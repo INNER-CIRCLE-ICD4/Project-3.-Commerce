@@ -40,6 +40,14 @@ jobs:
               - 'service/review/**'
             search:
               - 'service/search/**'
+          list-files: shell
+      - name: Debug Outputs
+        run: |
+          echo "Common Changed: ${{ steps.filter.outputs.common }}"
+          echo "Order Changed: ${{ steps.filter.outputs.order }}"
+          echo "Product Changed: ${{ steps.filter.outputs.product }}"
+          echo "Review Changed: ${{ steps.filter.outputs.review }}"
+          echo "Search Changed: ${{ steps.filter.outputs.search }}"
 
 
   # 2단계: 서비스별 병렬 빌드
