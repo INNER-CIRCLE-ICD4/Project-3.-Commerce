@@ -2,7 +2,7 @@ name: Multi-Module CI/CD Pipeline
 
 on:
   push:
-    branches: [10-chore-commerce-cicd]
+    branches: [main]
   pull_request:
     branches: [main]
 
