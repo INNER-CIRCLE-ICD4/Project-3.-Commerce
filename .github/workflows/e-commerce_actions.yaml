@@ -27,7 +27,6 @@ jobs:
       - uses: dorny/paths-filter@v3
         id: filter
         with:
-          list-files: 'json'
           filters: |
             common:
               - 'common/**'
@@ -87,25 +86,51 @@ jobs:
           echo "has-changes=${has_changes}" >> $GITHUB_OUTPUT
           echo "📋 Matrix JSON: ${matrix_json}"
 
-  # 3단계: 서비스별 병렬 빌드 (변경된 서비스만)
+  # 3단계: 서비스별 병렬 빌드
   build-services:
     runs-on: ubuntu-latest
-    needs: prepare-matrix
-    if: needs.prepare-matrix.outputs.has-changes == 'true'
+    needs: detect-changes
+    if: needs.detect-changes.outputs.common-changed == 'true' || (needs.detect-changes.outputs.order == 'true' || needs.detect-changes.outputs.product == 'true' || needs.detect-changes.outputs.review == 'true' || needs.detect-changes.outputs.search == 'true')
     strategy:
       fail-fast: false
-      matrix: ${{ fromJson(needs.prepare-matrix.outputs.matrix) }}
+      matrix:
+        service: [order, product, review, search]  # 단순화
     steps:
+      - name: Skip if no changes
+        if: |
+          (matrix.service == 'order' && needs.detect-changes.outputs.common-changed != 'true' && needs.detect-changes.outputs.order != 'true') ||
+          (matrix.service == 'product' && needs.detect-changes.outputs.common-changed != 'true' && needs.detect-changes.outputs.product != 'true') ||
+          (matrix.service == 'review' && needs.detect-changes.outputs.common-changed != 'true' && needs.detect-changes.outputs.review != 'true') ||
+          (matrix.service == 'search' && needs.detect-changes.outputs.common-changed != 'true' && needs.detect-changes.outputs.search != 'true')
+        run: |
+          echo "No changes detected for ${{ matrix.service }}, skipping..."
+          exit 0
+
       - name: Checkout code
+        if: |
+          (matrix.service == 'order' && (needs.detect-changes.outputs.common-changed == 'true' || needs.detect-changes.outputs.order == 'true')) ||
+          (matrix.service == 'product' && (needs.detect-changes.outputs.common-changed == 'true' || needs.detect-changes.outputs.product == 'true')) ||
+          (matrix.service == 'review' && (needs.detect-changes.outputs.common-changed == 'true' || needs.detect-changes.outputs.review == 'true')) ||
+          (matrix.service == 'search' && (needs.detect-changes.outputs.common-changed == 'true' || needs.detect-changes.outputs.search == 'true'))
         uses: actions/checkout@v4
 
       - name: Set up JDK 21
+        if: |
+          (matrix.service == 'order' && (needs.detect-changes.outputs.common-changed == 'true' || needs.detect-changes.outputs.order == 'true')) ||
+          (matrix.service == 'product' && (needs.detect-changes.outputs.common-changed == 'true' || needs.detect-changes.outputs.product == 'true')) ||
+          (matrix.service == 'review' && (needs.detect-changes.outputs.common-changed == 'true' || needs.detect-changes.outputs.review == 'true')) ||
+          (matrix.service == 'search' && (needs.detect-changes.outputs.common-changed == 'true' || needs.detect-changes.outputs.search == 'true'))
         uses: actions/setup-java@v4
         with:
           java-version: '21'
           distribution: 'temurin'
 
       - name: Cache Gradle packages
+        if: |
+          (matrix.service == 'order' && (needs.detect-changes.outputs.common-changed == 'true' || needs.detect-changes.outputs.order == 'true')) ||
+          (matrix.service == 'product' && (needs.detect-changes.outputs.common-changed == 'true' || needs.detect-changes.outputs.product == 'true')) ||
+          (matrix.service == 'review' && (needs.detect-changes.outputs.common-changed == 'true' || needs.detect-changes.outputs.review == 'true')) ||
+          (matrix.service == 'search' && (needs.detect-changes.outputs.common-changed == 'true' || needs.detect-changes.outputs.search == 'true'))
         uses: actions/cache@v4
         with:
           path: |
@@ -116,12 +141,22 @@ jobs:
             ${{ runner.os }}-gradle-
 
       - name: Build and test service
+        if: |
+          (matrix.service == 'order' && (needs.detect-changes.outputs.common-changed == 'true' || needs.detect-changes.outputs.order == 'true')) ||
+          (matrix.service == 'product' && (needs.detect-changes.outputs.common-changed == 'true' || needs.detect-changes.outputs.product == 'true')) ||
+          (matrix.service == 'review' && (needs.detect-changes.outputs.common-changed == 'true' || needs.detect-changes.outputs.review == 'true')) ||
+          (matrix.service == 'search' && (needs.detect-changes.outputs.common-changed == 'true' || needs.detect-changes.outputs.search == 'true'))
         run: |
           echo "🔨 Building ${{ matrix.service }} service..."
           chmod +x ./gradlew
           ./gradlew :service:${{ matrix.service }}:build :service:${{ matrix.service }}:test
 
       - name: Configure AWS credentials
+        if: |
+          (matrix.service == 'order' && (needs.detect-changes.outputs.common-changed == 'true' || needs.detect-changes.outputs.order == 'true')) ||
+          (matrix.service == 'product' && (needs.detect-changes.outputs.common-changed == 'true' || needs.detect-changes.outputs.product == 'true')) ||
+          (matrix.service == 'review' && (needs.detect-changes.outputs.common-changed == 'true' || needs.detect-changes.outputs.review == 'true')) ||
+          (matrix.service == 'search' && (needs.detect-changes.outputs.common-changed == 'true' || needs.detect-changes.outputs.search == 'true'))
         uses: aws-actions/configure-aws-credentials@v4
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
@@ -129,23 +164,43 @@ jobs:
           aws-region: ${{ env.AWS_REGION }}
 
       - name: Login to Amazon ECR Public
+        if: |
+          (matrix.service == 'order' && (needs.detect-changes.outputs.common-changed == 'true' || needs.detect-changes.outputs.order == 'true')) ||
+          (matrix.service == 'product' && (needs.detect-changes.outputs.common-changed == 'true' || needs.detect-changes.outputs.product == 'true')) ||
+          (matrix.service == 'review' && (needs.detect-changes.outputs.common-changed == 'true' || needs.detect-changes.outputs.review == 'true')) ||
+          (matrix.service == 'search' && (needs.detect-changes.outputs.common-changed == 'true' || needs.detect-changes.outputs.search == 'true'))
         id: login-ecr-public
         uses: aws-actions/amazon-ecr-login@v2
         with:
           registry-type: public
 
       - name: Create ECR Repository if not exists
+        if: |
+          (matrix.service == 'order' && (needs.detect-changes.outputs.common-changed == 'true' || needs.detect-changes.outputs.order == 'true')) ||
+          (matrix.service == 'product' && (needs.detect-changes.outputs.common-changed == 'true' || needs.detect-changes.outputs.product == 'true')) ||
+          (matrix.service == 'review' && (needs.detect-changes.outputs.common-changed == 'true' || needs.detect-changes.outputs.review == 'true')) ||
+          (matrix.service == 'search' && (needs.detect-changes.outputs.common-changed == 'true' || needs.detect-changes.outputs.search == 'true'))
         run: |
           aws ecr-public describe-repositories --repository-names ${{ matrix.service }} --region ${{ env.AWS_REGION }} || \
           aws ecr-public create-repository --repository-name ${{ matrix.service }} --region ${{ env.AWS_REGION }}
 
       - name: Build Docker image
+        if: |
+          (matrix.service == 'order' && (needs.detect-changes.outputs.common-changed == 'true' || needs.detect-changes.outputs.order == 'true')) ||
+          (matrix.service == 'product' && (needs.detect-changes.outputs.common-changed == 'true' || needs.detect-changes.outputs.product == 'true')) ||
+          (matrix.service == 'review' && (needs.detect-changes.outputs.common-changed == 'true' || needs.detect-changes.outputs.review == 'true')) ||
+          (matrix.service == 'search' && (needs.detect-changes.outputs.common-changed == 'true' || needs.detect-changes.outputs.search == 'true'))
         run: | 
           echo "🐳 Building Docker image for ${{ matrix.service }}..."
           docker build -t $ECR_REGISTRY/${{ matrix.service }}:${{ github.sha }} -f service/${{ matrix.service }}/Dockerfile .
           docker tag $ECR_REGISTRY/${{ matrix.service }}:${{ github.sha }} $ECR_REGISTRY/${{ matrix.service }}:latest
 
       - name: Push to ECR Public
+        if: |
+          (matrix.service == 'order' && (needs.detect-changes.outputs.common-changed == 'true' || needs.detect-changes.outputs.order == 'true')) ||
+          (matrix.service == 'product' && (needs.detect-changes.outputs.common-changed == 'true' || needs.detect-changes.outputs.product == 'true')) ||
+          (matrix.service == 'review' && (needs.detect-changes.outputs.common-changed == 'true' || needs.detect-changes.outputs.review == 'true')) ||
+          (matrix.service == 'search' && (needs.detect-changes.outputs.common-changed == 'true' || needs.detect-changes.outputs.search == 'true'))
         run: | 
           echo "🚀 Pushing images for ${{ matrix.service }}..."
           docker push $ECR_REGISTRY/${{ matrix.service }}:${{ github.sha }}
