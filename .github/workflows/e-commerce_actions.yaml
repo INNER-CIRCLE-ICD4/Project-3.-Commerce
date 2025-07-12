@@ -27,9 +27,12 @@ jobs:
       - uses: dorny/paths-filter@v3
         id: filter
         with:
+          list-files: 'json'
           filters: |
             common:
               - 'common/**'
+              - 'build.gradle.kts'
+              - 'settings.gradle.kts'
             order:
               - 'service/order/**'
             product:
