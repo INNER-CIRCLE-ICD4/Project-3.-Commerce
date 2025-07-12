@@ -11,7 +11,6 @@ env:
   AWS_REGION: us-east-1
   ECR_REGISTRY: public.ecr.aws/o3q0p5x7
 
-
 # 1단계: 변경된 파일 감지
 jobs:
   detect-changes:
@@ -42,42 +41,65 @@ jobs:
             search:
               - 'service/search/**'
 
-
-  # 3단계: 서비스별 병렬 빌드
-  build-services:
+  # 2단계: 변경된 서비스 매트릭스 생성
+  prepare-matrix:
     runs-on: ubuntu-latest
     needs: detect-changes
-    if: needs.detect-changes.outputs.common-changed == 'true' || (needs.detect-changes.outputs.order == 'true' || needs.detect-changes.outputs.product == 'true' || needs.detect-changes.outputs.review == 'true' || needs.detect-changes.outputs.search == 'true')
-    strategy:
-      fail-fast: false  # 하나가 실패해도 다른 서비스는 계속 실행
-      matrix:
-        include:
-          - service: order
-            condition: ${{ needs.detect-changes.outputs.common-changed == 'true' ||  needs.detect-changes.outputs.order == 'true' }}
-          - service: product
-            condition: ${{ needs.detect-changes.outputs.common-changed == 'true' ||  needs.detect-changes.outputs.product == 'true' }}
-          - service: review
-            condition: ${{ needs.detect-changes.outputs.common-changed == 'true' ||  needs.detect-changes.outputs.review == 'true' }}
-          - service: search
-            condition: ${{ needs.detect-changes.outputs.common-changed == 'true' ||  needs.detect-changes.outputs.search == 'true' }}
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+      has-changes: ${{ steps.set-matrix.outputs.has-changes }}
     steps:
-      - name: Skip if no changes
-        if:  ${{ !matrix.condition }}
-        run: echo "No changes detected for ${{ matrix.service }}, skipping..."
+      - name: Set matrix for changed services
+        id: set-matrix
+        run: |
+          services=()
+          
+          # common 변경 시 모든 서비스 포함
+          if [[ "${{ needs.detect-changes.outputs.common-changed }}" == "true" ]]; then
+            services=("order" "product" "review" "search")
+            echo "🔄 Common 모듈 변경됨 - 모든 서비스 빌드"
+          else
+            # 개별 서비스 변경 확인
+            [[ "${{ needs.detect-changes.outputs.order }}" == "true" ]] && services+=("order")
+            [[ "${{ needs.detect-changes.outputs.product }}" == "true" ]] && services+=("product")
+            [[ "${{ needs.detect-changes.outputs.review }}" == "true" ]] && services+=("review")
+            [[ "${{ needs.detect-changes.outputs.search }}" == "true" ]] && services+=("search")
+          fi
+          
+          # JSON 배열로 변환
+          if [ ${#services[@]} -eq 0 ]; then
+            matrix_json='{"service":[]}'
+            has_changes="false"
+            echo "⚠️ 변경된 서비스가 없습니다"
+          else
+            matrix_json=$(printf '%s\n' "${services[@]}" | jq -R . | jq -s -c '{service: .}')
+            has_changes="true"
+            echo "🚀 변경된 서비스: ${services[*]}"
+          fi
+          
+          echo "matrix=${matrix_json}" >> $GITHUB_OUTPUT
+          echo "has-changes=${has_changes}" >> $GITHUB_OUTPUT
+          echo "📋 Matrix JSON: ${matrix_json}"
 
+  # 3단계: 서비스별 병렬 빌드 (변경된 서비스만)
+  build-services:
+    runs-on: ubuntu-latest
+    needs: prepare-matrix
+    if: needs.prepare-matrix.outputs.has-changes == 'true'
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJson(needs.prepare-matrix.outputs.matrix) }}
+    steps:
       - name: Checkout code
-        if: matrix.condition
         uses: actions/checkout@v4
 
       - name: Set up JDK 21
-        if: matrix.condition
         uses: actions/setup-java@v4
         with:
           java-version: '21'
           distribution: 'temurin'
 
       - name: Cache Gradle packages
-        if: matrix.condition
         uses: actions/cache@v4
         with:
           path: |
@@ -88,13 +110,12 @@ jobs:
             ${{ runner.os }}-gradle-
 
       - name: Build and test service
-        if: matrix.condition
         run: |
+          echo "🔨 Building ${{ matrix.service }} service..."
           chmod +x ./gradlew
           ./gradlew :service:${{ matrix.service }}:build :service:${{ matrix.service }}:test
 
       - name: Configure AWS credentials
-        if: matrix.condition
         uses: aws-actions/configure-aws-credentials@v4
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
@@ -102,37 +123,33 @@ jobs:
           aws-region: ${{ env.AWS_REGION }}
 
       - name: Login to Amazon ECR Public
-        if: matrix.condition
         id: login-ecr-public
         uses: aws-actions/amazon-ecr-login@v2
         with:
           registry-type: public
 
-
       - name: Create ECR Repository if not exists
-        if: matrix.condition
         run: |
           aws ecr-public describe-repositories --repository-names ${{ matrix.service }} --region ${{ env.AWS_REGION }} || \
           aws ecr-public create-repository --repository-name ${{ matrix.service }} --region ${{ env.AWS_REGION }}
 
       - name: Build Docker image
-        if: matrix.condition
         run: | 
+          echo "🐳 Building Docker image for ${{ matrix.service }}..."
           docker build -t $ECR_REGISTRY/${{ matrix.service }}:${{ github.sha }} -f service/${{ matrix.service }}/Dockerfile .
           docker tag $ECR_REGISTRY/${{ matrix.service }}:${{ github.sha }} $ECR_REGISTRY/${{ matrix.service }}:latest
 
       - name: Push to ECR Public
-        if: matrix.condition
         run: | 
+          echo "🚀 Pushing images for ${{ matrix.service }}..."
           docker push $ECR_REGISTRY/${{ matrix.service }}:${{ github.sha }}
           docker push $ECR_REGISTRY/${{ matrix.service }}:latest
-          
-          
+          echo "✅ ${{ matrix.service }} 이미지 푸시 완료!"
 
   # 4단계: 빌드 결과 요약
   build-summary:
     runs-on: ubuntu-latest
-    needs: [detect-changes, build-services]
+    needs: [detect-changes, prepare-matrix, build-services]
     if: always()
     steps:
       - name: Build Summary
@@ -140,12 +157,15 @@ jobs:
           echo "## 🚀 Multi-Module CI Build Summary" >> $GITHUB_STEP_SUMMARY
           echo "| Service | Status | Changed |" >> $GITHUB_STEP_SUMMARY
           echo "|---------|--------|---------|" >> $GITHUB_STEP_SUMMARY
-          echo "| Order | ${{ needs.build-services.result }} | ${{ needs.detect-changes.outputs.order }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| Product | ${{ needs.build-services.result }} | ${{ needs.detect-changes.outputs.product }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| Review | ${{ needs.build-services.result }} | ${{ needs.detect-changes.outputs.review }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| Search | ${{ needs.build-services.result }} | ${{ needs.detect-changes.outputs.search }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Order | ${{ needs.detect-changes.outputs.order == 'true' && 'built' || 'skipped' }} | ${{ needs.detect-changes.outputs.order }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Product | ${{ needs.detect-changes.outputs.product == 'true' && 'built' || 'skipped' }} | ${{ needs.detect-changes.outputs.product }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Review | ${{ needs.detect-changes.outputs.review == 'true' && 'built' || 'skipped' }} | ${{ needs.detect-changes.outputs.review }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Search | ${{ needs.detect-changes.outputs.search == 'true' && 'built' || 'skipped' }} | ${{ needs.detect-changes.outputs.search }} |" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### 📊 Build Details" >> $GITHUB_STEP_SUMMARY
           echo "- **Branch**: ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
           echo "- **Commit**: ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
           echo "- **Trigger**: ${{ github.event_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Common Changed**: ${{ needs.detect-changes.outputs.common-changed }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Built Services**: ${{ needs.prepare-matrix.outputs.matrix }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Has Changes**: ${{ needs.prepare-matrix.outputs.has-changes }}" >> $GITHUB_STEP_SUMMARY
