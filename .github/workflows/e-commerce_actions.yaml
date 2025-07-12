@@ -18,8 +18,8 @@ jobs:
       review: ${{ steps.filter.outputs.review }}
       search: ${{ steps.filter.outputs.search }}
     steps:
-      - uses: actions/checkout@v3
-      - uses: dorny/paths-filter@v2
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
         id: filter
         with:
           filters: |
@@ -46,16 +46,16 @@ jobs:
     needs: detect-changes
     if: needs.detect-changes.outputs.common-changed == 'true'
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Set up JDK 21
-        uses: actions/setup-java@v3
+        uses: actions/setup-java@v4
         with:
           java-version: '21'
           distribution: 'temurin'
 
       - name: Cache Gradle packages
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: |
             ~/.gradle/caches
@@ -70,7 +70,7 @@ jobs:
           ./gradlew :common:snowflake:build :common:snowflake:test
 
       - name: Upload common artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: common-artifacts
           path: common/snowflake/build/libs/
@@ -99,18 +99,18 @@ jobs:
 
       - name: Checkout code
         if: matrix.condition == 'true'
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Set up JDK 21
         if: matrix.condition == 'true'
-        uses: actions/setup-java@v3
+        uses: actions/setup-java@v4
         with:
           java-version: '21'
           distribution: 'temurin'
 
       - name: Cache Gradle packages
         if: matrix.condition == 'true'
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: |
             ~/.gradle/caches
@@ -121,7 +121,7 @@ jobs:
 
       - name: Download common artifacts
         if: matrix.condition == 'true' && needs.build-common.result == 'success'
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: common-artifacts
           path: common/snowflake/build/libs/
