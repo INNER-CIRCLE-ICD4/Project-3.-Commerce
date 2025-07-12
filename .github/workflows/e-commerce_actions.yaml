@@ -88,7 +88,7 @@ jobs:
             ${{ runner.os }}-gradle-
 
       - name: Build and test service
-
+        if: matrix.condition
         run: |
           chmod +x ./gradlew
           ./gradlew :service:${{ matrix.service }}:build :service:${{ matrix.service }}:test

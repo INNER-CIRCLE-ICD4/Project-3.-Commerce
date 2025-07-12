@@ -1,5 +1,5 @@
 # service/review/Dockerfile
-FROM openjdk:21-jre-slim
+FROM eclipse-temurin:21-jre-jammy
 
 WORKDIR /app
 
