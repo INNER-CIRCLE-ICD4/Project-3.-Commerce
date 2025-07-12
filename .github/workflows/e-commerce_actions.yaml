@@ -30,8 +30,6 @@ jobs:
           filters: |
             common:
               - 'common/**'
-              - 'build.gradle.kts'
-              - 'settings.gradle.kts'
             order:
               - 'service/order/**'
             product:
