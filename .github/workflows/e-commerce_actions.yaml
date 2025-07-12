@@ -51,19 +51,24 @@ jobs:
     steps:
       - name: Set matrix for changed services
         id: set-matrix
+        env:
+          COMMON_CHANGED: ${{ needs.detect-changes.outputs.common-changed }}
+          ORDER_CHANGED: ${{ needs.detect-changes.outputs.order }}
+          PRODUCT_CHANGED: ${{ needs.detect-changes.outputs.product }}
+          REVIEW_CHANGED: ${{ needs.detect-changes.outputs.review }}
+          SEARCH_CHANGED: ${{ needs.detect-changes.outputs.search }}
         run: |
           services=()
           
-          # common 변경 시 모든 서비스 포함
-          if [[ "${{ needs.detect-changes.outputs.common-changed }}" == "true" ]]; then
+          if [ "$COMMON_CHANGED" = "true" ]; then
             services=("order" "product" "review" "search")
             echo "🔄 Common 모듈 변경됨 - 모든 서비스 빌드"
           else
             # 개별 서비스 변경 확인
-            [[ "${{ needs.detect-changes.outputs.order }}" == "true" ]] && services+=("order")
-            [[ "${{ needs.detect-changes.outputs.product }}" == "true" ]] && services+=("product")
-            [[ "${{ needs.detect-changes.outputs.review }}" == "true" ]] && services+=("review")
-            [[ "${{ needs.detect-changes.outputs.search }}" == "true" ]] && services+=("search")
+            [ "$ORDER_CHANGED" = "true" ] && services+=("order")
+            [ "$PRODUCT_CHANGED" = "true" ] && services+=("product")
+            [ "$REVIEW_CHANGED" = "true" ] && services+=("review")
+            [ "$SEARCH_CHANGED" = "true" ] && services+=("search")
           fi
           
           # JSON 배열로 변환
