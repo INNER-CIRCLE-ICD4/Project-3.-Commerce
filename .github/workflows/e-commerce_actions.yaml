@@ -41,52 +41,8 @@ jobs:
             search:
               - 'service/search/**'
 
-  # 2단계: 변경된 서비스 매트릭스 생성
-  prepare-matrix:
-    runs-on: ubuntu-latest
-    needs: detect-changes
-    outputs:
-      matrix: ${{ steps.set-matrix.outputs.matrix }}
-      has-changes: ${{ steps.set-matrix.outputs.has-changes }}
-    steps:
-      - name: Set matrix for changed services
-        id: set-matrix
-        env:
-          COMMON_CHANGED: ${{ needs.detect-changes.outputs.common-changed }}
-          ORDER_CHANGED: ${{ needs.detect-changes.outputs.order }}
-          PRODUCT_CHANGED: ${{ needs.detect-changes.outputs.product }}
-          REVIEW_CHANGED: ${{ needs.detect-changes.outputs.review }}
-          SEARCH_CHANGED: ${{ needs.detect-changes.outputs.search }}
-        run: |
-          services=()
-          
-          if [ "$COMMON_CHANGED" = "true" ]; then
-            services=("order" "product" "review" "search")
-            echo "🔄 Common 모듈 변경됨 - 모든 서비스 빌드"
-          else
-            # 개별 서비스 변경 확인
-            [ "$ORDER_CHANGED" = "true" ] && services+=("order")
-            [ "$PRODUCT_CHANGED" = "true" ] && services+=("product")
-            [ "$REVIEW_CHANGED" = "true" ] && services+=("review")
-            [ "$SEARCH_CHANGED" = "true" ] && services+=("search")
-          fi
-          
-          # JSON 배열로 변환
-          if [ ${#services[@]} -eq 0 ]; then
-            matrix_json='{"service":[]}'
-            has_changes="false"
-            echo "⚠️ 변경된 서비스가 없습니다"
-          else
-            matrix_json=$(printf '%s\n' "${services[@]}" | jq -R . | jq -s -c '{service: .}')
-            has_changes="true"
-            echo "🚀 변경된 서비스: ${services[*]}"
-          fi
-          
-          echo "matrix=${matrix_json}" >> $GITHUB_OUTPUT
-          echo "has-changes=${has_changes}" >> $GITHUB_OUTPUT
-          echo "📋 Matrix JSON: ${matrix_json}"
 
-  # 3단계: 서비스별 병렬 빌드
+  # 2단계: 서비스별 병렬 빌드
   build-services:
     runs-on: ubuntu-latest
     needs: detect-changes
@@ -203,7 +159,7 @@ jobs:
           (matrix.service == 'search' && (needs.detect-changes.outputs.common-changed == 'true' || needs.detect-changes.outputs.search == 'true'))
         run: | 
           echo "🚀 Pushing images for ${{ matrix.service }}..."
-          docker push $ECR_REGISTRY/${{ matrix.service }}:${{ github.sha }}
+#          docker push $ECR_REGISTRY/${{ matrix.service }}:${{ github.sha }}
           docker push $ECR_REGISTRY/${{ matrix.service }}:latest
           echo "✅ ${{ matrix.service }} 이미지 푸시 완료!"
 
