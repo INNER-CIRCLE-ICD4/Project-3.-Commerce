@@ -51,18 +51,10 @@ jobs:
 
 
   # 2단계: 서비스별 병렬 빌드
-  build-services:
+  build-and-test:
     runs-on: ubuntu-latest
     needs: detect-changes
-    if: |
-      github.event_name == 'push' && 
-      github.ref == 'refs/heads/main' && 
-      needs.build-and-test.result == 'success' &&
-      (needs.detect-changes.outputs.common-changed == 'true' || 
-       needs.detect-changes.outputs.order == 'true' || 
-       needs.detect-changes.outputs.product == 'true' || 
-       needs.detect-changes.outputs.review == 'true' || 
-       needs.detect-changes.outputs.search == 'true')
+    if: needs.detect-changes.outputs.common-changed == 'true' || (needs.detect-changes.outputs.order == 'true' || needs.detect-changes.outputs.product == 'true' || needs.detect-changes.outputs.review == 'true' || needs.detect-changes.outputs.search == 'true')
     strategy:
       fail-fast: false
       matrix:
@@ -167,21 +159,102 @@ jobs:
           docker build -t $ECR_REGISTRY/${{ matrix.service }}:${{ github.sha }} -f service/${{ matrix.service }}/Dockerfile .
           docker tag $ECR_REGISTRY/${{ matrix.service }}:${{ github.sha }} $ECR_REGISTRY/${{ matrix.service }}:latest
 
+  # 3단계 이미지 push 및 매포
+  deploy:
+    runs-on: ubuntu-latest
+    needs: [detect-changes, build-and-test]
+    if: |
+      github.event_name == 'push' && 
+      github.ref == 'refs/heads/main' && 
+      needs.build-and-test.result == 'success' &&
+      (needs.detect-changes.outputs.common-changed == 'true' || 
+       needs.detect-changes.outputs.order == 'true' || 
+       needs.detect-changes.outputs.product == 'true' || 
+       needs.detect-changes.outputs.review == 'true' || 
+       needs.detect-changes.outputs.search == 'true')
+    strategy:
+      fail-fast: false
+      matrix:
+        service: [order, product, review, search]
+    steps:
+      - name: Skip if no changes
+        if: |
+          (matrix.service == 'order' && needs.detect-changes.outputs.common-changed != 'true' && needs.detect-changes.outputs.order != 'true') ||
+          (matrix.service == 'product' && needs.detect-changes.outputs.common-changed != 'true' && needs.detect-changes.outputs.product != 'true') ||
+          (matrix.service == 'review' && needs.detect-changes.outputs.common-changed != 'true' && needs.detect-changes.outputs.review != 'true') ||
+          (matrix.service == 'search' && needs.detect-changes.outputs.common-changed != 'true' && needs.detect-changes.outputs.search != 'true')
+        run: |
+          echo "No changes detected for ${{ matrix.service }}, skipping push..."
+          exit 0
+          - name: Rebuild Docker image
+        if: |
+          (matrix.service == 'order' && (needs.detect-changes.outputs.common-changed == 'true' || needs.detect-changes.outputs.order == 'true')) ||
+          (matrix.service == 'product' && (needs.detect-changes.outputs.common-changed == 'true' || needs.detect-changes.outputs.product == 'true')) ||
+          (matrix.service == 'review' && (needs.detect-changes.outputs.common-changed == 'true' || needs.detect-changes.outputs.review == 'true')) ||
+          (matrix.service == 'search' && (needs.detect-changes.outputs.common-changed == 'true' || needs.detect-changes.outputs.search == 'true'))
+        run: |
+          echo "🔄 Rebuilding Docker image for push..."
+          
+          # Gradle 빌드 (JAR 파일 필요)
+          chmod +x ./gradlew
+          ./gradlew :service:${{ matrix.service }}:build -x test
+          
+          # Docker 이미지 빌드
+          docker build -t $ECR_REGISTRY/${{ matrix.service }}:${{ github.sha }} -f service/${{ matrix.service }}/Dockerfile .
+          docker tag $ECR_REGISTRY/${{ matrix.service }}:${{ github.sha }} $ECR_REGISTRY/${{ matrix.service }}:latest
+
+      - name: Configure AWS credentials
+        if: |
+          (matrix.service == 'order' && (needs.detect-changes.outputs.common-changed == 'true' || needs.detect-changes.outputs.order == 'true')) ||
+          (matrix.service == 'product' && (needs.detect-changes.outputs.common-changed == 'true' || needs.detect-changes.outputs.product == 'true')) ||
+          (matrix.service == 'review' && (needs.detect-changes.outputs.common-changed == 'true' || needs.detect-changes.outputs.review == 'true')) ||
+          (matrix.service == 'search' && (needs.detect-changes.outputs.common-changed == 'true' || needs.detect-changes.outputs.search == 'true'))
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR Public
+        if: |
+          (matrix.service == 'order' && (needs.detect-changes.outputs.common-changed == 'true' || needs.detect-changes.outputs.order == 'true')) ||
+          (matrix.service == 'product' && (needs.detect-changes.outputs.common-changed == 'true' || needs.detect-changes.outputs.product == 'true')) ||
+          (matrix.service == 'review' && (needs.detect-changes.outputs.common-changed == 'true' || needs.detect-changes.outputs.review == 'true')) ||
+          (matrix.service == 'search' && (needs.detect-changes.outputs.common-changed == 'true' || needs.detect-changes.outputs.search == 'true'))
+        uses: aws-actions/amazon-ecr-login@v2
+        with:
+          registry-type: public
+
+      - name: Create ECR Repository if not exists
+        if: |
+          (matrix.service == 'order' && (needs.detect-changes.outputs.common-changed == 'true' || needs.detect-changes.outputs.order == 'true')) ||
+          (matrix.service == 'product' && (needs.detect-changes.outputs.common-changed == 'true' || needs.detect-changes.outputs.product == 'true')) ||
+          (matrix.service == 'review' && (needs.detect-changes.outputs.common-changed == 'true' || needs.detect-changes.outputs.review == 'true')) ||
+          (matrix.service == 'search' && (needs.detect-changes.outputs.common-changed == 'true' || needs.detect-changes.outputs.search == 'true'))
+        run: |
+          aws ecr-public describe-repositories --repository-names ${{ matrix.service }} --region ${{ env.AWS_REGION }} || \
+          aws ecr-public create-repository --repository-name ${{ matrix.service }} --region ${{ env.AWS_REGION }}
+
       - name: Push to ECR Public
         if: |
           (matrix.service == 'order' && (needs.detect-changes.outputs.common-changed == 'true' || needs.detect-changes.outputs.order == 'true')) ||
           (matrix.service == 'product' && (needs.detect-changes.outputs.common-changed == 'true' || needs.detect-changes.outputs.product == 'true')) ||
           (matrix.service == 'review' && (needs.detect-changes.outputs.common-changed == 'true' || needs.detect-changes.outputs.review == 'true')) ||
           (matrix.service == 'search' && (needs.detect-changes.outputs.common-changed == 'true' || needs.detect-changes.outputs.search == 'true'))
-        run: | 
+        run: |
           echo "🚀 Pushing images for ${{ matrix.service }}..."
+          docker push $ECR_REGISTRY/${{ matrix.service }}:${{ github.sha }}
           docker push $ECR_REGISTRY/${{ matrix.service }}:latest
           echo "✅ ${{ matrix.service }} 이미지 푸시 완료!"
+          
+          
+
+
 
   # 4단계: 빌드 결과 요약
   build-summary:
     runs-on: ubuntu-latest
-    needs: [detect-changes, build-services]
+    needs: [detect-changes, build-and-test]
     if: always()
     steps:
       - name: Build Summary
