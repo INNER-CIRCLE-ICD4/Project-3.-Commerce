@@ -286,16 +286,34 @@ jobs:
           aws ecs register-task-definition \
             --cli-input-json file://clean-${{ matrix.service }}.json
           
+          
+          # 서비스 존재 여부 확인
+               echo "🔍 서비스 존재 여부 확인 중..."
+               if aws ecs describe-services \
+               --cluster e-commerce \
+               --services ${{ matrix.service }}-service \
+               --query 'services[0].status' \
+               --output text 2>/dev/null | grep -q "ACTIVE"; then
+               
+               echo "✅ 서비스 ${{ matrix.service }}-service 존재 - 업데이트 진행"
+               aws ecs update-service \
+               --cluster e-commerce \
+               --service ${{ matrix.service }}-service \
+               --task-definition ${{ matrix.service }} \
+               --force-new-deployment
+               echo "🎉 ${{ matrix.service }} 서비스 업데이트 완료!"
+               
+               else
+               echo "⚠️ 서비스 ${{ matrix.service }}-service가 존재하지 않습니다."
+               echo "📋 Task Definition '${{ matrix.service }}'이 생성되었습니다."
+               echo "🔧 다음 단계: AWS 콘솔에서 서비스를 생성하세요."
+               echo "   - 클러스터: e-commerce"
+               echo "   - 서비스 이름: ${{ matrix.service }}-service"
+               echo "   - Task Definition: ${{ matrix.service }}:latest"
+               fi
+          
           # 임시 파일 삭제
-               rm temp-${{ matrix.service }}.json clean-${{ matrix.service }}.json          
-    
-            
-          # ECS 서비스 업데이트
-          aws ecs update-service \
-            --cluster e-commerce \
-            --service ${{ matrix.service }}-service \
-            --task-definition ${{ matrix.service }} \
-            --force-new-deployment
+               rm temp-${{ matrix.service }}.json clean-${{ matrix.service }}.json
           
           echo "🎉 ${{ matrix.service }} 배포 시작 완료!"
       
