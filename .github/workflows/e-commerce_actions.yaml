@@ -145,6 +145,10 @@ jobs:
       matrix:
         service: [order, product, review, search]
     steps:
+      # 🆕 항상 먼저 실행되는 checkout
+      - name: Checkout code
+        uses: actions/checkout@v4
+
       - name: Skip if no changes
         if: |
           (matrix.service == 'order' && needs.detect-changes.outputs.common-changed != 'true' && needs.detect-changes.outputs.order != 'true') ||
@@ -154,6 +158,17 @@ jobs:
         run: |
           echo "No changes detected for ${{ matrix.service }}, skipping push..."
           exit 0
+
+      - name: Set up JDK 21
+        if: |
+          (matrix.service == 'order' && (needs.detect-changes.outputs.common-changed == 'true' || needs.detect-changes.outputs.order == 'true')) ||
+          (matrix.service == 'product' && (needs.detect-changes.outputs.common-changed == 'true' || needs.detect-changes.outputs.product == 'true')) ||
+          (matrix.service == 'review' && (needs.detect-changes.outputs.common-changed == 'true' || needs.detect-changes.outputs.review == 'true')) ||
+          (matrix.service == 'search' && (needs.detect-changes.outputs.common-changed == 'true' || needs.detect-changes.outputs.search == 'true'))
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
 
       - name: Cache Gradle packages
         if: |
@@ -169,7 +184,7 @@ jobs:
           key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
           restore-keys: |
             ${{ runner.os }}-gradle-
-            
+
       - name: Rebuild Docker image
         if: |
           (matrix.service == 'order' && (needs.detect-changes.outputs.common-changed == 'true' || needs.detect-changes.outputs.order == 'true')) ||
