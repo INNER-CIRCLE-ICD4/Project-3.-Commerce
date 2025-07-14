@@ -277,7 +277,7 @@ jobs:
           
           # Task Definition에서 이미지 URL 업데이트
           sed -i 's|"image": ".*"|"image": "${{ env.ECR_REGISTRY }}/${{ matrix.service }}:latest"|' \
-            .aws/task-definitions/temp-${{ matrix.service }}.json
+            temp-${{ matrix.service }}.json
           
           # 불필요한 필드 제거 (간단한 방법)
           cat temp-${{ matrix.service }}.json | \
