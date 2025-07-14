@@ -275,20 +275,12 @@ jobs:
             --query 'taskDefinition' \
             --output json > temp-${{ matrix.service }}.json
           
-          # Task Definition에서 이미지 URL 업데이트
-          sed -i 's|"image": ".*"|"image": "${{ env.ECR_REGISTRY }}/${{ matrix.service }}:latest"|' \
-            temp-${{ matrix.service }}.json
-          
-          # 불필요한 필드 제거 (완전한 목록)
-          cat temp-${{ matrix.service }}.json | \
-            sed 's/"taskDefinitionArn":[^,]*,//g' | \
-            sed 's/"revision":[^,]*,//g' | \
-            sed 's/"status":[^,]*,//g' | \
-            sed 's/"requiresAttributes":\[[^]]*\],//g' | \
-            sed 's/"placementConstraints":\[[^]]*\],//g' | \
-            sed 's/"compatibilities":\[[^]]*\],//g' | \
-            sed 's/"registeredAt":[^,]*,//g' | \
-            sed 's/"registeredBy":[^,]*,//g' > clean-${{ matrix.service }}.json
+        
+          # jq로 안전하게 필드 제거 및 이미지 업데이트
+          jq --arg image "${{ env.ECR_REGISTRY }}/${{ matrix.service }}:latest" '
+            del(.taskDefinitionArn, .revision, .status, .requiresAttributes, .compatibilities, .registeredAt, .registeredBy) |
+            .containerDefinitions[0].image = $image
+          ' temp-${{ matrix.service }}.json > clean-${{ matrix.service }}.json
           
           # Task Definition 등록
           aws ecs register-task-definition \
