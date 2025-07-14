@@ -248,6 +248,18 @@ jobs:
           docker push $ECR_REGISTRY/${{ matrix.service }}:latest
           echo "✅ ${{ matrix.service }} 이미지 푸시 완료!"
 
+      - name: Configure AWS credentials
+        if: |
+          (matrix.service == 'order' && (needs.detect-changes.outputs.common-changed == 'true' || needs.detect-changes.outputs.order == 'true')) ||
+          (matrix.service == 'product' && (needs.detect-changes.outputs.common-changed == 'true' || needs.detect-changes.outputs.product == 'true')) ||
+          (matrix.service == 'review' && (needs.detect-changes.outputs.common-changed == 'true' || needs.detect-changes.outputs.review == 'true')) ||
+          (matrix.service == 'search' && (needs.detect-changes.outputs.common-changed == 'true' || needs.detect-changes.outputs.search == 'true'))
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
       - name: Update Task Definition and Deploy to ECS
         if: |
           (matrix.service == 'order' && (needs.detect-changes.outputs.common-changed == 'true' || needs.detect-changes.outputs.order == 'true')) ||
