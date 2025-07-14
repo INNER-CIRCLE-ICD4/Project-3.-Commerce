@@ -289,7 +289,7 @@ jobs:
           
           # Task Definition 등록
           aws ecs register-task-definition \
-            --cli-input-json file://.aws/task-definitions/clean-${{ matrix.service }}.json
+            --cli-input-json file://clean-${{ matrix.service }}.json
           
           # 임시 파일 삭제
                rm temp-${{ matrix.service }}.json clean-${{ matrix.service }}.json          
