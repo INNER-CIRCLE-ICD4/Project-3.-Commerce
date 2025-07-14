@@ -4,12 +4,13 @@ on:
   push:
     branches: [main]
   pull_request:
-    branches: [main]
+    branches: [main, 10-chore-commerce-cicd]
 
 # AWS 설정 정보
 env:
   AWS_REGION: us-east-1
   ECR_REGISTRY: public.ecr.aws/o3q0p5x7
+  ECS_CLUSTER: e-commerce
 
 # 1단계: 변경된 파일 감지
 jobs:
@@ -160,13 +161,13 @@ jobs:
           docker tag $ECR_REGISTRY/${{ matrix.service }}:${{ github.sha }} $ECR_REGISTRY/${{ matrix.service }}:latest
 
   # 3단계 이미지 push 및 매포
+  #github.event_name == 'push' &&
+  #github.ref == 'refs/heads/main' &&
+  #needs.build-and-test.result == 'success' &&
   push-to-ecr:
     runs-on: ubuntu-latest
     needs: [detect-changes, build-and-test]
     if: |
-      github.event_name == 'push' && 
-      github.ref == 'refs/heads/main' && 
-      needs.build-and-test.result == 'success' &&
       (needs.detect-changes.outputs.common-changed == 'true' || 
        needs.detect-changes.outputs.order == 'true' || 
        needs.detect-changes.outputs.product == 'true' || 
@@ -246,9 +247,41 @@ jobs:
           docker push $ECR_REGISTRY/${{ matrix.service }}:${{ github.sha }}
           docker push $ECR_REGISTRY/${{ matrix.service }}:latest
           echo "✅ ${{ matrix.service }} 이미지 푸시 완료!"
-          
-          
 
+      - name: Update Task Definition and Deploy to ECS
+        if: |
+          (matrix.service == 'order' && (needs.detect-changes.outputs.common-changed == 'true' || needs.detect-changes.outputs.order == 'true')) ||
+          (matrix.service == 'product' && (needs.detect-changes.outputs.common-changed == 'true' || needs.detect-changes.outputs.product == 'true')) ||
+          (matrix.service == 'review' && (needs.detect-changes.outputs.common-changed == 'true' || needs.detect-changes.outputs.review == 'true')) ||
+          (matrix.service == 'search' && (needs.detect-changes.outputs.common-changed == 'true' || needs.detect-changes.outputs.search == 'true'))
+        run: |
+          echo "🔄 ${{ matrix.service }} Task Definition 업데이트 및 ECS 배포 중..."
+          
+          # Task Definition JSON 파일 복사
+          cp .aws/task-definitions/${{ matrix.service }}.json temp-${{ matrix.service }}.json
+          
+          # Task Definition에서 이미지 URL 업데이트
+          sed -i 's|"image": ".*"|"image": "${{ env.ECR_REGISTRY }}/${{ matrix.service }}:latest"|' \
+            .aws/task-definitions/temp-${{ matrix.service }}.json
+          
+          # Task Definition 등록
+          aws ecs register-task-definition \
+            --cli-input-json file://.aws/task-definitions/temp-${{ matrix.service }}.json
+          
+          
+          # 임시 파일 삭제
+          rm temp-${{ matrix.service }}.json
+    
+            
+          # ECS 서비스 업데이트
+          aws ecs update-service \
+            --cluster commerce-cluster \
+            --service ${{ matrix.service }}-service \
+            --task-definition ${{ matrix.service }} \
+            --force-new-deployment
+          
+          echo "🎉 ${{ matrix.service }} 배포 시작 완료!"
+        
 
 
   # 4단계: 빌드 결과 요약
