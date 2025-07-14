@@ -116,6 +116,17 @@ jobs:
           chmod +x ./gradlew
           ./gradlew :service:${{ matrix.service }}:build :service:${{ matrix.service }}:test
 
+      - name: Build Docker image
+        if: |
+          (matrix.service == 'order' && (needs.detect-changes.outputs.common-changed == 'true' || needs.detect-changes.outputs.order == 'true')) ||
+          (matrix.service == 'product' && (needs.detect-changes.outputs.common-changed == 'true' || needs.detect-changes.outputs.product == 'true')) ||
+          (matrix.service == 'review' && (needs.detect-changes.outputs.common-changed == 'true' || needs.detect-changes.outputs.review == 'true')) ||
+          (matrix.service == 'search' && (needs.detect-changes.outputs.common-changed == 'true' || needs.detect-changes.outputs.search == 'true'))
+        run: | 
+          echo "🐳 Building Docker image for ${{ matrix.service }}..."
+          docker build -t $ECR_REGISTRY/${{ matrix.service }}:${{ github.sha }} -f service/${{ matrix.service }}/Dockerfile .
+          docker tag $ECR_REGISTRY/${{ matrix.service }}:${{ github.sha }} $ECR_REGISTRY/${{ matrix.service }}:latest
+
   # 3단계 이미지 push 및 매포
   #github.event_name == 'push' &&
   #github.ref == 'refs/heads/main' &&
@@ -143,6 +154,22 @@ jobs:
         run: |
           echo "No changes detected for ${{ matrix.service }}, skipping push..."
           exit 0
+
+      - name: Cache Gradle packages
+        if: |
+          (matrix.service == 'order' && (needs.detect-changes.outputs.common-changed == 'true' || needs.detect-changes.outputs.order == 'true')) ||
+          (matrix.service == 'product' && (needs.detect-changes.outputs.common-changed == 'true' || needs.detect-changes.outputs.product == 'true')) ||
+          (matrix.service == 'review' && (needs.detect-changes.outputs.common-changed == 'true' || needs.detect-changes.outputs.review == 'true')) ||
+          (matrix.service == 'search' && (needs.detect-changes.outputs.common-changed == 'true' || needs.detect-changes.outputs.search == 'true'))
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
+            
       - name: Rebuild Docker image
         if: |
           (matrix.service == 'order' && (needs.detect-changes.outputs.common-changed == 'true' || needs.detect-changes.outputs.order == 'true')) ||
@@ -150,6 +177,7 @@ jobs:
           (matrix.service == 'review' && (needs.detect-changes.outputs.common-changed == 'true' || needs.detect-changes.outputs.review == 'true')) ||
           (matrix.service == 'search' && (needs.detect-changes.outputs.common-changed == 'true' || needs.detect-changes.outputs.search == 'true'))
         run: |
+          
           echo "🔄 Rebuilding Docker image for push..."
           
           echo "🔨 Building ${{ matrix.service }} service..."
