@@ -116,7 +116,6 @@ jobs:
           chmod +x ./gradlew
           ./gradlew :service:${{ matrix.service }}:build :service:${{ matrix.service }}:test
 
-
   # 3단계 이미지 push 및 매포
   #github.event_name == 'push' &&
   #github.ref == 'refs/heads/main' &&
@@ -153,9 +152,10 @@ jobs:
         run: |
           echo "🔄 Rebuilding Docker image for push..."
           
-          # Gradle 빌드 (JAR 파일 필요)
+          echo "🔨 Building ${{ matrix.service }} service..."
           chmod +x ./gradlew
-          ./gradlew :service:${{ matrix.service }}:build -x test
+          ./gradlew :service:${{ matrix.service }}:build :service:${{ matrix.service }}:test
+        
           
           # Docker 이미지 빌드
           docker build -t $ECR_REGISTRY/${{ matrix.service }}:${{ github.sha }} -f service/${{ matrix.service }}/Dockerfile .
