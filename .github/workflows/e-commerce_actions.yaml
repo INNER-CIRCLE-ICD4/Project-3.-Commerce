@@ -160,7 +160,7 @@ jobs:
           docker tag $ECR_REGISTRY/${{ matrix.service }}:${{ github.sha }} $ECR_REGISTRY/${{ matrix.service }}:latest
 
   # 3단계 이미지 push 및 매포
-  deploy:
+  push-to-ecr:
     runs-on: ubuntu-latest
     needs: [detect-changes, build-and-test]
     if: |
@@ -252,24 +252,24 @@ jobs:
 
 
   # 4단계: 빌드 결과 요약
-  build-summary:
+  pipeline-summary:
     runs-on: ubuntu-latest
-    needs: [detect-changes, build-and-test]
+    needs: [detect-changes, build-and-test, push-to-ecr]
     if: always()
     steps:
-      - name: Build Summary
+      - name: Pipeline Summary
         run: |
-          echo "## 🚀 Multi-Module CI Build Summary" >> $GITHUB_STEP_SUMMARY
-          echo "| Service | Status | Changed |" >> $GITHUB_STEP_SUMMARY
-          echo "|---------|--------|---------|" >> $GITHUB_STEP_SUMMARY
-          echo "| Order | ${{ needs.detect-changes.outputs.order == 'true' && 'built' || 'skipped' }} | ${{ needs.detect-changes.outputs.order }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| Product | ${{ needs.detect-changes.outputs.product == 'true' && 'built' || 'skipped' }} | ${{ needs.detect-changes.outputs.product }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| Review | ${{ needs.detect-changes.outputs.review == 'true' && 'built' || 'skipped' }} | ${{ needs.detect-changes.outputs.review }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| Search | ${{ needs.detect-changes.outputs.search == 'true' && 'built' || 'skipped' }} | ${{ needs.detect-changes.outputs.search }} |" >> $GITHUB_STEP_SUMMARY
+          echo "## 🚀 Multi-Module CI/CD Pipeline Summary" >> $GITHUB_STEP_SUMMARY
+          echo "| Service | Build & Test | ECR Push | Changed |" >> $GITHUB_STEP_SUMMARY
+          echo "|---------|--------------|----------|---------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Order | ${{ needs.build-and-test.result == 'success' && '✅ 성공' || needs.build-and-test.result == 'failure' && '❌ 실패' || '⏭️ 건너뜀' }} | ${{ needs.push-to-ecr.result == 'success' && '🚀 푸시완료' || needs.push-to-ecr.result == 'failure' && '💥 푸시실패' || '⏭️ 건너뜀' }} | ${{ needs.detect-changes.outputs.order }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Product | ${{ needs.build-and-test.result == 'success' && '✅ 성공' || needs.build-and-test.result == 'failure' && '❌ 실패' || '⏭️ 건너뜀' }} | ${{ needs.push-to-ecr.result == 'success' && '🚀 푸시완료' || needs.push-to-ecr.result == 'failure' && '💥 푸시실패' || '⏭️ 건너뜀' }} | ${{ needs.detect-changes.outputs.product }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Review | ${{ needs.build-and-test.result == 'success' && '✅ 성공' || needs.build-and-test.result == 'failure' && '❌ 실패' || '⏭️ 건너뜀' }} | ${{ needs.push-to-ecr.result == 'success' && '🚀 푸시완료' || needs.push-to-ecr.result == 'failure' && '💥 푸시실패' || '⏭️ 건너뜀' }} | ${{ needs.detect-changes.outputs.review }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Search | ${{ needs.build-and-test.result == 'success' && '✅ 성공' || needs.build-and-test.result == 'failure' && '❌ 실패' || '⏭️ 건너뜀' }} | ${{ needs.push-to-ecr.result == 'success' && '🚀 푸시완료' || needs.push-to-ecr.result == 'failure' && '💥 푸시실패' || '⏭️ 건너뜀' }} | ${{ needs.detect-changes.outputs.search }} |" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "### 📊 Build Details" >> $GITHUB_STEP_SUMMARY
+          echo "### 📊 Pipeline Details" >> $GITHUB_STEP_SUMMARY
+          echo "- **Event**: ${{ github.event_name }}" >> $GITHUB_STEP_SUMMARY
           echo "- **Branch**: ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
           echo "- **Commit**: ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
-          echo "- **Trigger**: ${{ github.event_name }}" >> $GITHUB_STEP_SUMMARY
           echo "- **Common Changed**: ${{ needs.detect-changes.outputs.common-changed }}" >> $GITHUB_STEP_SUMMARY
-          echo "- **Has Changes**: ${{ needs.prepare-matrix.outputs.has-changes }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **ECR Push Condition**: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && '✅ Met' || '❌ Not Met' }}" >> $GITHUB_STEP_SUMMARY
