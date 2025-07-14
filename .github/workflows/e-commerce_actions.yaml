@@ -257,20 +257,30 @@ jobs:
         run: |
           echo "🔄 ${{ matrix.service }} Task Definition 업데이트 및 ECS 배포 중..."
           
-          # Task Definition JSON 파일 복사
-          cp .aws/task-definitions/${{ matrix.service }}.json temp-${{ matrix.service }}.json
+          # 기존 Task Definition 가져오기
+          aws ecs describe-task-definition \
+            --task-definition ${{ matrix.service }} \
+            --query 'taskDefinition' \
+            --output json > temp-${{ matrix.service }}.json
           
           # Task Definition에서 이미지 URL 업데이트
           sed -i 's|"image": ".*"|"image": "${{ env.ECR_REGISTRY }}/${{ matrix.service }}:latest"|' \
             .aws/task-definitions/temp-${{ matrix.service }}.json
           
+          # 불필요한 필드 제거 (간단한 방법)
+          cat temp-${{ matrix.service }}.json | \
+            sed 's/"taskDefinitionArn":[^,]*,//g' | \
+            sed 's/"revision":[^,]*,//g' | \
+            sed 's/"status":[^,]*,//g' | \
+            sed 's/"registeredAt":[^,]*,//g' | \
+            sed 's/"registeredBy":[^,]*,//g' > clean-${{ matrix.service }}.json
+          
           # Task Definition 등록
           aws ecs register-task-definition \
-            --cli-input-json file://.aws/task-definitions/temp-${{ matrix.service }}.json
-          
+            --cli-input-json file://.aws/task-definitions/clean-${{ matrix.service }}.json
           
           # 임시 파일 삭제
-          rm temp-${{ matrix.service }}.json
+               rm temp-${{ matrix.service }}.json clean-${{ matrix.service }}.json          
     
             
           # ECS 서비스 업데이트
@@ -281,8 +291,7 @@ jobs:
             --force-new-deployment
           
           echo "🎉 ${{ matrix.service }} 배포 시작 완료!"
-        
-
+      
 
   # 4단계: 빌드 결과 요약
   pipeline-summary:
