@@ -285,7 +285,7 @@ jobs:
             
           # ECS 서비스 업데이트
           aws ecs update-service \
-            --cluster commerce-cluster \
+            --cluster e-commerce \
             --service ${{ matrix.service }}-service \
             --task-definition ${{ matrix.service }} \
             --force-new-deployment
