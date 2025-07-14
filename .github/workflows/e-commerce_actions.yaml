@@ -186,7 +186,7 @@ jobs:
         run: |
           echo "No changes detected for ${{ matrix.service }}, skipping push..."
           exit 0
-          - name: Rebuild Docker image
+      - name: Rebuild Docker image
         if: |
           (matrix.service == 'order' && (needs.detect-changes.outputs.common-changed == 'true' || needs.detect-changes.outputs.order == 'true')) ||
           (matrix.service == 'product' && (needs.detect-changes.outputs.common-changed == 'true' || needs.detect-changes.outputs.product == 'true')) ||
