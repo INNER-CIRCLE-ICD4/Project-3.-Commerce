@@ -9,6 +9,6 @@ public class ReviewController {
 
     @GetMapping
     public String test() {
-        return "hello world";
+        return "hello world2";
     }
 }
