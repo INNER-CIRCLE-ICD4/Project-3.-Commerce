@@ -4,7 +4,7 @@ on:
   push:
     branches: [main]
   pull_request:
-    branches: [main, 10-chore-commerce-cicd]
+    branches: [main]
 
 # AWS 설정 정보
 env:
@@ -128,13 +128,16 @@ jobs:
           docker tag $ECR_REGISTRY/${{ matrix.service }}:${{ github.sha }} $ECR_REGISTRY/${{ matrix.service }}:latest
 
   # 3단계 이미지 push 및 매포
-  #github.event_name == 'push' &&
-  #github.ref == 'refs/heads/main' &&
-  #needs.build-and-test.result == 'success' &&
+
+
+
   push-to-ecr:
     runs-on: ubuntu-latest
     needs: [detect-changes, build-and-test]
     if: |
+      github.event_name == 'push' &&
+      github.ref == 'refs/heads/main' &&
+      needs.build-and-test.result == 'success' &&
       (needs.detect-changes.outputs.common-changed == 'true' || 
        needs.detect-changes.outputs.order == 'true' || 
        needs.detect-changes.outputs.product == 'true' || 
