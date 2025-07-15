@@ -2,3 +2,12 @@ server.port: 9000
 spring:
   application:
     name: commerce-order-service
+  profiles:
+    # prod: 운영, dev: 개발
+    active: dev
+
+logging:
+  config: classpath:logback-spring.xml
+  file:
+    # 파일 저장할 경로
+    path: /logs

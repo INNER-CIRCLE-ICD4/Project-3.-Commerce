@@ -1,0 +1,94 @@
+<configuration>
+    <property name="LOG_PATH" value="${LOG_PATH:-/default/path}"/>
+    <property name="APP_NAME" value="order-service"/>
+
+    <!-- 개발환경: 텍스트 로그 (콘솔 출력) -->
+    <springProfile name="dev">
+        <appender name="DEV_CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+            <encoder>
+                <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+            </encoder>
+        </appender>
+
+        <root level="DEBUG">
+            <appender-ref ref="DEV_CONSOLE"/>
+        </root>
+    </springProfile>
+
+    <!-- 운영환경: 파일 저장 -->
+    <springProfile name="prod">
+
+        <!-- 1. 일반 텍스트 파일 로그 -->
+        <appender name="TEXT_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+            <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+                <fileNamePattern>${LOG_PATH}/${APP_NAME}-%d{yyyy-MM-dd}.log</fileNamePattern>
+                <maxHistory>30</maxHistory>
+            </rollingPolicy>
+            <encoder>
+                <pattern>%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n</pattern>
+            </encoder>
+        </appender>
+
+        <!-- 2. ERROR 로그만 별도 파일로 저장 -->
+        <appender name="ERROR_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+            <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+                <fileNamePattern>${LOG_PATH}/${APP_NAME}-error-%d{yyyy-MM-dd}.log</fileNamePattern>
+                <maxHistory>30</maxHistory>
+            </rollingPolicy>
+
+            <filter class="ch.qos.logback.classic.filter.LevelFilter">
+                <level>ERROR</level>
+                <onMatch>ACCEPT</onMatch>
+                <onMismatch>DENY</onMismatch>
+            </filter>
+
+            <encoder>
+                <pattern>%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n</pattern>
+            </encoder>
+        </appender>
+
+        <!-- 3. JSON 포맷 로그 (LogHelper 전용) -->
+        <appender name="METRIC_JSON_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+            <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+                <fileNamePattern>${LOG_PATH}/${APP_NAME}-metrics-%d{yyyy-MM-dd}.log</fileNamePattern>
+                <maxHistory>30</maxHistory>
+            </rollingPolicy>
+            <encoder class="net.logstash.logback.encoder.LoggingEventCompositeJsonEncoder">
+                <providers>
+                    <timestamp/>
+                    <pattern>
+                        <pattern>
+                            {
+                            "level": "%level",
+                            "traceId": "%X{traceId}",
+                            "userId": "%X{userId}",
+                            "service": "%X{service}",
+                            "message": "%message"
+                            }
+                        </pattern>
+                    </pattern>
+                    <stackTrace/>
+                </providers>
+            </encoder>
+        </appender>
+
+        <!-- 4. biz logger (LogHelper 전용 JSON 로그) -->
+        <logger name="biz" level="INFO" additivity="false">
+            <appender-ref ref="METRIC_JSON_FILE"/>
+        </logger>
+
+        <!-- 5. 콘솔 출력 -->
+        <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+            <encoder>
+                <pattern>%d{HH:mm:ss.SSS} %-5level %logger{36} - %msg%n</pattern>
+            </encoder>
+        </appender>
+
+        <root level="INFO">
+            <appender-ref ref="CONSOLE"/>
+            <appender-ref ref="TEXT_FILE"/>
+            <appender-ref ref="ERROR_FILE"/>
+        </root>
+
+    </springProfile>
+</configuration>

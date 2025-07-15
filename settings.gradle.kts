@@ -3,6 +3,7 @@ rootProject.name = "commerce"
 include(
     "common",
     "common:snowflake",
+    "common:logging",
     "service",
     "service:order",
     "service:review",
