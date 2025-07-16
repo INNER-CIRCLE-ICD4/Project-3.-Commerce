@@ -1,4 +1,18 @@
 server:
-  port: 8000
+  port: 9000
 
-spring.application.name: config-server
+jasypt:
+  encryptor:
+    password: ${JASYPT_ENCRYPTOR_PASSWORD}
+    bean: jasyptEncryptor
+
+spring:
+  application:
+    name: config-server
+  cloud:
+    config:
+      server:
+        git:
+          uri: ENC(2LIV5OwyUsguZDe65zY5m4kS1VrSm5SH/dGe0Pl6ECjq9Vy4DGNFzfi1Nlm10ypLT7yKjmJRwp5Lrgy87uYoMg==)
+          username: ENC(DDubtfkAGniOPQ4W4zFVZMsRQOw1N67bfMfzFfrxHK0=)
+          password: ENC(HNFZ9+JqltsDY/edbkhO+gf3EAKFKnhRihNTHfo41PcxF1ncs1VSs1McVR2vYLUVWlTI8WLtSMQ=)
