@@ -10,5 +10,6 @@ include(
     "service:product",
     "service:search",
     "infra",
-    "infra:gateway"
+    "infra:gateway",
+    "infra:config-server"
 )
