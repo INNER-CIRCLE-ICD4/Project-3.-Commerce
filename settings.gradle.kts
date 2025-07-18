@@ -11,5 +11,6 @@ include(
     "service:search",
     "infra",
     "infra:gateway",
-    "infra:config-server"
+    "infra:config-server",
+    "infra:eureka-server"
 )
