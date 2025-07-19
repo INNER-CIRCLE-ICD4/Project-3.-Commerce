@@ -7,6 +7,9 @@ plugins {
 group = "innercircle"
 version = "0.0.1-SNAPSHOT"
 
+//Cloud 버전 설정
+extra["springCloudVersion"] = "2025.0.0"
+
 
 allprojects {
 
@@ -32,5 +35,16 @@ allprojects {
 
     tasks.withType<Test> {
         useJUnitPlatform()
+    }
+}
+
+
+subprojects {
+    if (path.startsWith(":infra:")) {
+        dependencyManagement {
+            imports {
+                mavenBom("org.springframework.cloud:spring-cloud-dependencies:${property("springCloudVersion")}")
+            }
+        }
     }
 }
