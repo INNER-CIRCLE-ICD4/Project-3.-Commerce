@@ -16,4 +16,8 @@ spring:
     gateway:
       server:
         webflux:
-          default-filters:
+          routes:
+            - id: review-service
+              uri: lb://commerce-review-service
+              predicates:
+                - Path=/api/review-service/**
