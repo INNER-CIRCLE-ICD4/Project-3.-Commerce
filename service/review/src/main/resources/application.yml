@@ -3,6 +3,7 @@ spring:
   application:
     name: commerce-review-service
 
+
 eureka:
   instance:
     instance-id: ${spring.application.name}:${spring.application.instance_id:${random.value}}
@@ -10,7 +11,9 @@ eureka:
     fetch-registry: true
     register-with-eureka: true
     service-url:
-      defaultZone: http://127.0.0.1:8761/eureka
-
+      defaultZone: http://localhost:8761/eureka
+server:
+  servlet:
+    context-path: /api/review-service
 
 

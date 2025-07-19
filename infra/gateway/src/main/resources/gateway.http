@@ -1,0 +1,8 @@
+### GET review
+GET http://localhost:8000/api/review-service/
+Content-Type: application/json
+
+
+### GET review
+GET http://localhost:9001/api/review
+Content-Type: application/json
