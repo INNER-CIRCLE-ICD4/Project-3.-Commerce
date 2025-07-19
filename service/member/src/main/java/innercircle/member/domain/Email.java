@@ -17,7 +17,7 @@ public record Email(
 
         // 이메일 형식 검증
         if (!EMAIL_PATTERN.matcher(email).matches()) {
-            throw new IllegalArgumentException("이메일 형식이 올바르지 않습니다. " + email);
+            throw new IllegalArgumentException("이메일 형식이 올바르지 않습니다. email :" + email);
         }
     }
 }

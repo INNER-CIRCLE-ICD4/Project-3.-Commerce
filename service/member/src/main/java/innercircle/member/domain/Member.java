@@ -2,6 +2,7 @@ package innercircle.member.domain;
 
 import jakarta.persistence.*;
 import lombok.AccessLevel;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.NaturalId;
 import org.hibernate.annotations.NaturalIdCache;
@@ -15,6 +16,7 @@ import java.util.Objects;
         @UniqueConstraint(name = "UK_MEMBER_EMAIL_ADDRESS", columnNames = "email")
 })
 @NaturalIdCache
+@Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Member extends BaseEntity {
 
@@ -70,6 +72,10 @@ public class Member extends BaseEntity {
     private void setPassword(String password) {
         if (password == null || password.length() < 8) {
             throw new IllegalArgumentException("비밀번호는 8글자 이상 입력해주세요");
+        }
+
+        if (password.length() > 20) {
+            throw new IllegalArgumentException("비밀번호는 20글자 이하로 입력해주세요");
         }
         //todo 암호화 필요
         this.password = password;
