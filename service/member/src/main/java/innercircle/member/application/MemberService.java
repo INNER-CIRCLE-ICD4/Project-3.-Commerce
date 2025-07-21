@@ -15,6 +15,8 @@ public class MemberService implements MemberUseCase {
 
     private final MemberRepository memberRepository;
     private final MemberDomainService memberDomainService;
+    private final PasswordEncoderPort passwordEncoderPort;
+
 
     @Override
     public MemberResponse createMember(MemberCreateRequest request) {
@@ -24,7 +26,7 @@ public class MemberService implements MemberUseCase {
         Member member = Member.create(
                 request.email(),
                 request.name(),
-                request.password(),
+                passwordEncoderPort.encode(request.password()),
                 request.birthDate(),
                 request.gender()
         );

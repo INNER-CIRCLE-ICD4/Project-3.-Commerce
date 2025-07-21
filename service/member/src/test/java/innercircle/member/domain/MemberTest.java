@@ -45,14 +45,8 @@ class MemberTest {
     @Test
     @DisplayName("비밀번호가 8글자 이하이다.")
     public void validTest3() {
-        assertThatThrownBy(() -> Member.create("commerce@gmail.com", "노성웅", "1234567", "1996-04-23", "MAIL"))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("비밀번호는 8글자 이상 입력해주세요");
-
-        assertThatThrownBy(() -> Member.create("commerce@gmail.com", "노성웅", "12345".repeat(5), "1996-04-23", "MAIL"))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("비밀번호는 20글자 이하로 입력해주세요");
-
+        assertThatThrownBy(() -> Member.create("commerce@gmail.com", "노성웅", "", "1996-04-23", "MAIL"))
+                .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test

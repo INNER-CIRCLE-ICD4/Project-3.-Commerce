@@ -1,14 +1,17 @@
 package innercircle.member.application;
 
-import innercircle.member.domain.*;
+import innercircle.member.domain.Member;
+import innercircle.member.domain.MemberDomainService;
+import innercircle.member.domain.MemberRepository;
+import innercircle.member.domain.SnowFlakeGenerator;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Import;
 import org.springframework.test.util.ReflectionTestUtils;
-
-import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -24,6 +27,8 @@ class MemberServiceTest {
     @Mock
     private MemberDomainService memberDomainService;
 
+    @Mock
+    private PasswordEncoderPort passwordEncoderPort;
 
     @InjectMocks
     private MemberService memberService;
@@ -35,10 +40,11 @@ class MemberServiceTest {
 
         Member member = Member.create("asdz453@gmail.com", "노성웅", "12345678a", "1996-04-23", "MAIL");
 
-
         long id = SnowFlakeGenerator.GENERATOR.nextId();
         ReflectionTestUtils.setField(member, "id", id);
 
+
+        when(passwordEncoderPort.encode("12345678a")).thenReturn("$2a$12$xlARSI2aAoLcFVWJiMoN..XUvDhME0nXYbaMO2UTaoTT6835QhMcu");
         when(memberDomainService.existsByEmail(memberCreateRequest.email(), memberRepository)).thenReturn(true);
         when(memberRepository.save(any(Member.class))).thenReturn(member);
 

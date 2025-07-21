@@ -5,7 +5,7 @@ import innercircle.commerce.common.snowflake.Snowflake;
 public enum SnowFlakeGenerator {
     GENERATOR;
 
-    private Snowflake snowflake;
+    private final Snowflake snowflake;
 
     SnowFlakeGenerator() {
         this.snowflake = new Snowflake();
