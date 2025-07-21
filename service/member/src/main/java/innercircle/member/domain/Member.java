@@ -54,6 +54,8 @@ public class Member extends BaseEntity {
         member.setPassword(password);
         member.setBirthDate(birthDate);
         member.setGender(gender);
+        member.status = MemberStatus.ACTIVE;
+        member.createAt = LocalDateTime.now();
 
         return member;
     }

@@ -10,12 +10,12 @@ import lombok.Getter;
 public abstract class BaseEntity {
 
     @Id
-    private Long memberId;
+    private Long id;
 
     @PrePersist
     private void ensureId() {
-        if (this.memberId == null) {
-            this.memberId = SnowFlakeGenerator.GENERATOR.nextId();
+        if (this.id == null) {
+            this.id = SnowFlakeGenerator.GENERATOR.nextId();
         }
     }
 

@@ -19,7 +19,6 @@ class MemberTest {
         assertThat(member.getName()).isEqualTo("노성웅");
     }
 
-
     @Test
     @DisplayName("이메일 형식이 올바르지 않음.")
     void validTest1() {
