@@ -11,6 +11,8 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Objects;
 
+import static innercircle.member.domain.ValidationMember.*;
+
 @Entity
 @Table(name = "member", uniqueConstraints = {
         @UniqueConstraint(name = "UK_MEMBER_EMAIL_ADDRESS", columnNames = "email")
@@ -45,7 +47,6 @@ public class Member extends BaseEntity {
     @Column(name = "create_at", nullable = false)
     private LocalDateTime createAt;
 
-
     public static Member create(String email, String name, String password, String birthDate, String gender) {
 
         Member member = new Member();
@@ -61,45 +62,24 @@ public class Member extends BaseEntity {
     }
 
     private void setName(String name) {
-        if (name.isBlank()) {
-            throw new IllegalArgumentException("이름은 필수로 입력해야합니다.");
-        }
-
-        if (name.length() > 10) {
-            throw new IllegalArgumentException("이름은 10글자를 넘을 수 없습니다. name : " + name);
-        }
+        validationNameCheck(name);
         this.name = name;
     }
 
     private void setPassword(String password) {
-        if (password == null || password.length() < 8) {
-            throw new IllegalArgumentException("비밀번호는 8글자 이상 입력해주세요");
-        }
-
-        if (password.length() > 20) {
-            throw new IllegalArgumentException("비밀번호는 20글자 이하로 입력해주세요");
-        }
-        //todo 암호화 필요
+        validatePassword(password);
         this.password = password;
     }
 
     private void setBirthDate(String birthDate) {
-
-        try {
-            this.birthDate = LocalDate.parse(birthDate);
-        }catch (Exception e) {
-            throw new IllegalArgumentException("생년월일 형식이 올바르지 않습니다. birth_date : " + birthDate);
-        }
+        validBirthDate(birthDate);
+        this.birthDate = LocalDate.parse(birthDate);
     }
 
     private void setGender(String gender) {
-        try {
-            this.gender = Gender.valueOf(gender);
-        } catch (Exception e) {
-            throw new IllegalArgumentException("성별 형식 올바르지 않습니다. gender : " + gender);
-        }
+        validGender(gender);
+        this.gender = Gender.valueOf(gender);
     }
-
 
     @Override
     public boolean equals(Object o) {
