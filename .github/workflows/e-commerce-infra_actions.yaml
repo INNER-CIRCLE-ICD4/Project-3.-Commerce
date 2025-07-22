@@ -83,10 +83,10 @@ jobs:
         run: |
           echo "🗑️ Cleaning up old images for ${{ matrix.service }}..."
           
-          image_digests=$(aws ecr-public describe-images \
-            --repository-name "infra/${{ matrix.service }}" \
-            --query 'imageDetails[].imageDigest' \ 
-            --output text \ 
+          image_digests=$(aws ecr-public describe-images\
+            --repository-name "infra/${{ matrix.service }}"\
+            --query 'imageDetails[].imageDigest'\ 
+            --output text\ 
             --region ${{ env.AWS_REGION }} 2>/dev/null || echo "")
           
           if [ ! -z "$image_digests" ] && [ "$image_digests" != "" ]; then
@@ -96,9 +96,9 @@ jobs:
             for digest in $image_digests; do 
               if [ ! -z "$digest" ] && [ "$digest" != "None" ]; then
                 echo "🗑️ Deleting image digest: $digest"
-                aws ecr-public batch-delete-image \ 
-                  --repository-name "infra/${{ matrix.service }}" \
-                  --image-ids imageDigest=$digest \
+                aws ecr-public batch-delete-image\ 
+                  --repository-name "infra/${{ matrix.service }}"\
+                  --image-ids imageDigest=$digest\
                   --region ${{ env.AWS_REGION }} || echo "Failed to delete $digest"
               fi
             done
