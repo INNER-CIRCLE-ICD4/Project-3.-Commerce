@@ -116,7 +116,7 @@ jobs:
     needs: [detect-infra-changes]
     if: | 
       github.event_name == 'push' &&
-      githu.ref == 'refs/heads/22-msa-infra-모듈-cicd-적용-및-cicd-개선'  &&
+      github.ref == 'refs/heads/22-msa-infra-모듈-cicd-적용-및-cicd-개선'  &&
       needs.build-infra.result == 'success' &&
       needs.detect-infra-changes.outputs.any-infra-changed == 'true'
     strategy:
