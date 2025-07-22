@@ -156,8 +156,8 @@ jobs:
           chmod +x ./gradlew
           ./gradlew :infra:${{ matrix.service }}:build
           
-          docker build -t $ECR_REGISTRY/infra-${{ matrix.service }}:${{ github.sha }} -f infra/${{ matrix.service }}/Dockerfile .
-          docker tag $ECR_REGISTRY/infra-${{ matrix.service }}:${{ github.sha }} $ECR_REGISTRY/infra-${{ matrix.service }}:latest
+          docker build -t $ECR_REGISTRY/infra/${{ matrix.service }}:${{ github.sha }} -f infra/${{ matrix.service }}/Dockerfile .
+          docker tag $ECR_REGISTRY/infra/${{ matrix.service }}:${{ github.sha }} $ECR_REGISTRY/infra/${{ matrix.service }}:latest
 
       - name: Configure AWS credentials (ECR)
         uses: aws-actions/configure-aws-credentials@v4
