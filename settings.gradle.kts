@@ -9,6 +9,7 @@ include(
     "service:review",
     "service:product",
     "service:search",
+
     "infra",
     "infra:gateway",
     "infra:config-server",
