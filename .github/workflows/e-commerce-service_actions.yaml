@@ -1,42 +1,34 @@
-name: Service CI/CD Pipeline
+name: Multi-Module CI/CD Pipeline
 
 on:
   push:
-    branches: [22-msa-infra-모듈-cicd-적용-및-cicd-개선]
-    paths:
-      - 'service/**'
-      - 'common/**'
+    branches: [main]
   pull_request:
-    branches: [22-msa-infra-모듈-cicd-적용-및-cicd-개선]
-    paths:
-      - 'service/**'
-      - 'common/**'
-  workflow_dispatch:
+    branches: [main]
 
+# AWS 설정 정보
 env:
   AWS_REGION: us-east-1
   ECR_REGISTRY: public.ecr.aws/o3q0p5x7
   ECS_CLUSTER: e-commerce
 
+# 1단계: 변경된 파일 감지
 jobs:
-  # ✅ 1단계: 서비스 자동 발견 + 변경 감지
   detect-changes:
     runs-on: ubuntu-latest
     outputs:
-      changed-services: ${{ steps.generate.outputs.changed-services }}
+      services: ${{ steps.filter.outputs.changes }}
       common-changed: ${{ steps.filter.outputs.common }}
       order: ${{ steps.filter.outputs.order }}
       product: ${{ steps.filter.outputs.product }}
       review: ${{ steps.filter.outputs.review }}
       search: ${{ steps.filter.outputs.search }}
+      # ✅ 추가: 변경된 서비스만의 JSON 배열
+      changed-services: ${{ steps.generate-matrix.outputs.changed-services }}
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      # 🎯 변경사항 감지
-      - name: Detect changes
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
         id: filter
-        uses: dorny/paths-filter@v3
         with:
           filters: |
             common:
@@ -51,51 +43,55 @@ jobs:
               - 'service/review/**'
             search:
               - 'service/search/**'
-
-      # 📊 변경된 서비스 목록 생성 (안전한 방식)
-      - name: Generate changed services list
-        id: generate
+          list-files: shell
+      - name: Debug Outputs
         run: |
-          echo "🔍 변경사항 분석 중..."
-          services=""
+          echo "Common Changed: ${{ steps.filter.outputs.common }}"
+          echo "Order Changed: ${{ steps.filter.outputs.order }}"
+          echo "Product Changed: ${{ steps.filter.outputs.product }}"
+          echo "Review Changed: ${{ steps.filter.outputs.review }}"
+          echo "Search Changed: ${{ steps.filter.outputs.search }}"
+
+      # ✅ 새로 추가: 변경된 서비스만 추출
+      - name: Generate changed services matrix
+        id: generate-matrix
+        run: |
+          changed_services='[]'
           
-          common_changed='${{ steps.filter.outputs.common }}'
-          echo "📋 공통 모듈 변경: $common_changed"
+          echo "🔍 변경된 서비스 확인 중..."
           
-          # ✅ 단순한 문자열 방식
-          if [[ "$common_changed" == "true" || "${{ steps.filter.outputs.order }}" == "true" ]]; then
-            services="$services order"
-            echo "✅ order 배포 대상"
-          fi
-          
-          if [[ "$common_changed" == "true" || "${{ steps.filter.outputs.product }}" == "true" ]]; then
-            services="$services product"
-            echo "✅ product 배포 대상"
-          fi
-          
-          if [[ "$common_changed" == "true" || "${{ steps.filter.outputs.review }}" == "true" ]]; then
-            services="$services review"
-            echo "✅ review 배포 대상"
-          fi
-          
-          if [[ "$common_changed" == "true" || "${{ steps.filter.outputs.search }}" == "true" ]]; then
-            services="$services search"
-            echo "✅ search 배포 대상"
-          fi
-          
-          # 공백 제거 후 JSON 배열로 변환
-          services=$(echo $services | xargs)
-          if [[ -n "$services" ]]; then
-            changed_services="[\"$(echo $services | sed 's/ /","/g')\"]"
+          # 공통 모듈 변경 시 모든 서비스 포함
+          if [[ "${{ steps.filter.outputs.common }}" == "true" ]]; then
+            changed_services='["order","product","review","search"]'
+            echo "📋 공통 모듈 변경 - 모든 서비스 배포"
           else
-            changed_services="[]"
+            # 개별 서비스 변경 확인
+            if [[ "${{ steps.filter.outputs.order }}" == "true" ]]; then
+              changed_services=$(echo $changed_services | jq '. + ["order"]')
+              echo "✅ order 배포 대상"
+            fi
+          
+            if [[ "${{ steps.filter.outputs.product }}" == "true" ]]; then
+              changed_services=$(echo $changed_services | jq '. + ["product"]')
+              echo "✅ product 배포 대상"
+            fi
+          
+            if [[ "${{ steps.filter.outputs.review }}" == "true" ]]; then
+              changed_services=$(echo $changed_services | jq '. + ["review"]')
+              echo "✅ review 배포 대상"
+            fi
+          
+            if [[ "${{ steps.filter.outputs.search }}" == "true" ]]; then
+              changed_services=$(echo $changed_services | jq '. + ["search"]')
+              echo "✅ search 배포 대상"
+            fi
           fi
           
           echo "changed-services=$changed_services" >> $GITHUB_OUTPUT
-          echo "🎯 최종 배포 대상: $changed_services"        
+          echo "🎯 최종 배포 대상: $changed_services"
 
 
-  # ✅ 2단계: 변경된 서비스만 빌드 & 테스트
+  # 2단계: 서비스별 병렬 빌드
   build-and-test:
     runs-on: ubuntu-latest
     needs: detect-changes
@@ -121,6 +117,8 @@ jobs:
             ~/.gradle/caches
             ~/.gradle/wrapper
           key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
 
       - name: Build and test service
         run: |
@@ -134,13 +132,13 @@ jobs:
           docker build -t $ECR_REGISTRY/${{ matrix.service }}:${{ github.sha }} -f service/${{ matrix.service }}/Dockerfile .
           docker tag $ECR_REGISTRY/${{ matrix.service }}:${{ github.sha }} $ECR_REGISTRY/${{ matrix.service }}:latest
 
-  # ✅ 3단계: 배포 (변경된 서비스만)
-  deploy-services:
+  # 3단계 이미지 push 및 매포
+  push-to-ecr:
     runs-on: ubuntu-latest
     needs: [detect-changes, build-and-test]
     if: |
       github.event_name == 'push' &&
-      github.ref == 'refs/heads/22-msa-infra-모듈-cicd-적용-및-cicd-개선' &&
+      github.ref == 'refs/heads/main' &&
       needs.build-and-test.result == 'success' &&
       needs.detect-changes.outputs.changed-services != '[]'
     strategy:
@@ -148,19 +146,152 @@ jobs:
       matrix:
         service: ${{ fromJson(needs.detect-changes.outputs.changed-services) }}
     steps:
+      # 🆕 항상 먼저 실행되는 checkout
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # 🔧 재사용 가능한 배포 액션 호출
-      - name: Deploy service
-        uses: ./.github/actions/aws-deploy
+      - name: Set up JDK 21
+        if: steps.deploy-check.outputs.should-deploy == 'true'
+        uses: actions/setup-java@v4
         with:
-          service-name: ${{ matrix.service }}
-          service-path: service/${{ matrix.service }}
-          ecr-registry: ${{ env.ECR_REGISTRY }}
+          java-version: '21'
+          distribution: 'temurin'
+
+      - name: Cache Gradle packages
+        if: steps.deploy-check.outputs.should-deploy == 'true'
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
+
+      - name: Rebuild Docker image
+        if: steps.deploy-check.outputs.should-deploy == 'true'
+        run: |
+
+          echo "🔄 Rebuilding Docker image for push..."
+
+          echo "🔨 Building ${{ matrix.service }} service..."
+          chmod +x ./gradlew
+          ./gradlew :service:${{ matrix.service }}:build :service:${{ matrix.service }}:test
+
+
+          # Docker 이미지 빌드
+          docker build -t $ECR_REGISTRY/${{ matrix.service }}:${{ github.sha }} -f service/${{ matrix.service }}/Dockerfile .
+          docker tag $ECR_REGISTRY/${{ matrix.service }}:${{ github.sha }} $ECR_REGISTRY/${{ matrix.service }}:latest
+
+      - name: Configure AWS credentials
+        if: steps.deploy-check.outputs.should-deploy == 'true'
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_REGION }}
-          aws-access-key: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          ecs-cluster: ${{ env.ECS_CLUSTER }}
-          gradle-task: :service:${{ matrix.service }}:build
-          cleanup-old-images: 'true'
+
+      - name: Login to Amazon ECR Public
+        if: steps.deploy-check.outputs.should-deploy == 'true'
+        uses: aws-actions/amazon-ecr-login@v2
+        with:
+          registry-type: public
+
+      - name: Create ECR Repository if not exists
+        if: steps.deploy-check.outputs.should-deploy == 'true'
+        run: |
+          aws ecr-public describe-repositories --repository-names ${{ matrix.service }} --region ${{ env.AWS_REGION }} || \
+          aws ecr-public create-repository --repository-name ${{ matrix.service }} --region ${{ env.AWS_REGION }}
+
+      - name: Push to ECR Public
+        if: steps.deploy-check.outputs.should-deploy == 'true'
+        run: |
+          echo "🚀 Pushing images for ${{ matrix.service }}..."
+          docker push $ECR_REGISTRY/${{ matrix.service }}:${{ github.sha }}
+          docker push $ECR_REGISTRY/${{ matrix.service }}:latest
+          echo "✅ ${{ matrix.service }} 이미지 푸시 완료!"
+
+      - name: Configure AWS credentials
+        if: steps.deploy-check.outputs.should-deploy == 'true'
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ap-northeast-2
+
+      - name: Update Task Definition and Deploy to ECS
+        if: steps.deploy-check.outputs.should-deploy == 'true'
+        run: |
+          echo "🔄 ${{ matrix.service }} Task Definition 업데이트 및 ECS 배포 중..."
+
+          # 기존 Task Definition 가져오기
+          aws ecs describe-task-definition \
+            --task-definition ${{ matrix.service }} \
+            --query 'taskDefinition' \
+            --output json > temp-${{ matrix.service }}.json
+
+
+          # jq로 안전하게 필드 제거 및 이미지 업데이트
+          jq --arg image "${{ env.ECR_REGISTRY }}/${{ matrix.service }}:latest" '
+            del(.taskDefinitionArn, .revision, .status, .requiresAttributes, .compatibilities, .registeredAt, .registeredBy) |
+            .containerDefinitions[0].image = $image
+          ' temp-${{ matrix.service }}.json > clean-${{ matrix.service }}.json
+
+          # Task Definition 등록
+          aws ecs register-task-definition \
+            --cli-input-json file://clean-${{ matrix.service }}.json
+
+
+          # 서비스 존재 여부 확인
+               echo "🔍 서비스 존재 여부 확인 중..."
+               if aws ecs describe-services \
+               --cluster e-commerce \
+               --services ${{ matrix.service }}-service \
+               --query 'services[0].status' \
+               --output text 2>/dev/null | grep -q "ACTIVE"; then
+
+               echo "✅ 서비스 ${{ matrix.service }}-service 존재 - 업데이트 진행"
+               aws ecs update-service \
+               --cluster e-commerce \
+               --service ${{ matrix.service }}-service \
+               --task-definition ${{ matrix.service }} \
+               --force-new-deployment
+               echo "🎉 ${{ matrix.service }} 서비스 업데이트 완료!"
+
+               else
+               echo "⚠️ 서비스 ${{ matrix.service }}-service가 존재하지 않습니다."
+               echo "📋 Task Definition '${{ matrix.service }}'이 생성되었습니다."
+               echo "🔧 다음 단계: AWS 콘솔에서 서비스를 생성하세요."
+               echo "   - 클러스터: e-commerce"
+               echo "   - 서비스 이름: ${{ matrix.service }}-service"
+               echo "   - Task Definition: ${{ matrix.service }}:latest"
+               fi
+
+          # 임시 파일 삭제
+               rm temp-${{ matrix.service }}.json clean-${{ matrix.service }}.json
+
+          echo "🎉 ${{ matrix.service }} 배포 시작 완료!"
+
+
+  # 4단계: 빌드 결과 요약
+  pipeline-summary:
+    runs-on: ubuntu-latest
+    needs: [detect-changes, build-and-test, push-to-ecr]
+    if: always()
+    steps:
+      - name: Pipeline Summary
+        run: |
+          echo "## 🚀 Multi-Module CI/CD Pipeline Summary" >> $GITHUB_STEP_SUMMARY
+          echo "| Service | Build & Test | ECR Push | Changed |" >> $GITHUB_STEP_SUMMARY
+          echo "|---------|--------------|----------|---------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Order | ${{ needs.build-and-test.result == 'success' && '✅ 성공' || needs.build-and-test.result == 'failure' && '❌ 실패' || '⏭️ 건너뜀' }} | ${{ needs.push-to-ecr.result == 'success' && '🚀 푸시완료' || needs.push-to-ecr.result == 'failure' && '💥 푸시실패' || '⏭️ 건너뜀' }} | ${{ needs.detect-changes.outputs.order }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Product | ${{ needs.build-and-test.result == 'success' && '✅ 성공' || needs.build-and-test.result == 'failure' && '❌ 실패' || '⏭️ 건너뜀' }} | ${{ needs.push-to-ecr.result == 'success' && '🚀 푸시완료' || needs.push-to-ecr.result == 'failure' && '💥 푸시실패' || '⏭️ 건너뜀' }} | ${{ needs.detect-changes.outputs.product }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Review | ${{ needs.build-and-test.result == 'success' && '✅ 성공' || needs.build-and-test.result == 'failure' && '❌ 실패' || '⏭️ 건너뜀' }} | ${{ needs.push-to-ecr.result == 'success' && '🚀 푸시완료' || needs.push-to-ecr.result == 'failure' && '💥 푸시실패' || '⏭️ 건너뜀' }} | ${{ needs.detect-changes.outputs.review }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Search | ${{ needs.build-and-test.result == 'success' && '✅ 성공' || needs.build-and-test.result == 'failure' && '❌ 실패' || '⏭️ 건너뜀' }} | ${{ needs.push-to-ecr.result == 'success' && '🚀 푸시완료' || needs.push-to-ecr.result == 'failure' && '💥 푸시실패' || '⏭️ 건너뜀' }} | ${{ needs.detect-changes.outputs.search }} |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 📊 Pipeline Details" >> $GITHUB_STEP_SUMMARY
+          echo "- **Event**: ${{ github.event_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Branch**: ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Commit**: ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Common Changed**: ${{ needs.detect-changes.outputs.common-changed }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **ECR Push Condition**: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && '✅ Met' || '❌ Not Met' }}" >> $GITHUB_STEP_SUMMARY
