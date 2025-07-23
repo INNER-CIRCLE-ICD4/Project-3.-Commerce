@@ -34,28 +34,58 @@ jobs:
       - name: Discover services
         id: discover
         run: |
-          echo "🔍 서비스 디렉터리 스캔 중..."
+          echo "🔍 변경사항 분석 중..."
+          changed_services='[]'
           
-          # service/ 디렉터리에서 Dockerfile이 있는 서비스만 감지
-          services=$(find service -maxdepth 1 -type d -exec test -f {}/Dockerfile \; -print | \
-                    sed 's|service/||' | \
-                    grep -v '^$' | \
-                    sort | \
-                    jq -R -s -c 'split("\n")[:-1]')
+          # ✅ 직접 변수로 접근 (동적 객체 접근 제거)
+          common_changed='${{ steps.detect-changes.outputs.common }}'
+          order_changed='${{ steps.detect-changes.outputs.order }}'
+          product_changed='${{ steps.detect-changes.outputs.product }}'
+          review_changed='${{ steps.detect-changes.outputs.review }}'
+          search_changed='${{ steps.detect-changes.outputs.search }}'
           
-          echo "services=$services" >> $GITHUB_OUTPUT
-          echo "📋 발견된 서비스: $services"
+          echo "📋 공통 모듈 변경: $common_changed"
+          echo "📋 Order 변경: $order_changed"
+          echo "📋 Product 변경: $product_changed"
+          echo "📋 Review 변경: $review_changed"
+          echo "📋 Search 변경: $search_changed"
           
-          # paths-filter를 위한 동적 필터 생성
-          filter_config="common:\n  - 'common/**'\n  - 'build.gradle.kts'\n  - 'settings.gradle.kts'\n"
+          # Order 서비스 확인
+          if [[ "$common_changed" == "true" || "$order_changed" == "true" ]]; then
+            changed_services=$(echo $changed_services | jq '. + ["order"]')
+            echo "✅ order 배포 대상에 추가"
+          else
+            echo "⏭️ order 변경사항 없음"
+          fi
           
-          for service in $(echo $services | jq -r '.[]'); do
-            filter_config="${filter_config}${service}:\n  - 'service/${service}/**'\n"
-          done
+          # Product 서비스 확인
+          if [[ "$common_changed" == "true" || "$product_changed" == "true" ]]; then
+            changed_services=$(echo $changed_services | jq '. + ["product"]')
+            echo "✅ product 배포 대상에 추가"
+          else
+            echo "⏭️ product 변경사항 없음"
+          fi
           
-          echo -e "$filter_config" > filters.yml
-          echo "🔧 동적 필터 생성 완료:"
-          cat filters.yml
+          # Review 서비스 확인
+          if [[ "$common_changed" == "true" || "$review_changed" == "true" ]]; then
+            changed_services=$(echo $changed_services | jq '. + ["review"]')
+            echo "✅ review 배포 대상에 추가"
+          else
+            echo "⏭️ review 변경사항 없음"
+          fi
+          
+          # Search 서비스 확인
+          if [[ "$common_changed" == "true" || "$search_changed" == "true" ]]; then
+            changed_services=$(echo $changed_services | jq '. + ["search"]')
+            echo "✅ search 배포 대상에 추가"
+          else
+            echo "⏭️ search 변경사항 없음"
+          fi
+          
+          echo "services-matrix=$changed_services" >> $GITHUB_OUTPUT
+          echo "changed-services=$changed_services" >> $GITHUB_OUTPUT
+          echo "common-changed=$common_changed" >> $GITHUB_OUTPUT
+          echo "🎯 최종 배포 대상: $changed_services"
 
       # 🎯 변경사항 감지 (동적 필터 사용)
       - name: Detect changes
