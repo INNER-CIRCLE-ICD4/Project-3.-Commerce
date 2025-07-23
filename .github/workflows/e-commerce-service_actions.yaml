@@ -95,7 +95,7 @@ jobs:
   build-and-test:
     runs-on: ubuntu-latest
     needs: detect-changes
-    if: needs.discover-and-detect.outputs.changed-services != '[]'
+    if: needs.detect-changes.outputs.changed-services != '[]'
     strategy:
       fail-fast: false
       matrix:
