@@ -20,117 +20,81 @@ env:
 
 jobs:
   # ✅ 1단계: 서비스 자동 발견 + 변경 감지
-  discover-and-detect:
+  detect-changes:
     runs-on: ubuntu-latest
     outputs:
-      services-matrix: ${{ steps.generate-matrix.outputs.services-matrix }}
-      changed-services: ${{ steps.detect-changes.outputs.changed-services }}
-      common-changed: ${{ steps.detect-changes.outputs.common-changed }}
+      changed-services: ${{ steps.generate.outputs.changed-services }}
+      common-changed: ${{ steps.filter.outputs.common }}
+      order: ${{ steps.filter.outputs.order }}
+      product: ${{ steps.filter.outputs.product }}
+      review: ${{ steps.filter.outputs.review }}
+      search: ${{ steps.filter.outputs.search }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # 🔍 서비스 자동 발견
-      - name: Discover services
-        id: discover
-        run: |
-          echo "🔍 변경사항 분석 중..."
-          changed_services='[]'
-          
-          # ✅ 직접 변수로 접근 (동적 객체 접근 제거)
-          common_changed='${{ steps.detect-changes.outputs.common }}'
-          order_changed='${{ steps.detect-changes.outputs.order }}'
-          product_changed='${{ steps.detect-changes.outputs.product }}'
-          review_changed='${{ steps.detect-changes.outputs.review }}'
-          search_changed='${{ steps.detect-changes.outputs.search }}'
-          
-          echo "📋 공통 모듈 변경: $common_changed"
-          echo "📋 Order 변경: $order_changed"
-          echo "📋 Product 변경: $product_changed"
-          echo "📋 Review 변경: $review_changed"
-          echo "📋 Search 변경: $search_changed"
-          
-          # Order 서비스 확인
-          if [[ "$common_changed" == "true" || "$order_changed" == "true" ]]; then
-            changed_services=$(echo $changed_services | jq '. + ["order"]')
-            echo "✅ order 배포 대상에 추가"
-          else
-            echo "⏭️ order 변경사항 없음"
-          fi
-          
-          # Product 서비스 확인
-          if [[ "$common_changed" == "true" || "$product_changed" == "true" ]]; then
-            changed_services=$(echo $changed_services | jq '. + ["product"]')
-            echo "✅ product 배포 대상에 추가"
-          else
-            echo "⏭️ product 변경사항 없음"
-          fi
-          
-          # Review 서비스 확인
-          if [[ "$common_changed" == "true" || "$review_changed" == "true" ]]; then
-            changed_services=$(echo $changed_services | jq '. + ["review"]')
-            echo "✅ review 배포 대상에 추가"
-          else
-            echo "⏭️ review 변경사항 없음"
-          fi
-          
-          # Search 서비스 확인
-          if [[ "$common_changed" == "true" || "$search_changed" == "true" ]]; then
-            changed_services=$(echo $changed_services | jq '. + ["search"]')
-            echo "✅ search 배포 대상에 추가"
-          else
-            echo "⏭️ search 변경사항 없음"
-          fi
-          
-          echo "services-matrix=$changed_services" >> $GITHUB_OUTPUT
-          echo "changed-services=$changed_services" >> $GITHUB_OUTPUT
-          echo "common-changed=$common_changed" >> $GITHUB_OUTPUT
-          echo "🎯 최종 배포 대상: $changed_services"
-
-      # 🎯 변경사항 감지 (동적 필터 사용)
+      # 🎯 변경사항 감지
       - name: Detect changes
-        id: detect-changes
+        id: filter
         uses: dorny/paths-filter@v3
         with:
-          filters: filters.yml
-          list-files: shell
+          filters: |
+            common:
+              - 'common/**'
+              - 'build.gradle.kts'
+              - 'settings.gradle.kts'
+            order:
+              - 'service/order/**'
+            product:
+              - 'service/product/**'
+            review:
+              - 'service/review/**'
+            search:
+              - 'service/search/**'
 
-      # 📊 변경된 서비스 매트릭스 생성
-      - name: Generate services matrix
-        id: generate-matrix
+      # 📊 변경된 서비스 목록 생성
+      - name: Generate changed services list
+        id: generate
         run: |
-          services='${{ steps.discover.outputs.services }}'
-          common_changed='${{ steps.detect-changes.outputs.common }}'
+          echo "🔍 변경사항 분석 중..."
           changed_services='[]'
           
-          echo "🔍 변경사항 분석 중..."
-          echo "📋 전체 서비스: $services"
+          common_changed='${{ steps.filter.outputs.common }}'
           echo "📋 공통 모듈 변경: $common_changed"
+          echo "📋 Order 변경: ${{ steps.filter.outputs.order }}"
+          echo "📋 Product 변경: ${{ steps.filter.outputs.product }}"
+          echo "📋 Review 변경: ${{ steps.filter.outputs.review }}"
+          echo "📋 Search 변경: ${{ steps.filter.outputs.search }}"
           
-          # 각 서비스별 변경사항 확인
-          for service in $(echo $services | jq -r '.[]'); do
-            service_changed=$(echo '${{ steps.detect-changes.outputs }}' | jq -r ".${service}")
-            echo "📋 $service 변경: $service_changed"
+          # 각 서비스별 확인
+          if [[ "$common_changed" == "true" || "${{ steps.filter.outputs.order }}" == "true" ]]; then
+            changed_services=$(echo $changed_services | jq '. + ["order"]')
+            echo "✅ order 배포 대상"
+          fi
           
-            # 공통 모듈 변경되었거나 해당 서비스가 변경된 경우
-            if [[ "$common_changed" == "true" || "$service_changed" == "true" ]]; then
-              changed_services=$(echo $changed_services | jq ". + [\"$service\"]")
-              echo "✅ $service 배포 대상에 추가"
-            else
-              echo "⏭️ $service 변경사항 없음"
-            fi
-          done
+          if [[ "$common_changed" == "true" || "${{ steps.filter.outputs.product }}" == "true" ]]; then
+            changed_services=$(echo $changed_services | jq '. + ["product"]')
+            echo "✅ product 배포 대상"
+          fi
           
-          echo "services-matrix=$changed_services" >> $GITHUB_OUTPUT
+          if [[ "$common_changed" == "true" || "${{ steps.filter.outputs.review }}" == "true" ]]; then
+            changed_services=$(echo $changed_services | jq '. + ["review"]')
+            echo "✅ review 배포 대상"
+          fi
+          
+          if [[ "$common_changed" == "true" || "${{ steps.filter.outputs.search }}" == "true" ]]; then
+            changed_services=$(echo $changed_services | jq '. + ["search"]')
+            echo "✅ search 배포 대상"
+          fi
+          
           echo "changed-services=$changed_services" >> $GITHUB_OUTPUT
-          echo "common-changed=$common_changed" >> $GITHUB_OUTPUT
-          echo "🎯 최종 배포 대상: $changed_services"          
+          echo "🎯 최종 배포 대상: $changed_services"        
 
 
   # ✅ 2단계: 변경된 서비스만 빌드 & 테스트
   build-and-test:
     runs-on: ubuntu-latest
-    needs: discover-and-detect
+    needs: detect-changes
     if: needs.discover-and-detect.outputs.changed-services != '[]'
     strategy:
       fail-fast: false
@@ -169,10 +133,10 @@ jobs:
   # ✅ 3단계: 배포 (변경된 서비스만)
   deploy-services:
     runs-on: ubuntu-latest
-    needs: [discover-and-detect, build-and-test]
+    needs: [detect-changes, build-and-test]
     if: |
       github.event_name == 'push' &&
-      github.ref == 'refs/heads/main' &&
+      github.ref == 'refs/heads/22-msa-infra-모듈-cicd-적용-및-cicd-개선' &&
       needs.build-and-test.result == 'success' &&
       needs.discover-and-detect.outputs.changed-services != '[]'
     strategy:
