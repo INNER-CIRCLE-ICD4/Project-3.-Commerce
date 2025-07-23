@@ -2,9 +2,9 @@ name: Multi-Module CI/CD Pipeline
 
 on:
   push:
-    branches: [22-msa-infra-모듈-cicd-적용-및-cicd-개선]
+    branches: [main]
   pull_request:
-    branches: [22-msa-infra-모듈-cicd-적용-및-cicd-개선]
+    branches: [main]
 
 # AWS 설정 정보
 env:
@@ -95,7 +95,7 @@ jobs:
     needs: detect-changes
     if: |
       github.event_name == 'push' && 
-      github.ref == 'refs/heads/22-msa-infra-모듈-cicd-적용-및-cicd-개선' && 
+      github.ref == 'refs/heads/main' && 
       needs.detect-changes.outputs.changed-services != '[]'
     strategy:
       matrix:
@@ -191,7 +191,7 @@ jobs:
     needs: [detect-changes, build-and-test]
     if: |
       github.event_name == 'push' &&
-      github.ref == 'refs/heads/22-msa-infra-모듈-cicd-적용-및-cicd-개선' &&
+      github.ref == 'refs/heads/main' &&
       needs.build-and-test.result == 'success' &&
       needs.detect-changes.outputs.changed-services != '[]'
     strategy:
