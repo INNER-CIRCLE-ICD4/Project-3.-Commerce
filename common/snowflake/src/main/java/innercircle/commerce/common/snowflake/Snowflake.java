@@ -48,4 +48,5 @@ public class Snowflake {
 		}
 		return currentTimestamp;
 	}
+
 }
