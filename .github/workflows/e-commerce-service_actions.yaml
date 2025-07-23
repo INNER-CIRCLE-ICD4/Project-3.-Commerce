@@ -148,6 +148,12 @@ jobs:
       matrix:
         service: ${{ fromJson(needs.detect-changes.outputs.changed-services) }}
     steps:
+      - name: Skip if no changes
+        if: needs.detect-changes.outputs.changed-services == '[]'
+        run: | 
+          echo "No changes detected, skipping build and test."
+          exit 0
+
       - name: Checkout code
         uses: actions/checkout@v4
 
@@ -193,6 +199,13 @@ jobs:
       matrix:
         service: ${{ fromJson(needs.detect-changes.outputs.changed-services) }}
     steps:
+
+      - name: Skip if no changes
+        if: needs.detect-changes.outputs.changed-services == '[]'
+        run: |
+         echo "No changes detected, skipping build and test."
+          exit 0       
+
       # 🆕 항상 먼저 실행되는 checkout
       - name: Checkout code
         uses: actions/checkout@v4
