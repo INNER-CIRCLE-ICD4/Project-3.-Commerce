@@ -99,7 +99,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        service: ${{ fromJson(needs.discover-and-detect.outputs.changed-services) }}
+        service: ${{ fromJson(needs.detect-changes.outputs.changed-services) }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -142,7 +142,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        service: ${{ fromJson(needs.discover-and-detect.outputs.changed-services) }}
+        service: ${{ fromJson(needs.detect-changes.outputs.changed-services) }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
