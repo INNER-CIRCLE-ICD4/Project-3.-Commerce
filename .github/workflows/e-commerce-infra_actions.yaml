@@ -92,7 +92,7 @@ jobs:
             for digest in $image_digests; do 
               if [ ! -z "$digest" ] && [ "$digest" != "None" ]; then
                 echo "🗑️ Deleting image digest: $digest"
-                aws ecr-public batch-delete-image--repository-name "infra/${{ matrix.service }}" --image-ids imageDigest=$digest --region ${{ env.AWS_REGION }} || echo "Failed to delete $digest"
+                aws ecr-public batch-delete-image --repository-name "infra/${{ matrix.service }}" --image-ids imageDigest=$digest --region ${{ env.AWS_REGION }} || echo "Failed to delete $digest"
               fi
             done
           
@@ -101,11 +101,8 @@ jobs:
             echo "ℹ️ No existing images found in infra/${{ matrix.service }} repository"
           fi
           
-          
+        
           # 오래된 이미지 삭제 (
-  
-  
-  
 
   build-infra:
     runs-on: ubuntu-latest
