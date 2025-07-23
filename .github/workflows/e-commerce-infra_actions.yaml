@@ -102,7 +102,7 @@ jobs:
           fi
           
         
-          # 오래된 이미지 삭제 (
+          # ✅오래된 이미지 삭제
 
   build-infra:
     runs-on: ubuntu-latest

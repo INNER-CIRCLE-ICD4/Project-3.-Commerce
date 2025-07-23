@@ -90,6 +90,53 @@ jobs:
           echo "changed-services=$changed_services" >> $GITHUB_OUTPUT
           echo "🎯 최종 배포 대상: $changed_services"
 
+  cleanup-ecr-images:
+    runs-on: ubuntu-latest
+    needs: detect-changes
+    if: |
+      github.event_name == 'push' && 
+      github.ref == 'refs/heads/22-msa-infra-모듈-cicd-적용-및-cicd-개선' && 
+      needs.detect-changes.outputs.changed-services != '[]'
+    strategy:
+      matrix:
+        service: ${{ fromJson(needs.detect-changes.outputs.changed-services) }}
+    steps:
+      - name: Configure AWS credentials (ECR)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR Public
+        uses: aws-actions/amazon-ecr-login@v2
+        with:
+          registry-type: public
+
+      - name: Cleanup old Images
+        run: |
+          echo "🗑️ Cleaning up old images for ${{ matrix.service }}..."
+          
+          image_digests=$(aws ecr-public describe-images --repository-name "${{ matrix.service }}" --query 'imageDetails[].imageDigest'  --output text --region ${{ env.AWS_REGION }} 2>/dev/null || echo "")
+          
+          if [ ! -z "$image_digests" ] && [ "$image_digests" != "" ]; then
+            image_count=$(echo $image_digests | wc -w)
+            echo "🔍 Found $image_count existing images to delete"
+          
+            for digest in $image_digests; do 
+              if [ ! -z "$digest" ] && [ "$digest" != "None" ]; then
+                echo "🗑️ Deleting image digest: $digest"
+                aws ecr-public batch-delete-image --repository-name "${{ matrix.service }}" --image-ids imageDigest=$digest --region ${{ env.AWS_REGION }} || echo "Failed to delete $digest"
+              fi
+            done
+          
+            echo "✅ Successfully deleted all $image_count existing images from ${{ matrix.service }}"
+          else
+            echo "ℹ️ No existing images found in ${{ matrix.service }} repository"
+          fi
+          
+          
+          # 오래된 이미지 삭제
 
   # 2단계: 서비스별 병렬 빌드
   build-and-test:
