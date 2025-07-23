@@ -52,39 +52,43 @@ jobs:
             search:
               - 'service/search/**'
 
-      # 📊 변경된 서비스 목록 생성
+      # 📊 변경된 서비스 목록 생성 (안전한 방식)
       - name: Generate changed services list
         id: generate
         run: |
           echo "🔍 변경사항 분석 중..."
-          changed_services='[]'
+          services=""
           
           common_changed='${{ steps.filter.outputs.common }}'
           echo "📋 공통 모듈 변경: $common_changed"
-          echo "📋 Order 변경: ${{ steps.filter.outputs.order }}"
-          echo "📋 Product 변경: ${{ steps.filter.outputs.product }}"
-          echo "📋 Review 변경: ${{ steps.filter.outputs.review }}"
-          echo "📋 Search 변경: ${{ steps.filter.outputs.search }}"
           
-          # 각 서비스별 확인
+          # ✅ 단순한 문자열 방식
           if [[ "$common_changed" == "true" || "${{ steps.filter.outputs.order }}" == "true" ]]; then
-            changed_services=$(echo $changed_services | jq '. + ["order"]')
+            services="$services order"
             echo "✅ order 배포 대상"
           fi
           
           if [[ "$common_changed" == "true" || "${{ steps.filter.outputs.product }}" == "true" ]]; then
-            changed_services=$(echo $changed_services | jq '. + ["product"]')
+            services="$services product"
             echo "✅ product 배포 대상"
           fi
           
           if [[ "$common_changed" == "true" || "${{ steps.filter.outputs.review }}" == "true" ]]; then
-            changed_services=$(echo $changed_services | jq '. + ["review"]')
+            services="$services review"
             echo "✅ review 배포 대상"
           fi
           
           if [[ "$common_changed" == "true" || "${{ steps.filter.outputs.search }}" == "true" ]]; then
-            changed_services=$(echo $changed_services | jq '. + ["search"]')
+            services="$services search"
             echo "✅ search 배포 대상"
+          fi
+          
+          # 공백 제거 후 JSON 배열로 변환
+          services=$(echo $services | xargs)
+          if [[ -n "$services" ]]; then
+            changed_services="[\"$(echo $services | sed 's/ /","/g')\"]"
+          else
+            changed_services="[]"
           fi
           
           echo "changed-services=$changed_services" >> $GITHUB_OUTPUT
