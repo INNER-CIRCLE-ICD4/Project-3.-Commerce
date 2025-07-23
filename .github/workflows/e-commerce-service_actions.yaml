@@ -155,7 +155,7 @@ jobs:
 
       # 🔧 재사용 가능한 배포 액션 호출
       - name: Deploy service
-        uses: ./.github/actions/aws-deploy.yml
+        uses: ./.github/actions/aws-deploy
         with:
           service-name: ${{ matrix.service }}
           service-path: service/${{ matrix.service }}
