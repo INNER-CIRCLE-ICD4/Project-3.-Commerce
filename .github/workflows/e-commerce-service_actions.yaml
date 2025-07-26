@@ -89,6 +89,7 @@ jobs:
               changed_services=$(echo $changed_services | jq '. + ["search"]')
               echo "✅ search 배포 대상"
             fi
+          
             if [[ "${{ steps.filter.outputs.member }}" == "true" ]]; then
               changed_services=$(echo $changed_services | jq '. + ["member"]')
               echo "✅ member 배포 대상"
