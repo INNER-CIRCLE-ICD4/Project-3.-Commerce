@@ -25,5 +25,7 @@ public abstract class BaseEntity {
     @Override
     public abstract int hashCode();
 
+
+
 }
 
