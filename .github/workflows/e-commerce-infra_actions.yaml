@@ -1,0 +1,315 @@
+name: Infrastructure CI/CD Pipeline
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+env:
+  AWS_REGION: us-east-1
+  ECR_REGISTRY: public.ecr.aws/o3q0p5x7
+  ECS_CLUSTER: e-commerce  # infra 전용 클러스터
+
+
+jobs:
+  detect-infra-changes:
+    runs-on: ubuntu-latest
+    outputs:
+      common-changed: ${{ steps.filter.outputs.common }}
+      config-server: ${{ steps.filter.outputs.config-server }}
+      eureka-server: ${{ steps.filter.outputs.eureka-server }}
+      gateway: ${{ steps.filter.outputs.gateway }}
+      any-infra-changed: ${{ steps.check.outputs.any-changed }}
+      changed-services: ${{ steps.generate-matrix.outputs.changed-services }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            common: 
+              - 'common/**'
+              - 'build.gradle.kts'
+              - 'settings.gradle.kts'
+            config-server: 
+              - 'infra/config-server/**'
+            eureka-server:
+              - 'infra/eureka-server/**'
+            gateway: 
+              - 'infra/gateway/**'
+
+      - name: Generate changed services matrix
+        id: generate-matrix
+        run: |
+          changed_services='[]'
+          
+          echo "🔍 변경된 서비스 확인 중..."
+          
+          # 공통 모듈 변경 시 모든 서비스 포함
+          if [[ "${{ steps.filter.outputs.common }}" == "true" ]]; then
+            changed_services='["order","product","review","search"]'
+            echo "📋 공통 모듈 변경 - 모든 서비스 배포"
+          else
+            # 개별 서비스 변경 확인
+            if [[ "${{ steps.filter.outputs.config-server }}" == "true" ]]; then
+              changed_services=$(echo $changed_services | jq '. + ["config-server"]')
+              echo "✅ order 배포 대상"
+            fi
+          
+            if [[ "${{ steps.filter.outputs.eureka-server }}" == "true" ]]; then
+              changed_services=$(echo $changed_services | jq '. + ["eureka-server"]')
+              echo "✅ product 배포 대상"
+            fi
+          
+            if [[ "${{ steps.filter.outputs.gateway }}" == "true" ]]; then
+              changed_services=$(echo $changed_services | jq '. + ["gateway"]')
+              echo "✅ review 배포 대상"
+            fi
+          fi
+          
+          echo "changed-services=$changed_services" >> $GITHUB_OUTPUT
+          echo "🎯 최종 배포 대상: $changed_services"
+
+  cleanup-ecr-images:
+    runs-on: ubuntu-latest
+    needs: detect-infra-changes
+    if: |
+      github.event_name == 'push' && 
+      github.ref == 'refs/heads/main' && 
+      needs.detect-infra-changes.outputs.changed-services != '[]'
+    strategy:
+      matrix:
+        service: ${{ fromJson(needs.detect-infra-changes.outputs.changed-services) }}
+    steps:
+      - name: Configure AWS credentials (ECR)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR Public
+        uses: aws-actions/amazon-ecr-login@v2
+        with:
+          registry-type: public
+
+      - name: Cleanup old Images
+        run: |
+          echo "🗑️ Cleaning up old images for ${{ matrix.service }}..."
+          
+          image_digests=$(aws ecr-public describe-images --repository-name "infra/${{ matrix.service }}" --query 'imageDetails[].imageDigest'  --output text --region ${{ env.AWS_REGION }} 2>/dev/null || echo "")
+          
+          if [ ! -z "$image_digests" ] && [ "$image_digests" != "" ]; then
+            image_count=$(echo $image_digests | wc -w)
+            echo "🔍 Found $image_count existing images to delete"
+          
+            for digest in $image_digests; do 
+              if [ ! -z "$digest" ] && [ "$digest" != "None" ]; then
+                echo "🗑️ Deleting image digest: $digest"
+                aws ecr-public batch-delete-image --repository-name "infra/${{ matrix.service }}" --image-ids imageDigest=$digest --region ${{ env.AWS_REGION }} || echo "Failed to delete $digest"
+              fi
+            done
+          
+            echo "✅ Successfully deleted all $image_count existing images from infra/${{ matrix.service }}"
+          else
+            echo "ℹ️ No existing images found in infra/${{ matrix.service }} repository"
+          fi
+          
+        
+          # ✅오래된 이미지 삭제
+
+  build-infra:
+    runs-on: ubuntu-latest
+    needs: detect-infra-changes
+    if: needs.detect-infra-changes.outputs.changed-services != '[]'
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - service: config-server
+            priority: 1
+          - service: eureka-server
+            priority: 2
+          - service: gateway
+            priority: 3
+    steps:
+      - name: Skip if no changes
+        if: needs.detect-infra-changes.outputs.changed-services != '[]'
+        run: |
+          echo "No changes detected for ${{ matrix.service }}, skipping..."
+          exit 0
+
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+
+      - name: Cache Gradle packages
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-infra-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-infra-
+
+      - name: Build and test infra service
+        run: |
+          echo "🔨 Building ${{ matrix.service }}..."
+          chmod +x ./gradlew
+          ./gradlew :infra:${{ matrix.service }}:build :infra:${{ matrix.service }}:test
+
+      - name: Build Docker Test
+        run: |
+          echo "🐳 Building Docker image for ${{ matrix.service }}..."
+          docker build -t $ECR_REGISTRY/infra/${{ matrix.service }}:${{ github.sha }} -f infra/${{ matrix.service }}/Dockerfile .
+          docker tag $ECR_REGISTRY/infra/${{ matrix.service }}:${{ github.sha }} $ECR_REGISTRY/infra/${{ matrix.service }}:latest
+
+  deploy-infra:
+    runs-on: ubuntu-latest
+    needs: [detect-infra-changes, build-infra]
+    if: |
+      github.event_name == 'push' &&
+      github.ref == 'refs/heads/main'  &&
+      needs.build-infra.result == 'success' &&
+      needs.detect-infra-changes.outputs.changed-services != '[]'
+    strategy:
+      matrix:
+        include:
+          - service: config-server
+            priority: 1
+          - service: eureka-server
+            priority: 2
+          - service: gateway
+            priority: 3
+    steps:
+
+      - name: Skip if no changes
+        if: needs.detect-infra-changes.outputs.changed-services != '[]'
+        run: |
+          echo "No changes detected for ${{ matrix.service }}, skipping deployment..."
+          exit 0
+
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+
+      - name: Rebuild and Push Docker image
+        run: |
+          echo "🔄 Rebuilding ${{ matrix.service }}..."
+          chmod +x ./gradlew
+          ./gradlew :infra:${{ matrix.service }}:build
+          
+          docker build -t $ECR_REGISTRY/infra/${{ matrix.service }}:${{ github.sha }} -f infra/${{ matrix.service }}/Dockerfile .
+          docker tag $ECR_REGISTRY/infra/${{ matrix.service }}:${{ github.sha }} $ECR_REGISTRY/infra/${{ matrix.service }}:latest
+
+      - name: Configure AWS credentials (ECR)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR Public
+        uses: aws-actions/amazon-ecr-login@v2
+        with:
+          registry-type: public
+
+      - name: Push to ECR
+        run: |
+          echo "🚀 Pushing ${{ matrix.service }} to ECR..."
+          docker push $ECR_REGISTRY/infra/${{ matrix.service }}:${{ github.sha }}
+          docker push $ECR_REGISTRY/infra/${{ matrix.service }}:latest
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ap-northeast-2
+
+      - name: Update Task Definition and Deploy to ECS
+        run: |
+          echo "🔄 ${{ matrix.service }} Task Definition 업데이트 및 ECS 배포 중..."
+
+          # 기존 Task Definition 가져오기
+          aws ecs describe-task-definition \
+            --task-definition ${{ matrix.service }} \
+            --query 'taskDefinition' \
+            --output json > temp-${{ matrix.service }}.json
+
+
+          # jq로 안전하게 필드 제거 및 이미지 업데이트
+          jq --arg image "${{ env.ECR_REGISTRY }}/infra/${{ matrix.service }}:latest" '
+            del(.taskDefinitionArn, .revision, .status, .requiresAttributes, .compatibilities, .registeredAt, .registeredBy) |
+            .containerDefinitions[0].image = $image
+          ' temp-${{ matrix.service }}.json > clean-${{ matrix.service }}.json
+
+          # Task Definition 등록
+          aws ecs register-task-definition \
+            --cli-input-json file://clean-${{ matrix.service }}.json
+
+
+          # 서비스 존재 여부 확인
+          echo "🔍 서비스 존재 여부 확인 중..."
+          if aws ecs describe-services \
+          --cluster e-commerce \
+          --services ${{ matrix.service }}-service \
+          --query 'services[0].status' \
+          --output text 2>/dev/null | grep -q "ACTIVE"; then
+          
+          echo "✅ 서비스 ${{ matrix.service }}-service 존재 - 업데이트 진행"
+          aws ecs update-service \
+          --cluster e-commerce \
+          --service ${{ matrix.service }}-service \
+          --task-definition ${{ matrix.service }} \
+          --force-new-deployment
+          echo "🎉 ${{ matrix.service }} 서비스 업데이트 완료!"
+          
+          else
+          echo "⚠️ 서비스 ${{ matrix.service }}-service가 존재하지 않습니다."
+          echo "📋 Task Definition '${{ matrix.service }}'이 생성되었습니다."
+          echo "🔧 다음 단계: AWS 콘솔에서 서비스를 생성하세요."
+          echo "   - 클러스터: e-commerce"
+          echo "   - 서비스 이름: ${{ matrix.service }}-service"
+          echo "   - Task Definition: ${{ matrix.service }}:latest"
+          fi
+
+          # 임시 파일 삭제
+          rm temp-${{ matrix.service }}.json clean-${{ matrix.service }}.json  
+
+          echo "🎉 ${{ matrix.service }} 배포 시작 완료!"
+
+  # 4단계: 빌드 결과 요약
+  pipeline-summary:
+    runs-on: ubuntu-latest
+    needs: [detect-infra-changes, build-infra, deploy-infra]
+    if: always()
+    steps:
+      - name: Pipeline Summary
+        run: |
+          echo "## 🚀 Multi-Module CI/CD Pipeline Summary" >> $GITHUB_STEP_SUMMARY
+          echo "| Service | Build & Test | ECR Push | Changed |" >> $GITHUB_STEP_SUMMARY
+          echo "|---------|--------------|----------|---------|" >> $GITHUB_STEP_SUMMARY
+          echo "| ConfigServer | ${{ needs.build-infra.result == 'success' && '✅ 성공' || needs.build-infra.result == 'failure' && '❌ 실패' || '⏭️ 건너뜀' }} | ${{ needs.deploy-infra.result == 'success' && '🚀 푸시완료' || needs.deploy-infra.result == 'failure' && '💥 푸시실패' || '⏭️ 건너뜀' }} | ${{ needs.detect-infra-changes.outputs.config-server }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| EurekaServer | ${{ needs.build-infra.result == 'success' && '✅ 성공' || needs.build-infra.result == 'failure' && '❌ 실패' || '⏭️ 건너뜀' }} | ${{ needs.deploy-infra.result == 'success' && '🚀 푸시완료' || needs.deploy-infra.result == 'failure' && '💥 푸시실패' || '⏭️ 건너뜀' }} | ${{ needs.detect-infra-changes.outputs.eureka-server }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Gateway | ${{ needs.build-infra.result == 'success' && '✅ 성공' || needs.build-infra.result == 'failure' && '❌ 실패' || '⏭️ 건너뜀' }} | ${{ needs.deploy-infra.result == 'success' && '🚀 푸시완료' || needs.deploy-infra.result == 'failure' && '💥 푸시실패' || '⏭️ 건너뜀' }} | ${{ needs.detect-infra-changes.outputs.gateway }} |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 📊 Pipeline Details" >> $GITHUB_STEP_SUMMARY
+          echo "- **Event**: ${{ github.event_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Branch**: ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Commit**: ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Common Changed**: ${{ needs.detect-infra-changes.outputs.common-changed }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **ECR Push Condition**: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && '✅ Met' || '❌ Not Met' }}" >> $GITHUB_STEP_SUMMARY
