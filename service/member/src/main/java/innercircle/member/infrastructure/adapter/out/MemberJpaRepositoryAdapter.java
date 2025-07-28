@@ -1,8 +1,9 @@
-package innercircle.member.infrastructure;
+package innercircle.member.infrastructure.adapter.out;
 
 import innercircle.member.domain.Email;
 import innercircle.member.domain.Member;
-import innercircle.member.domain.MemberRepository;
+import innercircle.member.application.port.out.MemberRepository;
+import innercircle.member.infrastructure.persistence.MemberJpaRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 

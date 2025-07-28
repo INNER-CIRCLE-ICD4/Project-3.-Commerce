@@ -9,6 +9,8 @@ import org.hibernate.annotations.NaturalIdCache;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
 import static innercircle.member.domain.ValidationMember.*;
@@ -47,6 +49,9 @@ public class Member extends BaseEntity {
     @Column(name = "create_at", nullable = false)
     private LocalDateTime createAt;
 
+    @OneToMany(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<MemberRole> roles = new ArrayList<>();
+
     public static Member create(String email, String name, String password, String birthDate, String gender) {
 
         Member member = new Member();
@@ -57,6 +62,7 @@ public class Member extends BaseEntity {
         member.setGender(gender);
         member.status = MemberStatus.ACTIVE;
         member.createAt = LocalDateTime.now();
+        member.assignBuyerRole();
 
         return member;
     }
@@ -80,6 +86,18 @@ public class Member extends BaseEntity {
         validGender(gender);
         this.gender = Gender.valueOf(gender);
     }
+
+    private void assignBuyerRole() {
+        if (hasRole(RoleType.BUYER)) {
+            throw new IllegalStateException("이미 구매자 역할이 할당되어 있습니다.");
+        }
+        MemberRole.signUp(this);
+    }
+
+    private boolean hasRole(RoleType roleType) {
+        return roles.stream().anyMatch(role -> role.getRoleType() == roleType);
+    }
+
 
     @Override
     public boolean equals(Object o) {
