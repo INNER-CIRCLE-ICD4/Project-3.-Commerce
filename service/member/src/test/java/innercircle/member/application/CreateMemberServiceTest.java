@@ -1,5 +1,7 @@
 package innercircle.member.application;
 
+import innercircle.member.application.port.out.PasswordEncoderPort;
+import innercircle.member.application.service.MemberApplicationService;
 import innercircle.member.domain.Member;
 import innercircle.member.domain.MemberDomainService;
 import innercircle.member.domain.MemberRepository;
@@ -9,8 +11,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Import;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -19,7 +19,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-class MemberServiceTest {
+class CreateMemberServiceTest {
 
     @Mock
     private MemberRepository memberRepository;
@@ -31,7 +31,7 @@ class MemberServiceTest {
     private PasswordEncoderPort passwordEncoderPort;
 
     @InjectMocks
-    private MemberService memberService;
+    private MemberApplicationService memberApplicationService;
 
     @Test
     void 회원_가입_신청_성공() {
@@ -48,7 +48,7 @@ class MemberServiceTest {
         when(memberDomainService.existsByEmail(memberCreateRequest.email(), memberRepository)).thenReturn(true);
         when(memberRepository.save(any(Member.class))).thenReturn(member);
 
-        MemberResponse response = memberService.createMember(memberCreateRequest);
+        MemberResponse response = memberApplicationService.createMember(memberCreateRequest);
 
         assertThat(response.memberId()).isEqualTo(id);
         assertThat(response.name()).isEqualTo(member.getName());

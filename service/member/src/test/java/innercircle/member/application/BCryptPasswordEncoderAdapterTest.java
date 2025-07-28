@@ -1,5 +1,6 @@
 package innercircle.member.application;
 
+import innercircle.member.infrastructure.BCryptPasswordEncoderAdapter;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

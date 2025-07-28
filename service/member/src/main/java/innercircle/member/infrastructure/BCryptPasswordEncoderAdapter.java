@@ -1,8 +1,9 @@
-package innercircle.member.application;
+package innercircle.member.infrastructure;
 
 
 import at.favre.lib.crypto.bcrypt.BCrypt;
 import at.favre.lib.crypto.bcrypt.LongPasswordStrategies;
+import innercircle.member.application.port.out.PasswordEncoderPort;
 import org.springframework.stereotype.Component;
 
 @Component
