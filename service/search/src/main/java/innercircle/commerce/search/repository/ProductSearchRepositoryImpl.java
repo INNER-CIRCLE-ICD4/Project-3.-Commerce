@@ -12,6 +12,7 @@ import org.springframework.data.elasticsearch.core.SearchHit;
 import org.springframework.data.elasticsearch.core.SearchHits;
 import org.springframework.data.elasticsearch.core.query.*;
 import org.springframework.stereotype.Repository;
+import org.springframework.util.StringUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -25,9 +26,59 @@ public class ProductSearchRepositoryImpl implements ProductSearchRepositoryCusto
     
     @Override
     public Page<Product> searchProducts(ProductSearchRequest request, Pageable pageable) {
-        // 모든 문서를 검색하는 간단한 쿼리
-        CriteriaQuery query = new CriteriaQuery(new Criteria());
+        List<Criteria> criteriaList = new ArrayList<>();
+        
+        // 키워드 검색
+        if (StringUtils.hasText(request.getKeyword())) {
+            // Elasticsearch는 텍스트 필드를 토큰화하므로 is() 메서드를 사용하여 토큰 매칭
+            Criteria keywordCriteria = new Criteria("name").is(request.getKeyword()).boost(3.0f)
+                .or(new Criteria("description").is(request.getKeyword()).boost(2.0f))
+                .or(new Criteria("brandName").is(request.getKeyword()).boost(2.0f))
+                .or(new Criteria("categories.name").is(request.getKeyword()));
+            criteriaList.add(keywordCriteria);
+        }
+        
+        // 상태 필터 (활성 상품만)
+        criteriaList.add(new Criteria("status").is("ACTIVE"));
+        
+        // 카테고리 필터
+        if (request.getCategoryIds() != null && !request.getCategoryIds().isEmpty()) {
+            criteriaList.add(new Criteria("categories.id").in(request.getCategoryIds()));
+        }
+        
+        // 브랜드 필터
+        if (request.getBrandIds() != null && !request.getBrandIds().isEmpty()) {
+            criteriaList.add(new Criteria("brandId").in(request.getBrandIds()));
+        }
+        
+        // 가격 필터
+        if (request.getMinPrice() != null || request.getMaxPrice() != null) {
+            Criteria priceCriteria = new Criteria("price.finalPrice");
+            if (request.getMinPrice() != null) {
+                priceCriteria = priceCriteria.greaterThanEqual(request.getMinPrice().doubleValue());
+            }
+            if (request.getMaxPrice() != null) {
+                priceCriteria = priceCriteria.lessThanEqual(request.getMaxPrice().doubleValue());
+            }
+            criteriaList.add(priceCriteria);
+        }
+        
+        // CriteriaQuery 생성
+        CriteriaQuery query;
+        if (!criteriaList.isEmpty()) {
+            Criteria combinedCriteria = criteriaList.get(0);
+            for (int i = 1; i < criteriaList.size(); i++) {
+                combinedCriteria = combinedCriteria.and(criteriaList.get(i));
+            }
+            query = new CriteriaQuery(combinedCriteria);
+        } else {
+            query = new CriteriaQuery(new Criteria());
+        }
+        
         query.setPageable(pageable);
+        
+        // 정렬 적용
+        applySorting(query, request.getSortType());
         
         // 검색 실행
         SearchHits<Product> searchHits = elasticsearchOperations.search(query, Product.class);
@@ -41,6 +92,10 @@ public class ProductSearchRepositoryImpl implements ProductSearchRepositoryCusto
     
     @Override
     public List<String> getAutocompleteSuggestions(String keyword, int size) {
+        if (!StringUtils.hasText(keyword)) {
+            return List.of();
+        }
+        
         Criteria criteria = new Criteria("name.autocomplete").contains(keyword);
         
         CriteriaQuery query = new CriteriaQuery(criteria);
@@ -52,6 +107,7 @@ public class ProductSearchRepositoryImpl implements ProductSearchRepositoryCusto
         return searchHits.stream()
                 .map(hit -> hit.getContent().getName())
                 .distinct()
+                .limit(size)
                 .collect(Collectors.toList());
     }
     
