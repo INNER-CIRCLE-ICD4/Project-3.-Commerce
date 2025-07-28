@@ -1,6 +1,10 @@
-package innercircle.member.application;
+package innercircle.member.application.service;
 
 
+import innercircle.member.application.MemberCreateRequest;
+import innercircle.member.application.MemberResponse;
+import innercircle.member.application.port.in.CreateMemberUseCase;
+import innercircle.member.application.port.out.PasswordEncoderPort;
 import innercircle.member.domain.Member;
 import innercircle.member.domain.MemberDomainService;
 import innercircle.member.domain.MemberRepository;
@@ -11,7 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @Transactional
 @RequiredArgsConstructor
-public class MemberService implements MemberUseCase {
+public class MemberApplicationService implements CreateMemberUseCase {
 
     private final MemberRepository memberRepository;
     private final MemberDomainService memberDomainService;
