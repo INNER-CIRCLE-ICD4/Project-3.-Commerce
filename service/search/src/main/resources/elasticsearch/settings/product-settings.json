@@ -10,12 +10,29 @@
           "stop"
         ]
       },
+      "nori_synonym_analyzer": {
+        "type": "custom",
+        "tokenizer": "nori_tokenizer",
+        "filter": [
+          "nori_part_of_speech",
+          "lowercase",
+          "synonym_filter",
+          "stop"
+        ]
+      },
       "autocomplete_analyzer": {
         "type": "custom",
         "tokenizer": "standard",
         "filter": [
           "lowercase",
           "edge_ngram_filter"
+        ]
+      },
+      "autocomplete_search_analyzer": {
+        "type": "custom",
+        "tokenizer": "standard",
+        "filter": [
+          "lowercase"
         ]
       }
     },

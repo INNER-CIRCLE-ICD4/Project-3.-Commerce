@@ -9,6 +9,8 @@ import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.FieldType;
 import org.springframework.data.elasticsearch.annotations.Setting;
+import org.springframework.data.elasticsearch.annotations.MultiField;
+import org.springframework.data.elasticsearch.annotations.InnerField;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -19,16 +21,20 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Document(indexName = "products")
-@Setting(settingPath = "elasticsearch/settings/product-settings.json")
 public class Product {
     
     @Id
     private String id;
     
-    @Field(type = FieldType.Text, analyzer = "nori_analyzer")
+    @MultiField(
+        mainField = @Field(type = FieldType.Text),
+        otherFields = {
+            @InnerField(suffix = "autocomplete", type = FieldType.Text)
+        }
+    )
     private String name;
     
-    @Field(type = FieldType.Text, analyzer = "nori_analyzer")
+    @Field(type = FieldType.Text)
     private String description;
     
     @Field(type = FieldType.Keyword)
@@ -37,7 +43,7 @@ public class Product {
     @Field(type = FieldType.Long)
     private Long brandId;
     
-    @Field(type = FieldType.Text, analyzer = "nori_analyzer")
+    @Field(type = FieldType.Text)
     private String brandName;
     
     @Field(type = FieldType.Nested)
@@ -63,7 +69,7 @@ public class Product {
         @Field(type = FieldType.Long)
         private Long id;
         
-        @Field(type = FieldType.Text, analyzer = "nori_analyzer")
+        @Field(type = FieldType.Text)
         private String name;
         
         @Field(type = FieldType.Keyword)
