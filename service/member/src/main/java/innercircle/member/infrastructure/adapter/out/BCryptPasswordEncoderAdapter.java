@@ -1,4 +1,4 @@
-package innercircle.member.infrastructure;
+package innercircle.member.infrastructure.adapter.out;
 
 
 import at.favre.lib.crypto.bcrypt.BCrypt;

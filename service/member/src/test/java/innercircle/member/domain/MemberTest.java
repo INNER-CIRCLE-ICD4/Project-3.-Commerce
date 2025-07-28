@@ -66,5 +66,4 @@ class MemberTest {
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("성별 형식 올바르지 않습니다. gender : ");
     }
-
 }

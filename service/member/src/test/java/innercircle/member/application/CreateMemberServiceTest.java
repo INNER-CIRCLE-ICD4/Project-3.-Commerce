@@ -4,7 +4,7 @@ import innercircle.member.application.port.out.PasswordEncoderPort;
 import innercircle.member.application.service.MemberApplicationService;
 import innercircle.member.domain.Member;
 import innercircle.member.domain.MemberDomainService;
-import innercircle.member.domain.MemberRepository;
+import innercircle.member.application.port.out.MemberRepository;
 import innercircle.member.domain.SnowFlakeGenerator;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
