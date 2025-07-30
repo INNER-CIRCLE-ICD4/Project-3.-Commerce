@@ -3,7 +3,7 @@ FROM eclipse-temurin:21-jre-jammy
 
 WORKDIR /app
 
-COPY service/product/build/libs/*.jar app.jar
+COPY service/product/admin/build/libs/*.jar app.jar
 
 EXPOSE 8080
 
