@@ -48,6 +48,5 @@ public class Snowflake {
 			currentTimestamp = System.currentTimeMillis();
 		}
 		return currentTimestamp;
-
 	}
 }
