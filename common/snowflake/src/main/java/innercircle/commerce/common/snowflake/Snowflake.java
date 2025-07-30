@@ -8,6 +8,7 @@ public class Snowflake {
 	private static final int NODE_ID_BITS = 10;
 	private static final int SEQUENCE_BITS = 12;
 
+
 	private static final long maxNodeId = (1L << NODE_ID_BITS) - 1;
 	private static final long maxSequence = (1L << SEQUENCE_BITS) - 1;
 
@@ -32,6 +33,7 @@ public class Snowflake {
 			}
 		} else {
 			sequence = 0;
+
 		}
 
 		lastTimeMillis = currentTimeMillis;
