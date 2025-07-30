@@ -32,7 +32,6 @@ public class Snowflake {
 			}
 		} else {
 			sequence = 0;
-
 		}
 
 		lastTimeMillis = currentTimeMillis;
