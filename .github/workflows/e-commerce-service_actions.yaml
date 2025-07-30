@@ -81,12 +81,12 @@ jobs:
             fi
           
             if [[ "${{ steps.filter.outputs.product-api }}" == "true" ]]; then
-              services+=("product/api")
+              services+=("product:api")
               echo "✅ product 배포 대상"
             fi
           
             if [[ "${{ steps.filter.outputs.product-admin }}" == "true" ]]; then
-              services+=("product/admin")
+              services+=("product:admin")
               echo "✅ product 배포 대상"
             fi
           
