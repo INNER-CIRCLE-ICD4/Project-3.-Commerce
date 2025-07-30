@@ -20,7 +20,8 @@ jobs:
       services: ${{ steps.filter.outputs.changes }}
       common-changed: ${{ steps.filter.outputs.common }}
       order: ${{ steps.filter.outputs.order }}
-      product: ${{ steps.filter.outputs.product }}
+      product-api: ${{ steps.filter.outputs.product-api }}
+      product-admin: ${{ steps.filter.outputs.product-admin }}
       review: ${{ steps.filter.outputs.review }}
       search: ${{ steps.filter.outputs.search }}
       member: ${{ steps.filter.outputs.member }}
@@ -53,7 +54,8 @@ jobs:
         run: |
           echo "Common Changed: ${{ steps.filter.outputs.common }}"
           echo "Order Changed: ${{ steps.filter.outputs.order }}"
-          echo "Product Changed: ${{ steps.filter.outputs.product }}"
+          echo "Product-Api Changed: ${{ steps.filter.outputs.product-api }}"
+          echo "Product-Admin Changed: ${{ steps.filter.outputs.product-admin }}"
           echo "Review Changed: ${{ steps.filter.outputs.review }}"
           echo "Search Changed: ${{ steps.filter.outputs.search }}"
           echo "Member Changed: ${{ steps.filter.outputs.member }}"
@@ -78,7 +80,12 @@ jobs:
               echo "✅ order 배포 대상"
             fi
           
-            if [[ "${{ steps.filter.outputs.product }}" == "true" ]]; then
+            if [[ "${{ steps.filter.outputs.product-api }}" == "true" ]]; then
+              services+=("product")
+              echo "✅ product 배포 대상"
+            fi
+          
+            if [[ "${{ steps.filter.outputs.product-admin }}" == "true" ]]; then
               services+=("product")
               echo "✅ product 배포 대상"
             fi
