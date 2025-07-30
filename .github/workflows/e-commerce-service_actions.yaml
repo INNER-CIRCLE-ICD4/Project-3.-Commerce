@@ -20,7 +20,8 @@ jobs:
       services: ${{ steps.filter.outputs.changes }}
       common-changed: ${{ steps.filter.outputs.common }}
       order: ${{ steps.filter.outputs.order }}
-      product: ${{ steps.filter.outputs.product }}
+      product-api: ${{ steps.filter.outputs.product-api }}
+      product-admin: ${{ steps.filter.outputs.product-admin }}
       review: ${{ steps.filter.outputs.review }}
       search: ${{ steps.filter.outputs.search }}
       member: ${{ steps.filter.outputs.member }}
@@ -38,8 +39,10 @@ jobs:
               - 'settings.gradle.kts'
             order:
               - 'service/order/**'
-            product:
-              - 'service/product/**'
+            product-api:
+              - 'service/product-api/**'
+            product-admin:
+              - 'service/product-admin/**'
             review:
               - 'service/review/**'
             search:
@@ -51,7 +54,8 @@ jobs:
         run: |
           echo "Common Changed: ${{ steps.filter.outputs.common }}"
           echo "Order Changed: ${{ steps.filter.outputs.order }}"
-          echo "Product Changed: ${{ steps.filter.outputs.product }}"
+          echo "Product-Api Changed: ${{ steps.filter.outputs.product-api }}"
+          echo "Product-Admin Changed: ${{ steps.filter.outputs.product-admin }}"
           echo "Review Changed: ${{ steps.filter.outputs.review }}"
           echo "Search Changed: ${{ steps.filter.outputs.search }}"
           echo "Member Changed: ${{ steps.filter.outputs.member }}"
@@ -67,7 +71,12 @@ jobs:
           
           # 공통 모듈 변경 시 모든 서비스 포함 (member 추가!)
           if [[ "${{ steps.filter.outputs.common }}" == "true" ]]; then
-            services=("order" "product" "review" "search" "member")
+            services+=("order")
+            services+=("product-api")
+            services+=("product-admin")
+            services+=("review")
+            services+=("search")
+            services+=("member")
             echo "📋 공통 모듈 변경 - 모든 서비스 배포"
           else
             # 개별 서비스 변경 확인
@@ -76,9 +85,14 @@ jobs:
               echo "✅ order 배포 대상"
             fi
           
-            if [[ "${{ steps.filter.outputs.product }}" == "true" ]]; then
-              services+=("product")
-              echo "✅ product 배포 대상"
+            if [[ "${{ steps.filter.outputs.product-api }}" == "true" ]]; then
+              services+=("product-api")
+              echo "✅ product-api 배포 대상"
+            fi
+          
+            if [[ "${{ steps.filter.outputs.product-admin }}" == "true" ]]; then
+              services+=("product-admin")
+              echo "✅ product-admin 배포 대상"
             fi
           
             if [[ "${{ steps.filter.outputs.review }}" == "true" ]]; then
@@ -356,7 +370,8 @@ jobs:
           echo "| Service | Build & Test | ECR Push | Changed |" >> $GITHUB_STEP_SUMMARY
           echo "|---------|--------------|----------|---------|" >> $GITHUB_STEP_SUMMARY
           echo "| Order | ${{ needs.build-and-test.result == 'success' && '✅ 성공' || needs.build-and-test.result == 'failure' && '❌ 실패' || '⏭️ 건너뜀' }} | ${{ needs.push-to-ecr.result == 'success' && '🚀 푸시완료' || needs.push-to-ecr.result == 'failure' && '💥 푸시실패' || '⏭️ 건너뜀' }} | ${{ needs.detect-changes.outputs.order }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| Product | ${{ needs.build-and-test.result == 'success' && '✅ 성공' || needs.build-and-test.result == 'failure' && '❌ 실패' || '⏭️ 건너뜀' }} | ${{ needs.push-to-ecr.result == 'success' && '🚀 푸시완료' || needs.push-to-ecr.result == 'failure' && '💥 푸시실패' || '⏭️ 건너뜀' }} | ${{ needs.detect-changes.outputs.product }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Product-Api | ${{ needs.build-and-test.result == 'success' && '✅ 성공' || needs.build-and-test.result == 'failure' && '❌ 실패' || '⏭️ 건너뜀' }} | ${{ needs.push-to-ecr.result == 'success' && '🚀 푸시완료' || needs.push-to-ecr.result == 'failure' && '💥 푸시실패' || '⏭️ 건너뜀' }} | ${{ needs.detect-changes.outputs.product-api }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Product-Admin | ${{ needs.build-and-test.result == 'success' && '✅ 성공' || needs.build-and-test.result == 'failure' && '❌ 실패' || '⏭️ 건너뜀' }} | ${{ needs.push-to-ecr.result == 'success' && '🚀 푸시완료' || needs.push-to-ecr.result == 'failure' && '💥 푸시실패' || '⏭️ 건너뜀' }} | ${{ needs.detect-changes.outputs.product-admin }} |" >> $GITHUB_STEP_SUMMARY
           echo "| Review | ${{ needs.build-and-test.result == 'success' && '✅ 성공' || needs.build-and-test.result == 'failure' && '❌ 실패' || '⏭️ 건너뜀' }} | ${{ needs.push-to-ecr.result == 'success' && '🚀 푸시완료' || needs.push-to-ecr.result == 'failure' && '💥 푸시실패' || '⏭️ 건너뜀' }} | ${{ needs.detect-changes.outputs.review }} |" >> $GITHUB_STEP_SUMMARY
           echo "| Search | ${{ needs.build-and-test.result == 'success' && '✅ 성공' || needs.build-and-test.result == 'failure' && '❌ 실패' || '⏭️ 건너뜀' }} | ${{ needs.push-to-ecr.result == 'success' && '🚀 푸시완료' || needs.push-to-ecr.result == 'failure' && '💥 푸시실패' || '⏭️ 건너뜀' }} | ${{ needs.detect-changes.outputs.search }} |" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
