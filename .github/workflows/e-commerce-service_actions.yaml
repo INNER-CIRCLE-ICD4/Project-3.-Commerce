@@ -38,8 +38,10 @@ jobs:
               - 'settings.gradle.kts'
             order:
               - 'service/order/**'
-            product:
-              - 'service/product/**'
+            product-api:
+              - 'service/product/api/**'
+            product-admin:
+              - 'service/product/admin/**'
             review:
               - 'service/review/**'
             search:
