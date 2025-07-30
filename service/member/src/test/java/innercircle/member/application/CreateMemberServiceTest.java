@@ -44,7 +44,7 @@ class CreateMemberServiceTest {
         ReflectionTestUtils.setField(member, "id", id);
 
 
-        when(passwordEncoderPort.encode("12345678a")).thenReturn("$2a$12$xlARSI2aAoLcFVWJiMoN..XUvDhME0nXYbaMO2UTaoTT6835QhMcu");
+        when(passwordEncoderPort.encode(any())).thenReturn("$2a$12$xlARSI2aAoLcFVWJiMoN..XUvDhME0nXYbaMO2UTaoTT6835QhMcu");
         when(memberDomainService.existsByEmail(memberCreateRequest.email(), memberRepository)).thenReturn(true);
         when(memberRepository.save(any(Member.class))).thenReturn(member);
 

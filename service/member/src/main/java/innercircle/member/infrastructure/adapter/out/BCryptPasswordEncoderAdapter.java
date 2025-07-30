@@ -27,7 +27,15 @@ public class BCryptPasswordEncoderAdapter implements PasswordEncoderPort {
         }
 
         if (rawPassword.length() < 8) {
-            throw new IllegalArgumentException("비밀번호는  8자리 이상 입력할 수 있습니다.");
+            throw new IllegalArgumentException("비밀번호는 8자 이상이어야 합니다.");
+        }
+
+        if (!rawPassword.matches(".*[A-Z].*")) {
+            throw new IllegalArgumentException("비밀번호는 대문자를 포함해야 합니다.");
+        }
+
+        if (!rawPassword.matches(".*[0-9].*")) {
+            throw new IllegalArgumentException("비밀번호는 숫자를 포함해야 합니다.");
         }
 
         if (rawPassword.length() > 72) {
