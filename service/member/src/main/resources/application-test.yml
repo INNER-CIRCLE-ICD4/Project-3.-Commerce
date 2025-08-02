@@ -1,8 +1,3 @@
-server:
-  port: 9004
-  servlet:
-    context-path: /api/v1
-
 spring:
   application:
     name: member
