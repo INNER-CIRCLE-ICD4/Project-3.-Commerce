@@ -8,6 +8,7 @@ include(
     "service:order",
     "service:review",
     "service:product-core",
+    "service:product-infra",
     "service:product-api",
     "service:product-admin",
     "service:search",
