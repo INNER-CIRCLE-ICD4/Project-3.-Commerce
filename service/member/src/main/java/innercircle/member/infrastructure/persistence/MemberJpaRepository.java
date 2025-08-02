@@ -1,4 +1,4 @@
-package innercircle.member.infrastructure;
+package innercircle.member.infrastructure.persistence;
 
 import innercircle.member.domain.Email;
 import innercircle.member.domain.Member;

@@ -1,6 +1,7 @@
 package innercircle.member.domain;
 
 import com.sun.jdi.request.DuplicateRequestException;
+import innercircle.member.application.port.out.MemberRepository;
 import org.springframework.stereotype.Component;
 
 import java.util.Optional;

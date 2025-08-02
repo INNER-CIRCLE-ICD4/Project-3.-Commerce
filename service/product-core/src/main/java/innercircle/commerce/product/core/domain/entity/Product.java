@@ -191,13 +191,36 @@ public class Product {
 	 * 상품 상태를 변경합니다.
 	 * 
 	 * @param newStatus 새로운 상품 상태
-	 * @throws IllegalArgumentException 상태가 null인 경우
+	 * @throws IllegalArgumentException 상태가 null이거나 재고와 상태가 일치하지 않는 경우
 	 */
 	public void changeStatus (ProductStatus newStatus) {
 		if (newStatus == null) {
 			throw new IllegalArgumentException("상품 상태는 필수입니다");
 		}
+		
+		// 재고와 상태 변경 제약 조건 검증
+		validateStatusChange(newStatus);
+		
 		this.status = newStatus;
+		this.updatedAt = LocalDateTime.now();
+	}
+
+	/**
+	 * 상태 변경 시 재고와 상태의 일관성을 검증합니다.
+	 * 
+	 * @param newStatus 변경하려는 상태
+	 * @throws IllegalArgumentException 재고와 상태가 일치하지 않는 경우
+	 */
+	private void validateStatusChange(ProductStatus newStatus) {
+		// 재고가 0인 상품은 SALE로 변경할 수 없음
+		if (this.stock == 0 && newStatus == ProductStatus.SALE) {
+			throw new IllegalArgumentException("재고가 0인 상품은 판매 상태로 변경할 수 없습니다");
+		}
+		
+		// 재고가 있는 상품은 OUTOFSTOCK으로 변경할 수 없음
+		if (this.stock > 0 && newStatus == ProductStatus.OUTOFSTOCK) {
+			throw new IllegalArgumentException("재고가 있는 상품은 품절 상태로 변경할 수 없습니다");
+		}
 	}
 
 	/**
@@ -222,5 +245,42 @@ public class Product {
 	public void updateDetailContent (String newDetailContent) {
 		validateDetailContent(newDetailContent);
 		this.detailContent = newDetailContent;
+	}
+
+	/**
+	 * 상품 기본 정보를 수정합니다.
+	 * 
+	 * @param newName 새로운 상품명
+	 * @param newBasePrice 새로운 기본 가격
+	 * @param newDetailContent 새로운 상세 내용
+	 * @throws IllegalArgumentException 유효하지 않은 값인 경우
+	 */
+	public void updateBasicInfo(String newName, Integer newBasePrice, String newDetailContent) {
+		if (newName == null || newName.trim().isEmpty()) {
+			throw new IllegalArgumentException("상품명은 필수입니다");
+		}
+		
+		if (newBasePrice == null || newBasePrice < 0) {
+			throw new IllegalArgumentException("상품 가격은 0 이상이어야 합니다");
+		}
+		
+		validateDetailContent(newDetailContent);
+		
+		this.name = newName;
+		this.basePrice = newBasePrice;
+		this.detailContent = newDetailContent;
+		this.updatedAt = LocalDateTime.now();
+	}
+
+	/**
+	 * 상품 이미지를 수정합니다.
+	 * 
+	 * @param newImages 새로운 이미지 리스트
+	 * @throws IllegalArgumentException 이미지가 유효하지 않은 경우
+	 */
+	public void updateImages(List<ProductImage> newImages) {
+		ProductImage.validateImages(newImages);
+		this.images = newImages;
+		this.updatedAt = LocalDateTime.now();
 	}
 }

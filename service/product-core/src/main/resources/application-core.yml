@@ -1,0 +1,11 @@
+spring:
+  application:
+    name: commerce-product-core
+
+logging:
+  config: classpath:logback-spring.xml
+  file:
+    # 파일 저장할 경로
+    path: /logs
+  level:
+    innercircle.commerce.product.core: debug

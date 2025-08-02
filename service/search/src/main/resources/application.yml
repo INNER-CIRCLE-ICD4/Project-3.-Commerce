@@ -2,3 +2,11 @@ server.port: 9002
 spring:
   application:
     name: commerce-search-service
+  elasticsearch:
+    uris: http://localhost:9200
+    connection-timeout: 10s
+    socket-timeout: 30s
+  data:
+    elasticsearch:
+      repositories:
+        enabled: true

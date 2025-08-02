@@ -1,6 +1,6 @@
 package innercircle.member.domain;
 
-import innercircle.member.infrastructure.MemberJpaRepository;
+import innercircle.member.infrastructure.persistence.MemberJpaRepository;
 import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -8,6 +8,7 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 
 import java.util.Optional;
 
+import static org.assertj.core.api.Assertions.*;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @DataJpaTest
@@ -28,6 +29,8 @@ public class MemberRepositoryTest {
 
         assertThat(save.getId()).isNotNull();
         assertThat(save.getStatus()).isEqualTo(MemberStatus.ACTIVE);
+        assertThat(save.getRoles()).hasSize(1);
+        assertThat(save.getRoles().get(0).getRoleType()).isEqualTo(RoleType.BUYER);
     }
 
     @Test
@@ -41,8 +44,8 @@ public class MemberRepositoryTest {
 
         Optional<Member> byEmail = memberJpaRepository.findByEmail(new Email("asdz453@gmail.com"));
 
-
         assertThat(byEmail.isPresent()).isTrue();
+        assertThat(byEmail.get().getRoles()).hasSize(1);
     }
 
 }
