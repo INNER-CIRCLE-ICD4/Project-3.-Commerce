@@ -8,4 +8,6 @@ logging:
     # 파일 저장할 경로
     path: /logs
   level:
+    root: warn
+    org.springframework.boot.autoconfigure: warn
     innercircle.commerce.product.core: debug
