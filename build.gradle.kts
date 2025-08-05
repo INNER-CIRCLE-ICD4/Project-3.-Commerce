@@ -40,7 +40,7 @@ allprojects {
 
 
 subprojects {
-    if (path.startsWith(":infra:")) {
+    if (path.startsWith(":infra:") || path.startsWith(":service:member")) {
         dependencyManagement {
             imports {
                 mavenBom("org.springframework.cloud:spring-cloud-dependencies:${property("springCloudVersion")}")

@@ -1,4 +1,4 @@
-package innercircle.configserver.config;
+package innercircle.common.encryption;
 
 import lombok.extern.slf4j.Slf4j;
 import org.jasypt.encryption.StringEncryptor;
@@ -20,6 +20,7 @@ public class JasyptConfig {
     @Bean(name = "jasyptEncryptor")
     public StringEncryptor jasyptStringEncryptor() {
         log.info("password: {}", password);
+
         PooledPBEStringEncryptor encryptor = new PooledPBEStringEncryptor();
         SimplePBEConfig config = new SimplePBEConfig();
 

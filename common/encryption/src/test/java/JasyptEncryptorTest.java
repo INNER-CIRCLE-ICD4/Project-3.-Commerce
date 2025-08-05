@@ -1,19 +1,12 @@
-package innercircle.configserver.config;
-
-import innercircle.common.encryption.JasyptConfig;
-import org.jasypt.encryption.pbe.StandardPBEStringEncryptor;
-import org.jasypt.encryption.pbe.config.SimplePBEConfig;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
 
-import static org.assertj.core.api.Assertions.assertThat;
+class JasyptEncryptorTest {
 
-class JasyptConfigTest {
+    @Test
+    @DisplayName("jasypt 암호화 테스트")
+    void encryptTest() {
 
-//    @Test
-//    void jasyptTest() {
-//
 //        String value = "변경할 데이터";
 //
 //        StandardPBEStringEncryptor encryptor = new StandardPBEStringEncryptor();
@@ -33,5 +26,7 @@ class JasyptConfigTest {
 //
 //        assertThat(encryptedText).isNotEqualTo(value);
 //        assertThat(decryptedText).isEqualTo(value);
-//    }
+
+    }
+
 }

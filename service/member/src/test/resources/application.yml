@@ -1,4 +1,11 @@
+server:
+  servlet:
+    context-path: /api/v1
+  port: 8080
+
 spring:
+  profiles:
+    active: test
   application:
     name: member
   datasource:
@@ -18,3 +25,7 @@ spring:
     properties:
       hibernate:
         format_sql: true
+  cloud:
+    config:
+      enabled: false
+
