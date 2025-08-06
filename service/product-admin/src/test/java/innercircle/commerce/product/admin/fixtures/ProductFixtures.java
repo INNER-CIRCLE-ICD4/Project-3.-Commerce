@@ -22,34 +22,35 @@ public class ProductFixtures {
 				VALID_BRAND_ID,
 				VALID_BASE_PRICE,
 				VALID_STOCK,
+				null, // 옵션 없음
 				ProductImageFixtures.createValidImages(),
 				VALID_DETAIL_CONTENT
 		);
 	}
 
 	public static Product createValidProductWithOptions () {
-		return Product.createWithOptions(
+		return Product.create(
 				VALID_NAME,
 				VALID_CATEGORY_ID,
 				VALID_BRAND_ID,
 				VALID_BASE_PRICE,
 				VALID_STOCK,
+				ProductOptionFixtures.createValidOptions(),
 				ProductImageFixtures.createValidImages(),
-				VALID_DETAIL_CONTENT,
-				ProductOptionFixtures.createValidOptions()
+				VALID_DETAIL_CONTENT
 		);
 	}
 
 	public static Product createProductWithOptions (List<ProductOption> options) {
-		return Product.createWithOptions(
+		return Product.create(
 				VALID_NAME,
 				VALID_CATEGORY_ID,
 				VALID_BRAND_ID,
 				VALID_BASE_PRICE,
 				VALID_STOCK,
+				options,
 				ProductImageFixtures.createValidImages(),
-				VALID_DETAIL_CONTENT,
-				options
+				VALID_DETAIL_CONTENT
 		);
 	}
 
@@ -68,6 +69,7 @@ public class ProductFixtures {
 				brandId,
 				basePrice,
 				stock,
+				null, // 옵션 없음
 				images,
 				detailContent
 		);

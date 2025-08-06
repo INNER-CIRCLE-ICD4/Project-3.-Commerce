@@ -18,32 +18,20 @@ public record ProductCreateCommand(
 ) {
     /**
      * Command를 도메인 객체로 변환합니다.
-     * 옵션이 있으면 createWithOptions(), 없으면 create()를 호출합니다.
+     * 통합된 create() 메서드를 사용합니다.
      * 
      * @return 생성된 Product 도메인 객체
      */
     public Product toDomain() {
-        if (options == null || options.isEmpty()) {
-            return Product.create(
-                    name,
-                    leafCategoryId,
-                    brandId,
-                    basePrice,
-                    stock,
-                    images,
-                    detailContent
-            );
-        } else {
-            return Product.createWithOptions(
-                    name,
-                    leafCategoryId,
-                    brandId,
-                    basePrice,
-                    stock,
-                    images,
-                    detailContent,
-                    options
-            );
-        }
+        return Product.create(
+                name,
+                leafCategoryId,
+                brandId,
+                basePrice,
+                stock,
+                options,  // 옵션은 null이나 빈 리스트여도 처리됨
+                images,
+                detailContent
+        );
     }
 }
