@@ -1,4 +1,4 @@
-package innercircle.commerce.product.core.application.exception;
+package innercircle.commerce.product.admin.application.exception;
 
 public class InvalidCategoryException extends RuntimeException {
 	public InvalidCategoryException (Long categoryId) {

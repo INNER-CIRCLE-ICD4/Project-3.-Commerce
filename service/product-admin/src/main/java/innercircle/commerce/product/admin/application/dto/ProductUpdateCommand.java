@@ -1,4 +1,4 @@
-package innercircle.commerce.product.core.application.dto;
+package innercircle.commerce.product.admin.application.dto;
 
 public record ProductUpdateCommand(
         Long productId,
