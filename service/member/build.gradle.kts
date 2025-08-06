@@ -11,6 +11,8 @@ dependencies {
     implementation("org.springframework.cloud:spring-cloud-starter-config")
     // Spring Boot Actuator (설정 새로고침용)
     implementation("org.springframework.boot:spring-boot-starter-actuator")
+
+    implementation(project(":common:encryption"))
 }
 
 // 개발 환경에서만 테스트 비활성화

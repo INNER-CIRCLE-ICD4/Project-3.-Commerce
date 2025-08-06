@@ -6,5 +6,4 @@ public record MemberCreateRequest(
         String password,
         String birthDate,
         String gender) {
-
 }

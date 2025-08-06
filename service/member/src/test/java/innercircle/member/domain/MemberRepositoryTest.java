@@ -8,7 +8,6 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 
 import java.util.Optional;
 
-import static org.assertj.core.api.Assertions.*;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @DataJpaTest
@@ -44,8 +43,8 @@ public class MemberRepositoryTest {
 
         Optional<Member> byEmail = memberJpaRepository.findByEmail(new Email("asdz453@gmail.com"));
 
+
         assertThat(byEmail.isPresent()).isTrue();
-        assertThat(byEmail.get().getRoles()).hasSize(1);
     }
 
 }

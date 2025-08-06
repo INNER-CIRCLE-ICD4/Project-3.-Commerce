@@ -3,13 +3,52 @@ server:
   servlet:
     context-path: /api/v1
 
+jasypt:
+  encryptor:
+    password: ${JASYPT_ENCRYPTOR_PASSWORD}
+    bean: jasyptEncryptor
+
+spring:
+  profiles:
+    group:
+      local: default, local
+      prod: default, prod
+  application:
+    name: member
+
+
+
+---
+
+spring:
+  config:
+    activate:
+      on-profile: local
+    import: optional:configserver:http://admin:${CONFIG_PASSWORD}@localhost:9000
+  datasource:
+    url: ${db_url}
+    driver-class-name: org.postgresql.Driver
+    username: ${db_username}
+    password: ${db_password}
+  jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    hibernate:
+      ddl-auto: create
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+
+---
+
 spring:
   application:
     name: member
-  profiles:
-    active: local
   config:
-    import: optional:configserver:http://admin:1234@localhost:9000
+    activate:
+      on-profile: prod
+    #    import: optional:configserver:http://admin:1234@localhost:9000
+#    import: optional:configserver:http://admin:1234@config-server.commerce.local:8080
   datasource:
     url: ${db_url}
     driver-class-name: org.postgresql.Driver
