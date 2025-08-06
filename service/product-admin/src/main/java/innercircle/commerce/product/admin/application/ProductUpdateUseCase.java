@@ -51,7 +51,13 @@ public class ProductUpdateUseCase {
      */
     public Product changeStatus(ProductStatusChangeCommand command) {
         Product product = findProductById(command.productId());
-        product.changeStatus(command.status());
+        
+        // 새로운 API에 맞게 상태별로 구분하여 호출
+        switch (command.status()) {
+            case SALE -> product.changeToSale();
+            case OUTOFSTOCK -> product.changeToOutOfStock();
+            case CLOSE -> product.changeToClose();
+        }
         
         return productRepository.save(product);
     }
@@ -65,9 +71,13 @@ public class ProductUpdateUseCase {
      */
     public Product changeSaleType(ProductSaleTypeChangeCommand command) {
         Product product = findProductById(command.productId());
-        product.changeSaleType(command.saleType());
         
-        // 3. 상품 저장
+        // 새로운 API에 맞게 판매 타입별로 구분하여 호출
+        switch (command.saleType()) {
+            case NEW -> product.changeToNew();
+            case OLD -> product.changeToOld();
+        }
+        
         return productRepository.save(product);
     }
     

@@ -18,3 +18,4 @@ cloud:
       static: ap-southeast-2
     s3:
       bucket: innercircle-commerce1
+      base-url: s3://innercircle-commerce1
