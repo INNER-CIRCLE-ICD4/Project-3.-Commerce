@@ -1,12 +1,12 @@
-package innercircle.commerce.product.core.fixtures;
+package innercircle.commerce.product.admin.fixtures;
 
-import innercircle.commerce.product.core.application.dto.ProductCreateCommand;
+import innercircle.commerce.product.admin.application.dto.ProductCreateCommand;
 import innercircle.commerce.product.core.domain.entity.ProductImage;
 import innercircle.commerce.product.core.domain.entity.ProductOption;
 
 import java.util.List;
 
-import static innercircle.commerce.product.core.fixtures.ProductFixtures.*;
+import static innercircle.commerce.product.admin.fixtures.ProductFixtures.*;
 
 public class ProductCreateCommandFixtures {
     

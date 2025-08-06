@@ -1,13 +1,13 @@
-package innercircle.commerce.product.core.fixtures;
+package innercircle.commerce.product.admin.fixtures;
 
-import innercircle.commerce.product.core.application.dto.ProductImageUpdateCommand;
-import innercircle.commerce.product.core.application.dto.ProductSaleTypeChangeCommand;
-import innercircle.commerce.product.core.application.dto.ProductStatusChangeCommand;
-import innercircle.commerce.product.core.application.dto.ProductUpdateCommand;
+import innercircle.commerce.product.admin.application.dto.ProductImageUpdateCommand;
+import innercircle.commerce.product.admin.application.dto.ProductSaleTypeChangeCommand;
+import innercircle.commerce.product.admin.application.dto.ProductStatusChangeCommand;
+import innercircle.commerce.product.admin.application.dto.ProductUpdateCommand;
 import innercircle.commerce.product.core.domain.entity.ProductStatus;
 import innercircle.commerce.product.core.domain.entity.SaleType;
 
-import static innercircle.commerce.product.core.fixtures.ProductFixtures.*;
+import static innercircle.commerce.product.admin.fixtures.ProductFixtures.*;
 
 public class ProductUpdateCommandFixtures {
     

@@ -1,15 +1,15 @@
-package innercircle.commerce.product.core.application;
+package innercircle.commerce.product.admin.application;
 
-import innercircle.commerce.product.core.application.dto.ProductCreateCommand;
-import innercircle.commerce.product.core.application.exception.DuplicateProductNameException;
-import innercircle.commerce.product.core.application.exception.InvalidBrandException;
-import innercircle.commerce.product.core.application.exception.InvalidCategoryException;
-import innercircle.commerce.product.core.application.repository.BrandRepository;
-import innercircle.commerce.product.core.application.repository.CategoryRepository;
-import innercircle.commerce.product.core.application.repository.ProductRepository;
+import innercircle.commerce.product.admin.application.dto.ProductCreateCommand;
+import innercircle.commerce.product.admin.application.exception.DuplicateProductNameException;
+import innercircle.commerce.product.admin.application.exception.InvalidBrandException;
+import innercircle.commerce.product.admin.application.exception.InvalidCategoryException;
+import innercircle.commerce.product.admin.application.repository.BrandRepository;
+import innercircle.commerce.product.admin.application.repository.CategoryRepository;
+import innercircle.commerce.product.admin.application.repository.ProductRepository;
 import innercircle.commerce.product.core.domain.entity.Product;
-import innercircle.commerce.product.core.fixtures.ProductCreateCommandFixtures;
-import innercircle.commerce.product.core.fixtures.ProductFixtures;
+import innercircle.commerce.product.admin.fixtures.ProductCreateCommandFixtures;
+import innercircle.commerce.product.admin.fixtures.ProductFixtures;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -17,7 +17,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import static innercircle.commerce.product.core.fixtures.ProductFixtures.*;
+import static innercircle.commerce.product.admin.fixtures.ProductFixtures.*;
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;

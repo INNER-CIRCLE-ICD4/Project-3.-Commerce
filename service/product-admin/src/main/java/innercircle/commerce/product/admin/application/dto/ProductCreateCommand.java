@@ -1,4 +1,4 @@
-package innercircle.commerce.product.core.application.dto;
+package innercircle.commerce.product.admin.application.dto;
 
 import innercircle.commerce.product.core.domain.entity.Product;
 import innercircle.commerce.product.core.domain.entity.ProductImage;

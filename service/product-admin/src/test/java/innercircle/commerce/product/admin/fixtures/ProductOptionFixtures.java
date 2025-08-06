@@ -1,4 +1,4 @@
-package innercircle.commerce.product.core.fixtures;
+package innercircle.commerce.product.admin.fixtures;
 
 import innercircle.commerce.product.core.domain.entity.ProductOption;
 import innercircle.commerce.product.core.domain.entity.ProductOptionItem;
