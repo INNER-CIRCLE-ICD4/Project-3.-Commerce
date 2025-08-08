@@ -1,0 +1,105 @@
+{
+  "products": [
+    {
+      "id": "PROD-TV-001",
+      "name": "삼성 Neo QLED 8K 75인치 스마트TV QN75QN900C",
+      "code": "TV-SAMSUNG-QN75-2024",
+      "detailContent": "<div class='product-detail'><h2>삼성 Neo QLED 8K - 궁극의 화질</h2><p><strong>모델명:</strong> QN75QN900C (2024년형)</p><h3>주요 특징</h3><ul><li>화면 크기: <em>75인치 (189cm)</em></li><li>해상도: <strong>8K Ultra HD (7680 x 4320)</strong></li><li>HDR: Quantum HDR 64x 지원</li><li>프로세서: Neural Quantum 프로세서 8K</li></ul><br/><h3>스마트 기능</h3><p>삼성 Tizen OS 7.0 탑재로 다양한 OTT 서비스를 즐기세요.</p><ul><li>Netflix, YouTube, Disney+ 지원</li><li>게임 모드 Pro (144Hz)</li><li>SmartThings 연동</li></ul><br/><p class='warranty'>품질보증: 2년 무상 A/S</p></div>",
+      "price": 8900000,
+      "categories": ["전자제품", "TV/모니터", "삼성전자", "8K TV"],
+      "productStatus": "ACTIVE",
+      "saleType": "ONLINE"
+    },
+    {
+      "id": "PROD-PHONE-002",
+      "name": "Apple iPhone 15 Pro Max 256GB Natural Titanium",
+      "code": "IPHONE-15PM-256-NT",
+      "detailContent": "<div class='product-description'><h2>iPhone 15 Pro Max - Pro를 넘어선 혁신</h2><p><strong>용량:</strong> 256GB | <strong>색상:</strong> Natural Titanium</p><h3>핵심 스펙</h3><ul><li>디스플레이: 6.7인치 Super Retina XDR</li><li>칩셋: <strong>A17 Pro 칩</strong></li><li>카메라: 48MP 메인, 5배 광학줌</li><li>배터리: 최대 29시간 동영상 재생</li></ul><br/><h3>특별 기능</h3><p>새로운 <em>액션 버튼</em>으로 더 빠른 접근성을 경험하세요.</p><ul><li>ProRAW & ProRes 비디오 촬영</li><li>위성 긴급 SOS</li><li>USB-C (USB 3) 지원</li></ul><p class='note'><small>* 5G 지원 (한국 전 통신사 호환)</small></p></div>",
+      "price": 1900000,
+      "categories": ["전자제품", "스마트폰", "Apple", "iPhone"],
+      "productStatus": "ACTIVE",
+      "saleType": "BOTH"
+    },
+    {
+      "id": "PROD-SHOE-003",
+      "name": "나이키 에어맥스 2024 런닝화 (남녀공용)",
+      "code": "NIKE-AM2024-RUN-270",
+      "detailContent": "<div class='product-info'><h2>Nike Air Max 2024 - 완벽한 쿠셔닝</h2><p>일상과 운동을 아우르는 <strong>프리미엄 런닝화</strong></p><h3>제품 상세</h3><ul><li>소재: 메쉬 + 합성가죽</li><li>중창: <strong>Max Air 유닛 270도</strong></li><li>무게: 약 285g (270mm 기준)</li><li>사이즈: 230mm ~ 310mm</li></ul><br/><h3>기술력</h3><p>Nike의 최신 <em>React 폼</em> 기술이 적용되어 탁월한 반발력을 제공합니다.</p><ul><li>Flyknit 갑피로 통기성 극대화</li><li>와플 아웃솔로 접지력 향상</li><li>반사 소재 적용 (야간 안전성)</li></ul><p class='care-tip'><strong>관리 방법:</strong> 중성세제로 손세탁 권장</p></div>",
+      "price": 189000,
+      "categories": ["패션", "신발", "런닝화", "나이키"],
+      "productStatus": "ACTIVE",
+      "saleType": "BOTH"
+    },
+    {
+      "id": "PROD-BAG-004",
+      "name": "루이비통 모노그램 네버풀 MM 토트백",
+      "code": "LV-NEVERFULL-MM-M45685",
+      "detailContent": "<div class='luxury-product'><h2>Louis Vuitton Neverfull MM</h2><p class='subtitle'>시대를 초월한 <em>아이코닉</em> 토트백</p><h3>제품 사양</h3><ul><li>소재: 모노그램 캔버스</li><li>크기: 31.0 x 28.5 x 17.0 cm</li><li>핸들 드롭: 22.0 cm</li><li>안감: 베이지 스트라이프 직물</li></ul><br/><h3>디자인 특징</h3><p>1854년 창립 이래 루이비통의 <strong>시그니처 모노그램</strong> 패턴</p><ul><li>양면 사용 가능한 리버시블 디자인</li><li>사이드 레이스로 사이즈 조절 가능</li><li>탈부착 가능한 파우치 포함</li><li>내추럴 카우하이드 레더 트리밍</li></ul><p class='authenticity'><strong>정품 인증:</strong> 시리얼 넘버 및 정품 보증서 제공</p></div>",
+      "price": 2450000,
+      "categories": ["패션", "가방", "명품", "루이비통", "토트백"],
+      "productStatus": "ACTIVE",
+      "saleType": "OFFLINE"
+    },
+    {
+      "id": "PROD-BOOK-005",
+      "name": "해리포터 20주년 기념 한국어 특별판 전집 (전7권)",
+      "code": "BOOK-HP-20TH-KOR-SET",
+      "detailContent": "<div class='book-detail'><h2>해리포터 시리즈 20주년 기념판</h2><p><strong>저자:</strong> J.K. 롤링 | <strong>출판사:</strong> 문학수첩</p><h3>구성품</h3><ul><li>제1권: 해리포터와 마법사의 돌</li><li>제2권: 해리포터와 비밀의 방</li><li>제3권: 해리포터와 아즈카반의 죄수</li><li>제4권: 해리포터와 불의 잔</li><li>제5권: 해리포터와 불사조 기사단</li><li>제6권: 해리포터와 혼혈왕자</li><li>제7권: 해리포터와 죽음의 성물</li></ul><br/><h3>특별판 특징</h3><p>20주년을 기념하는 <em>프리미엄 하드커버</em> 에디션</p><ul><li>금박 양장본 제작</li><li>미공개 일러스트 40점 수록</li><li>작가의 친필 서명 인쇄</li><li>호그와트 4개 기숙사 엽서 증정</li></ul><p class='isbn'><small>ISBN: 978-89-8392-513-7</small></p></div>",
+      "price": 198000,
+      "categories": ["도서", "소설", "판타지", "해리포터", "세트도서"],
+      "productStatus": "ACTIVE",
+      "saleType": "BOTH"
+    },
+    {
+      "id": "PROD-FOOD-006",
+      "name": "한우 1++ 등심 스테이크 선물세트 2kg",
+      "code": "HANWOO-1PP-SIRLOIN-2KG",
+      "detailContent": "<div class='food-product'><h2>프리미엄 한우 1++ 등심</h2><p class='grade'>최상급 <strong>1++ 등급</strong> | 국내산 100%</p><h3>상품 구성</h3><ul><li>등심 스테이크용: 200g x 10팩</li><li>총 중량: 2kg</li><li>개체 식별번호 제공</li><li>도축일로부터 72시간 이내 발송</li></ul><br/><h3>품질 특징</h3><p>엄선된 <em>마블링 9등급</em> 이상의 최고급 한우</p><ul><li>육즙이 풍부한 프리미엄 육질</li><li>급속 냉동으로 신선도 유지</li><li>HACCP 인증 시설 가공</li><li>개별 진공포장</li></ul><p class='storage'><strong>보관방법:</strong> -18℃ 이하 냉동보관 (유통기한 6개월)</p><p class='origin'><small>원산지: 국내산 (전북 정읍)</small></p></div>",
+      "price": 580000,
+      "categories": ["식품", "정육", "한우", "선물세트"],
+      "productStatus": "ACTIVE",
+      "saleType": "ONLINE"
+    },
+    {
+      "id": "PROD-COSM-007",
+      "name": "에스티로더 어드밴스드 나이트 리페어 세럼 100ml",
+      "code": "EL-ANR-SERUM-100ML",
+      "detailContent": "<div class='cosmetic-detail'><h2>Estée Lauder Advanced Night Repair</h2><p class='tagline'>밤사이 피부를 되돌리는 <em>안티에이징 세럼</em></p><h3>제품 특징</h3><ul><li>용량: 100ml (약 3개월 사용분)</li><li>피부 타입: 모든 피부</li><li>주요 성분: 히알루론산, 펩타이드</li><li>특허 기술: ChronoluxCB™</li></ul><br/><h3>효능 & 효과</h3><p><strong>8시간 수면 효과</strong>를 선사하는 나이트 세럼</p><ul><li>주름 개선 기능성 인증</li><li>미백 기능성 인증</li><li>72시간 지속 보습</li><li>피부 톤 균일화</li></ul><p class='usage'><strong>사용법:</strong> 저녁 세안 후 토너 다음 단계에 2-3방울 사용</p><p class='caution'><small>* 알레르기 테스트 완료 | 피부과 테스트 완료</small></p></div>",
+      "price": 298000,
+      "categories": ["뷰티", "스킨케어", "세럼", "에스티로더"],
+      "productStatus": "ACTIVE",
+      "saleType": "BOTH"
+    },
+    {
+      "id": "PROD-GAME-008",
+      "name": "PlayStation 5 슬림 디지털 에디션 번들팩",
+      "code": "PS5-SLIM-DIGITAL-BUNDLE-2024",
+      "detailContent": "<div class='gaming-product'><h2>PlayStation 5 Slim Digital Edition</h2><p>차세대 게이밍의 <strong>새로운 기준</strong></p><h3>번들 구성품</h3><ul><li>PS5 슬림 디지털 에디션 본체</li><li>DualSense 무선 컨트롤러 2개</li><li>Spider-Man 2 디지털 코드</li><li>PlayStation Plus 12개월 이용권</li></ul><br/><h3>하드웨어 스펙</h3><p>더 작아진 크기, 더 강력한 성능</p><ul><li>CPU: AMD Ryzen Zen 2 (8코어)</li><li>GPU: 10.28 TFLOPS, AMD RDNA 2</li><li>메모리: 16GB GDDR6</li><li>저장공간: 1TB SSD</li><li>최대 해상도: 8K</li><li>프레임: 최대 120fps (4K)</li></ul><p class='feature'><strong>특별 기능:</strong> 레이 트레이싱, 3D 오디오, 초고속 SSD</p></div>",
+      "price": 598000,
+      "categories": ["게임", "콘솔", "PlayStation", "PS5"],
+      "productStatus": "PRE_ORDER",
+      "saleType": "ONLINE"
+    },
+    {
+      "id": "PROD-FURN-009",
+      "name": "이케아 JÄRVFJÄLLET 인체공학 사무용 의자",
+      "code": "IKEA-JARVFJALLET-OFFICE-CHAIR",
+      "detailContent": "<div class='furniture-detail'><h2>IKEA JÄRVFJÄLLET 야르브피엘레트</h2><p>장시간 작업을 위한 <strong>프리미엄 인체공학 의자</strong></p><h3>제품 사양</h3><ul><li>크기: W68 x D68 x H90-100cm</li><li>좌면 높이: 45-56cm (조절 가능)</li><li>최대 하중: 110kg</li><li>색상: 그레이/블랙</li></ul><br/><h3>인체공학적 설계</h3><p>스웨덴 디자인의 <em>편안함과 기능성</em></p><ul><li>4D 팔걸이 (상하좌우 조절)</li><li>틸트 텐션 조절 기능</li><li>요추 지지대 높이 조절</li><li>메쉬 등받이 (통기성)</li><li>360도 회전 캐스터</li></ul><p class='warranty'><strong>품질보증:</strong> 10년 제한 보증</p><p class='assembly'><small>* 조립 필요 (설명서 및 도구 포함)</small></p></div>",
+      "price": 329000,
+      "categories": ["가구", "의자", "사무용가구", "이케아"],
+      "productStatus": "ACTIVE",
+      "saleType": "BOTH"
+    },
+    {
+      "id": "PROD-WATCH-010",
+      "name": "롤렉스 서브마리너 데이트 126610LN",
+      "code": "ROLEX-SUB-126610LN-2024",
+      "detailContent": "<div class='luxury-watch'><h2>Rolex Submariner Date</h2><p class='model'>Ref. 126610LN - <em>다이버 워치의 전설</em></p><h3>기술 사양</h3><ul><li>케이스: 41mm 오이스터스틸</li><li>무브먼트: 칼리버 3235 (오토매틱)</li><li>파워리저브: 약 70시간</li><li>방수: 300m (1,000피트)</li><li>베젤: 세라크롬 단방향 회전</li></ul><br/><h3>디자인 디테일</h3><p><strong>타임리스한 럭셔리</strong>의 정수</p><ul><li>다이얼: 블랙 라커 (크로마라이트 디스플레이)</li><li>브레이슬릿: 오이스터 (오이스터락 세이프티 클라스프)</li><li>크리스탈: 사파이어 (반사 방지 코팅)</li><li>정확도: -2/+2초 (일일 오차)</li></ul><p class='certification'><strong>인증:</strong> COSC 크로노미터 인증</p><p class='serial'><small>시리얼 넘버: 개별 각인</small></p></div>",
+      "price": 18500000,
+      "categories": ["시계", "명품시계", "롤렉스", "다이버워치"],
+      "productStatus": "LIMITED",
+      "saleType": "OFFLINE"
+    }
+  ],
+  "failOnError": false
+}

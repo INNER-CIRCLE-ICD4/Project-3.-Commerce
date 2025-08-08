@@ -72,7 +72,7 @@ class ProductSearchServiceTest {
                 .id("1")
                 .name("Nike 에어맥스 90 운동화")
                 .description("Nike의 클래식한 에어맥스 시리즈 스니커즈로 편안한 착용감을 제공합니다")
-                .status("ACTIVE")
+                .productStatus("ACTIVE")
                 .brandId(1L)
                 .brandName("나이키")
                 .categories(List.of(category))
@@ -224,7 +224,7 @@ class ProductSearchServiceTest {
                 .id("1")
                 .name("테스트 상품")
                 .description("테스트 설명")
-                .status("ACTIVE")
+                .productStatus("ACTIVE")
                 .brandId(1L)
                 .brandName("테스트 브랜드")
                 .categories(null)  // null 카테고리

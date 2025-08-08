@@ -1,11 +1,11 @@
 package innercircle.commerce.search.controller;
 
-import innercircle.commerce.search.dto.ProductSearchRequest;
-import innercircle.commerce.search.dto.ProductSearchResponse;
+import innercircle.commerce.search.dto.*;
 import innercircle.commerce.search.service.ProductSearchService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -59,18 +59,68 @@ public class ProductSearchController {
     
     @GetMapping("/autocomplete")
     public ResponseEntity<List<String>> getAutocompleteSuggestions(
-            @RequestParam String keyword,
+            @RequestParam String name,
             @RequestParam(defaultValue = "10") Integer size) {
         
-        log.info("자동완성 API 호출: keyword={}, size={}", keyword, size);
-        List<String> suggestions = productSearchService.getAutocompleteSuggestions(keyword, size);
+        log.info("자동완성 API 호출: keyword={}, size={}", name, size);
+        List<String> suggestions = productSearchService.getAutocompleteSuggestions(name, size);
         return ResponseEntity.ok(suggestions);
     }
     
     @PostMapping("/products/index")
-    public ResponseEntity<String> indexProduct(@RequestBody innercircle.commerce.search.domain.Product product) {
-        log.info("상품 색인 API 호출: productId={}", product.getId());
-        productSearchService.indexProduct(product);
+    public ResponseEntity<String> indexProduct(@RequestBody ProductRequest request) {
+        log.info("상품 색인 API 호출: productId={}", request.id());
+        productSearchService.indexProduct(request.toDocument());
         return ResponseEntity.ok("상품이 성공적으로 색인되었습니다.");
+    }
+    
+    @PostMapping("/products/bulk-index")
+    public ResponseEntity<ProductBulkIndexResponse> bulkIndexProducts(
+            @Valid @RequestBody ProductBulkIndexRequest request) {
+        
+        log.info("벌크 상품 색인 API 호출: {} 개 상품", request.getProducts().size());
+        
+        try {
+            ProductBulkIndexResponse response = productSearchService.bulkIndexProducts(request);
+            
+            // 응답 상태 결정
+            if (response.getFailureCount() == 0) {
+                // 모든 상품이 성공적으로 인덱싱됨
+                log.info("벌크 인덱싱 완료: 모든 상품 성공 ({} 개)", response.getSuccessCount());
+                return ResponseEntity.ok(response);
+            } else if (response.getSuccessCount() > 0) {
+                // 부분 성공
+                log.warn("벌크 인덱싱 부분 성공: 성공 {}/{}", 
+                        response.getSuccessCount(), response.getTotalRequested());
+                return ResponseEntity.status(HttpStatus.MULTI_STATUS).body(response);
+            } else {
+                // 모든 상품 실패
+                log.error("벌크 인덱싱 실패: 모든 상품 실패");
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+            }
+            
+        } catch (Exception e) {
+            log.error("벌크 인덱싱 API 처리 중 오류 발생", e);
+            
+            ProductBulkIndexResponse errorResponse = ProductBulkIndexResponse.failure(
+                    "벌크 인덱싱 처리 중 오류 발생: " + e.getMessage()
+            );
+            
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
+        }
+    }
+    
+    @DeleteMapping("/products/{productId}")
+    public ResponseEntity<String> deleteProduct(@PathVariable String productId) {
+        log.info("상품 삭제 API 호출: productId={}", productId);
+        
+        try {
+            productSearchService.deleteProduct(productId);
+            return ResponseEntity.ok("상품이 성공적으로 삭제되었습니다.");
+        } catch (Exception e) {
+            log.error("상품 삭제 중 오류 발생: productId={}", productId, e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("상품 삭제 중 오류가 발생했습니다: " + e.getMessage());
+        }
     }
 }

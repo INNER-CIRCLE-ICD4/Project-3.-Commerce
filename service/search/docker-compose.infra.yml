@@ -2,6 +2,7 @@ version: '3.8'
 
 services:
   elasticsearch:
+    image: commerce/elasticsearch-with-nori:8.17.4
     build:
       context: ./docker/elasticsearch
       dockerfile: Dockerfile
@@ -9,25 +10,31 @@ services:
     environment:
       - discovery.type=single-node
       - xpack.security.enabled=false
-      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+      - ES_JAVA_OPTS=-Xms512m -Xmx512m
     ports:
       - "9200:9200"
       - "9300:9300"
     volumes:
       - elasticsearch-data:/usr/share/elasticsearch/data
       - ./src/main/resources/synonyms.txt:/usr/share/elasticsearch/config/synonyms.txt
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:9200/_cat/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
     networks:
       - commerce-network
 
   kibana:
-    image: docker.elastic.co/kibana/kibana:8.11.1
+    image: docker.elastic.co/kibana/kibana:8.17.4
     container_name: commerce-kibana
     environment:
       - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
     ports:
       - "5601:5601"
     depends_on:
-      - elasticsearch
+      elasticsearch:
+        condition: service_healthy
     networks:
       - commerce-network
 

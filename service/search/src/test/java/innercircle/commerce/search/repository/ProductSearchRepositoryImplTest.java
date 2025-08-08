@@ -471,7 +471,7 @@ class ProductSearchRepositoryImplTest {
                 .id(id)
                 .name(name)
                 .description(description)
-                .status("ACTIVE")
+                .productStatus("ACTIVE")
                 .brandId(brandId)
                 .brandName(brandName)
                 .categories(List.of(category))

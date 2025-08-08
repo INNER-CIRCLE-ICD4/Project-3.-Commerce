@@ -5,14 +5,8 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.Id;
-import org.springframework.data.elasticsearch.annotations.Document;
-import org.springframework.data.elasticsearch.annotations.Field;
-import org.springframework.data.elasticsearch.annotations.FieldType;
-import org.springframework.data.elasticsearch.annotations.Setting;
-import org.springframework.data.elasticsearch.annotations.MultiField;
-import org.springframework.data.elasticsearch.annotations.InnerField;
+import org.springframework.data.elasticsearch.annotations.*;
 
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -20,110 +14,51 @@ import java.util.List;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@Setting(settingPath = "/elasticsearch/product-settings.json")
 @Document(indexName = "products")
 public class Product {
     
     @Id
     private String id;
-    
+
     @MultiField(
-        mainField = @Field(type = FieldType.Text),
+        mainField = @Field(type = FieldType.Text, analyzer = "products_name_analyzer"),
         otherFields = {
-            @InnerField(suffix = "autocomplete", type = FieldType.Text)
+            @InnerField(suffix = "auto_complete", type = FieldType.Search_As_You_Type, analyzer = "nori")
         }
     )
     private String name;
-    
-    @Field(type = FieldType.Text)
-    private String description;
+
+    @Field(type = FieldType.Keyword)
+    private String code;
+
+    @Field(type = FieldType.Integer)
+    private Integer price;
     
     @Field(type = FieldType.Keyword)
-    private String status;
-    
-    @Field(type = FieldType.Long)
-    private Long brandId;
-    
-    @Field(type = FieldType.Text)
-    private String brandName;
-    
-    @Field(type = FieldType.Nested)
-    private List<Category> categories;
-    
-    @Field(type = FieldType.Object)
-    private Price price;
-    
-    @Field(type = FieldType.Nested)
-    private List<Option> options;
-    
-    @Field(type = FieldType.Date, format = {}, pattern = "uuuu-MM-dd'T'HH:mm:ss")
+    private String productStatus;
+
+    @Field(type = FieldType.Keyword)
+    private String saleType;
+
+    @MultiField(
+            mainField = @Field(type = FieldType.Text, analyzer = "products_category_analyzer"),
+            otherFields = {
+                    @InnerField(suffix = "raw", type = FieldType.Keyword)
+            }
+    )
+    private List<String> categories;
+
+    @Field(type = FieldType.Text, analyzer = "products_detail_content_analyzer")
+    private String detailContent;
+
+    @Field(type = FieldType.Integer)
+    private Integer stock;
+
+    @Field(type = FieldType.Date)
     private LocalDateTime createdAt;
-    
-    @Field(type = FieldType.Date, format = {}, pattern = "uuuu-MM-dd'T'HH:mm:ss")
+
+    @Field(type = FieldType.Date)
     private LocalDateTime updatedAt;
-    
-    @Getter
-    @Builder
-    @NoArgsConstructor
-    @AllArgsConstructor
-    public static class Category {
-        @Field(type = FieldType.Long)
-        private Long id;
-        
-        @Field(type = FieldType.Text)
-        private String name;
-        
-        @Field(type = FieldType.Keyword)
-        private String code;
-        
-        @Field(type = FieldType.Integer)
-        private Integer depth;
-        
-        @Field(type = FieldType.Long)
-        private Long parentId;
-    }
-    
-    @Getter
-    @Builder
-    @NoArgsConstructor
-    @AllArgsConstructor
-    public static class Price {
-        @Field(type = FieldType.Double)
-        private BigDecimal originalPrice;
-        
-        @Field(type = FieldType.Double)
-        private BigDecimal discountRate;
-        
-        @Field(type = FieldType.Boolean)
-        private Boolean isDiscount;
-        
-        @Field(type = FieldType.Date, format = {}, pattern = "uuuu-MM-dd'T'HH:mm:ss")
-        private LocalDateTime discountStartDate;
-        
-        @Field(type = FieldType.Date, format = {}, pattern = "uuuu-MM-dd'T'HH:mm:ss")
-        private LocalDateTime discountEndDate;
-        
-        @Field(type = FieldType.Double)
-        private BigDecimal finalPrice;
-    }
-    
-    @Getter
-    @Builder
-    @NoArgsConstructor
-    @AllArgsConstructor
-    public static class Option {
-        @Field(type = FieldType.Long)
-        private Long id;
-        
-        @Field(type = FieldType.Text)
-        private String groupName;
-        
-        @Field(type = FieldType.Text)
-        private String optionName;
-        
-        @Field(type = FieldType.Double)
-        private BigDecimal additionalPrice;
-        
-        @Field(type = FieldType.Integer)
-        private Integer stock;
-    }
+
 }

@@ -13,7 +13,6 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
-import java.math.BigDecimal;
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -43,7 +42,7 @@ class ProductSearchControllerTest {
         ProductSearchResponse.ProductDto productDto = ProductSearchResponse.ProductDto.builder()
                 .id("1")
                 .name("Nike 에어맥스 90 운동화")
-                .description("Nike의 클래식한 에어맥스 시리즈")
+                .detailContent("Nike의 클래식한 에어맥스 시리즈")
                 .status("ACTIVE")
                 .brandId(1L)
                 .brandName("나이키")
