@@ -19,3 +19,7 @@ cloud:
     s3:
       bucket: innercircle-commerce1
       base-url: s3://innercircle-commerce1
+
+app:
+  image:
+    max-file-size: 5242880 # 5MB

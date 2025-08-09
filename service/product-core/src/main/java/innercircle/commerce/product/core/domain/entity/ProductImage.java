@@ -4,6 +4,7 @@ import lombok.Builder;
 import lombok.Getter;
 import org.springframework.util.CollectionUtils;
 
+import java.util.List;
 import java.util.Optional;
 
 @Getter
@@ -24,7 +25,7 @@ public class ProductImage {
 	 * @param images 검증할 상품 이미지 리스트
 	 * @throws IllegalArgumentException 검증 실패 시
 	 */
-	public static void validateImages (java.util.List<ProductImage> images) {
+	public static void validateImages (List<ProductImage> images) {
 		if (CollectionUtils.isEmpty(images)) {
 			throw new IllegalArgumentException("상품 이미지는 최소 1개 이상 필요합니다");
 		}

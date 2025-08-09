@@ -1,9 +1,9 @@
 package innercircle.commerce.product.admin.application.dto;
 
 import innercircle.commerce.product.core.domain.entity.Product;
-import innercircle.commerce.product.core.domain.entity.ProductImage;
 import innercircle.commerce.product.core.domain.entity.ProductOption;
 
+import java.util.Collections;
 import java.util.List;
 
 public record ProductCreateCommand(
@@ -12,13 +12,22 @@ public record ProductCreateCommand(
         Long brandId,
         Integer basePrice,
         Integer stock,
-        List<ProductImage> images,
         String detailContent,
-        List<ProductOption> options
+        List<ProductOption> options,
+        ImageUploadCommand imageCommand
 ) {
     /**
-     * Command를 도메인 객체로 변환합니다.
-     * 통합된 create() 메서드를 사용합니다.
+     * Command 생성 시 검증
+     */
+    public ProductCreateCommand {
+        if (imageCommand == null || imageCommand.files().isEmpty()) {
+            throw new IllegalArgumentException("상품 이미지는 필수입니다");
+        }
+    }
+
+    /**
+     * Command를 도메인 객체로 변환합니다 (이미지 없이).
+     * 이미지는 별도 프로세스에서 처리 후 업데이트됩니다.
      * 
      * @return 생성된 Product 도메인 객체
      */
@@ -29,8 +38,8 @@ public record ProductCreateCommand(
                 brandId,
                 basePrice,
                 stock,
-                options,  // 옵션은 null이나 빈 리스트여도 처리됨
-                images,
+                options != null ? options : Collections.emptyList(),
+                Collections.emptyList(), // 이미지는 나중에 업데이트
                 detailContent
         );
     }
