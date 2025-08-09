@@ -1,4 +1,4 @@
-package innercircle.commerce.product.admin.config;
+package innercircle.commerce.product.infra.config;
 
 import com.amazonaws.auth.AWSStaticCredentialsProvider;
 import com.amazonaws.auth.BasicAWSCredentials;
