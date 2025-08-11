@@ -40,7 +40,7 @@ public class S3ImageStore {
 	 * @return 업로드된 이미지 정보
 	 * @throws IOException 파일 처리 중 오류 발생 시
 	 */
-	public UploadedImageInfo upload (MultipartFile file, String s3Key) throws IOException {
+	public String upload (MultipartFile file, String s3Key) throws IOException {
 		String originalName = file.getOriginalFilename();
 
 		ObjectMetadata metadata = new ObjectMetadata();
@@ -53,15 +53,7 @@ public class S3ImageStore {
 
 		amazonS3Client.putObject(request);
 
-		String url = baseUrl + "/" + s3Key;
-
-		return new UploadedImageInfo(
-				originalName,
-				url,
-				s3Key,
-				file.getSize(),
-				file.getContentType()
-		);
+		return String.format("https://%s.s3.%s.amazonaws.com/%s", bucketName, amazonS3Client.getRegionName(), s3Key);
 	}
 
 	/**
