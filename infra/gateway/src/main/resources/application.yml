@@ -12,13 +12,27 @@ spring:
 ---
 
 spring:
+  reactor:
+    context-propagation: AUTO # WebFlux에서 Reactor 컨텍스트 전파 활성화
+  docker:
+    compose:
+      lifecycle-management: start_only
+      file: infra/gateway/docker-compose.yml
   config:
     activate:
       on-profile: local
+  sleuth: # Micrometer에서도 일부 sleuth 설정 인식
+    reactor:
+      instrumentation-type: decorate_queues  # WebFlux용
   cloud:
     gateway:
       server:
         webflux:
+          default-filters:
+            - name: AddResponseHeader
+              args:
+                name: X-Trace-Id
+                value: "%{traceId}" # 응답 헤더에 traceId 추가 (디버깅용)
           routes:
             - id: review-service
               uri: lb://commerce-review-service
@@ -28,10 +42,44 @@ spring:
               uri: http://localhost:8888
               predicates:
                 - Path=/api/member-service/**
+jwt:
+    secret: ${JWT_SECRET}
+    authority-claim: roles
+    principal-claim: email
+cors:
+  allowed-origins: "http://localhost:3000,http://localhost:5173"
+
+management:
+  tracing:
+    enabled: true
+    sampling:
+      probability: 1.0
+  zipkin:
+    tracing:
+      endpoint: http://localhost:9411/api/v2/spans
+  observations:
+    web:
+      server:
+        enabled: true
+
+logging:
+  pattern:
+    level: "%5p [${spring.application.name},%X{traceId:-},%X{spanId:-}]" # MDC 출력
+  level:
+    root: INFO
+    io.micrometer.tracing: DEBUG # Micrometer Tracing 디버깅
+    reactor.netty: DEBUG # Reactor Netty 디버깅
+    org.springframework.cloud.gateway: DEBUG # Gateway 디버깅
+    zipkin2: DEBUG # Zipkin 디버깅
 
 ---
 
 spring:
+  reactor:
+    context-propagation: AUTO # WebFlux에서 Reactor 컨텍스트 전파 활성화
+  sleuth: # Micrometer에서도 일부 sleuth 설정 인식
+    reactor:
+      instrumentation-type: decorate_queues  # WebFlux용
   config:
     activate:
       on-profile: prod
@@ -48,3 +96,29 @@ spring:
               uri: http://member-service.commerce.local:8080
               predicates:
                 - Path=/api/member-service/**
+
+jwt:
+  secret: ${JWT_SECRET:local-dev-secret-change-me}
+  authority-claim: roles
+  principal-claim: email
+cors:
+  allowed-origins: "http://localhost:3000,http://localhost:5173"
+
+
+# 추적 및 관찰 설정
+management:
+  tracing:
+    enabled: true
+    sampling:
+      probability: 1.0 # 모든 요청 추적 (디버깅용)
+  zipkin:
+    tracing:
+      endpoint: http://localhost:9411/api/v2/spans
+  observations:
+    web:
+      server:
+        enabled: true  # ✅ WebFlux 서버 관찰 활성화
+
+logging:
+  pattern:
+    level: "%5p [${spring.application.name},%X{traceId:-},%X{spanId:-}]" # MDC 출력
