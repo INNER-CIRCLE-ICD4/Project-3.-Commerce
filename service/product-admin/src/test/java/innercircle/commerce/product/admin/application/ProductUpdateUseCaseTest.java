@@ -6,7 +6,7 @@ import innercircle.commerce.product.admin.application.dto.ProductStatusChangeCom
 import innercircle.commerce.product.admin.application.dto.ProductUpdateCommand;
 import innercircle.commerce.product.admin.application.exception.DuplicateProductNameException;
 import innercircle.commerce.product.admin.application.exception.ProductNotFoundException;
-import innercircle.commerce.product.admin.application.repository.ProductRepository;
+import innercircle.commerce.product.core.application.repository.ProductRepository;
 import innercircle.commerce.product.core.domain.entity.Product;
 import innercircle.commerce.product.admin.fixtures.ProductFixtures;
 import innercircle.commerce.product.admin.fixtures.ProductUpdateCommandFixtures;

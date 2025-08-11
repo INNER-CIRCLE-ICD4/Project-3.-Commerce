@@ -37,7 +37,7 @@ public class ImageValidator {
 	public void validate (MultipartFile file) {
 		String originalFilename = file.getOriginalFilename();
 
-		validateFilename(originalFilename);  // 파일명 체크를 먼저
+		validateFilename(originalFilename);
 		validateFileExists(file, originalFilename);
 		validateFileExtension(originalFilename);
 		validateFileSize(file, originalFilename);

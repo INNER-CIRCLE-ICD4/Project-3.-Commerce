@@ -1,9 +1,11 @@
-package innercircle.commerce.product.admin.application.repository;
+package innercircle.commerce.product.core.application.repository;
 
 import innercircle.commerce.product.core.domain.entity.Product;
+import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
 
+@Repository
 public interface ProductRepository {
     /**
      * 상품을 저장합니다.

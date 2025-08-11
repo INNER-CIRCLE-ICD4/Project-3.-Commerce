@@ -1,0 +1,25 @@
+spring:
+  config:
+    import:
+      - classpath:application-core.yml
+
+cloud:
+  aws:
+    credentials:
+      access-key: ${S3_ACCESS_KEY:test-access-key}
+      secret-key: ${S3_SECRET_KEY:test-secret-key}
+    region:
+      static: ap-southeast-2
+    s3:
+      bucket: innercircle-commerce1
+      base-url: s3://innercircle-commerce1
+
+app:
+  image:
+    max-file-size: 5242880 # 5MB
+
+logging:
+  level:
+    org.springframework: WARN
+    innercircle: DEBUG
+    com.amazonaws: WARN

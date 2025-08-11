@@ -1,7 +1,9 @@
 package innercircle.commerce.product.core.domain.entity;
 
+import innercircle.commerce.common.snowflake.Snowflake;
 import lombok.Builder;
 import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 import org.springframework.util.CollectionUtils;
 
 import java.util.List;
@@ -10,8 +12,8 @@ import java.util.Optional;
 @Getter
 @Builder
 public class ProductImage {
-	private Long id;
-	private Long productId;
+	private final Long id;
+	private final Long productId;
 	private String url;
 	private String originalName;
 	private boolean isMain;

@@ -7,8 +7,6 @@ import innercircle.commerce.product.admin.application.dto.ProductUpdateCommand;
 import innercircle.commerce.product.core.domain.entity.ProductStatus;
 import innercircle.commerce.product.core.domain.entity.SaleType;
 
-import static innercircle.commerce.product.admin.fixtures.ProductFixtures.*;
-
 public class ProductUpdateCommandFixtures {
     
     public static final Long EXISTING_PRODUCT_ID = 1L;

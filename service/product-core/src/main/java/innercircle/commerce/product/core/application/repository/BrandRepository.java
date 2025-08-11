@@ -1,5 +1,8 @@
-package innercircle.commerce.product.admin.application.repository;
+package innercircle.commerce.product.core.application.repository;
 
+import org.springframework.stereotype.Repository;
+
+@Repository
 public interface BrandRepository {
     /**
      * 브랜드 ID로 브랜드 존재 여부를 확인합니다.
