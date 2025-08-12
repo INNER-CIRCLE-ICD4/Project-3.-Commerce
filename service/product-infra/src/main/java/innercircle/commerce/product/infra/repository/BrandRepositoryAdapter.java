@@ -9,12 +9,11 @@ import org.springframework.stereotype.Repository;
  */
 @Repository
 @RequiredArgsConstructor
-public class BrandRepositoryImpl implements BrandRepository {
+public class BrandRepositoryAdapter implements BrandRepository {
+	private final BrandJpaRepository brandJpaRepository;
 
-    private final BrandJpaRepository brandJpaRepository;
-
-    @Override
-    public boolean existsById(Long brandId) {
-        return brandJpaRepository.existsById(brandId);
-    }
+	@Override
+	public boolean existsById (Long brandId) {
+		return brandJpaRepository.existsById(brandId);
+	}
 }

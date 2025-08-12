@@ -2,9 +2,6 @@ dependencies {
     // 내부 모듈 의존성
     implementation(project(":service:product-core"))
     implementation(project(":service:product-infra"))
-
-    implementation("org.springframework.boot:spring-boot-starter-web")
-    implementation("org.springframework.boot:spring-boot-starter-data-jpa")
 }
 
 // Admin 모듈도 실행 가능한 애플리케이션
