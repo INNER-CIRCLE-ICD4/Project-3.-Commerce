@@ -7,14 +7,15 @@ import innercircle.commerce.product.admin.web.dto.ImageUploadResponse;
 import innercircle.commerce.product.admin.web.dto.ProductCreateRequest;
 import innercircle.commerce.product.admin.web.dto.ProductCreateResponse;
 import innercircle.commerce.product.core.domain.entity.Product;
+import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import jakarta.validation.Valid;
+
 import java.io.IOException;
 import java.util.List;
 
@@ -24,7 +25,6 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/admin/products")
 @RequiredArgsConstructor
-@Validated
 public class ProductController {
 	private final ImageUploadUseCase imageUploadUseCase;
 	private final ProductCreateUseCase productCreateUseCase;
@@ -36,14 +36,14 @@ public class ProductController {
 	 * @return 등록된 상품 정보
 	 */
 	@PostMapping
-	public ResponseEntity<ApiResponse<ProductCreateResponse>> createProduct(
+	public ResponseEntity<ApiResponse<ProductCreateResponse>> createProduct (
 			@Valid @RequestBody ProductCreateRequest request
 	) {
 		Product createdProduct = productCreateUseCase.create(request.toCommand());
 		ProductCreateResponse response = ProductCreateResponse.from(createdProduct);
-		
+
 		return ResponseEntity.status(HttpStatus.CREATED)
-				.body(ApiResponse.success(response));
+							 .body(ApiResponse.success(response));
 	}
 
 	/**

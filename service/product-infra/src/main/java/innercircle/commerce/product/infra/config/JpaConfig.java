@@ -10,7 +10,6 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
  */
 @Configuration
 @EnableJpaAuditing
-@EnableJpaRepositories(basePackages = "innercircle.commerce.product.infra.repository")
 @EntityScan(basePackages = "innercircle.commerce.product.infra.entity")
 public class JpaConfig {
 }

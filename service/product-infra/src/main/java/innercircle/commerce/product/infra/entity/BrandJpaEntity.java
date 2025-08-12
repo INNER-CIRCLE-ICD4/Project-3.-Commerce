@@ -18,35 +18,32 @@ import java.time.LocalDateTime;
 @Table(name = "brands")
 @Getter
 @NoArgsConstructor
-@AllArgsConstructor
-@Builder
-@EntityListeners(AuditingEntityListener.class)
 public class BrandJpaEntity {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	private Long id;
 
-    @Column(nullable = false, unique = true, length = 100)
-    private String name;
+	@Column(nullable = false, unique = true, length = 100)
+	private String name;
 
-    @Column(length = 500)
-    private String description;
+	@Column(length = 500)
+	private String description;
 
-    @Column(name = "logo_url", length = 255)
-    private String logoUrl;
+	@Column(name = "logo_url", length = 255)
+	private String logoUrl;
 
-    @Column(name = "website_url", length = 255)
-    private String websiteUrl;
+	@Column(name = "website_url", length = 255)
+	private String websiteUrl;
 
-    @Column(nullable = false)
-    private Boolean active;
+	@Column(nullable = false)
+	private Boolean active;
 
-    @CreatedDate
-    @Column(name = "created_at", nullable = false, updatable = false)
-    private LocalDateTime createdAt;
+	@CreatedDate
+	@Column(name = "created_at", nullable = false, updatable = false)
+	private LocalDateTime createdAt;
 
-    @LastModifiedDate
-    @Column(name = "updated_at", nullable = false)
-    private LocalDateTime updatedAt;
+	@LastModifiedDate
+	@Column(name = "updated_at", nullable = false)
+	private LocalDateTime updatedAt;
 }
