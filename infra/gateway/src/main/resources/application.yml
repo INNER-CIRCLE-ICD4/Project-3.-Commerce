@@ -29,19 +29,17 @@ spring:
       server:
         webflux:
           default-filters:
-            - name: AddResponseHeader
-              args:
-                name: X-Trace-Id
-                value: "%{traceId}" # 응답 헤더에 traceId 추가 (디버깅용)
           routes:
             - id: review-service
               uri: lb://commerce-review-service
               predicates:
                 - Path=/api/review-service/**
             - id: member-service
-              uri: http://localhost:8888
+              uri: http://localhost:8080
               predicates:
                 - Path=/api/member-service/**
+              filters:
+                - RewritePath=/api/member-service/(?<segment>.*), /api/v1/$\{segment}
 jwt:
     secret: ${JWT_SECRET}
     authority-claim: roles
@@ -110,7 +108,7 @@ management:
   tracing:
     enabled: true
     sampling:
-      probability: 1.0 # 모든 요청 추적 (디버깅용)
+      probability: 0.1 # 모든 요청 추적 (디버깅용)
   zipkin:
     tracing:
       endpoint: http://localhost:9411/api/v2/spans

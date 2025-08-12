@@ -55,10 +55,14 @@ public class UserContextFilter implements GlobalFilter, Ordered {
                     return exchange;
                 })
                 .defaultIfEmpty(exchange)
-                .flatMap(chain::filter)
-                .doFinally(signalType -> {
-                    addTraceHeaders(exchange);
+                .flatMap(modifiedExchange -> {
+                    addTraceHeaders(modifiedExchange);
+                    return chain.filter(modifiedExchange);
                 });
+//                .flatMap(chain::filter)
+//                .doOnSuccess(signalType -> {
+//                    addTraceHeaders(exchange);
+//                });
     }
 
     private void addTraceHeaders(ServerWebExchange exchange) {
@@ -69,10 +73,10 @@ public class UserContextFilter implements GlobalFilter, Ordered {
         System.out.println("traceId = " + traceId);
 
         if (traceId != null) {
-            exchange.getResponse().getHeaders().add("X-TRACE-ID", traceId);
+            exchange.getResponse().getHeaders().set("X-TRACE-ID", traceId);
         }
         if (spanId != null) {
-            exchange.getResponse().getHeaders().add("X-SPAN-ID", spanId);
+            exchange.getResponse().getHeaders().set("X-SPAN-ID", spanId);
         }
     }
 
