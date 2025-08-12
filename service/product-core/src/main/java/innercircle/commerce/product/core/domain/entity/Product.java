@@ -48,7 +48,11 @@ public class Product {
 	) {
 		validateBasicInfo(name, leafCategoryId, brandId, basePrice, stock);
 		validateDetailContent(detailContent);
-		ProductImage.validateImages(images);
+		
+		// 이미지가 있는 경우에만 검증 (상품 등록 시 이미지 없이 생성 가능)
+		if (!CollectionUtils.isEmpty(images)) {
+			ProductImage.validateImages(images);
+		}
 
 		List<ProductOption> validatedOptions = validateAndProcessOptions(options);
 
@@ -288,6 +292,20 @@ public class Product {
 	public void updateImages (List<ProductImage> newImages) {
 		ProductImage.validateImages(newImages);
 		this.images = newImages;
+		this.updatedAt = LocalDateTime.now();
+	}
+
+	/**
+	 * 상품 이미지를 추가합니다.
+	 * 상품 생성 후 이미지를 추가할 때 사용하며, 최소 1개 이상의 이미지와 대표 이미지 1개가 필요합니다.
+	 *
+	 * @param productImages 추가할 이미지 리스트 (최소 1개, 대표 이미지 1개 필수)
+	 * @throws IllegalArgumentException 이미지 리스트가 null이거나 비어있는 경우
+	 * @throws IllegalArgumentException 대표 이미지가 없거나 2개 이상인 경우
+	 */
+	public void addImages (List<ProductImage> productImages) {
+		ProductImage.validateImages(productImages);
+		this.images = productImages;
 		this.updatedAt = LocalDateTime.now();
 	}
 }
