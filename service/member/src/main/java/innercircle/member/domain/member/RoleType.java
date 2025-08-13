@@ -1,4 +1,4 @@
-package innercircle.member.domain;
+package innercircle.member.domain.member;
 
 public enum RoleType {
     BUYER, SELLER, ADMIN;

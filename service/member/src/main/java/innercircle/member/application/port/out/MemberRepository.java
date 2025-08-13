@@ -1,7 +1,7 @@
 package innercircle.member.application.port.out;
 
-import innercircle.member.domain.Email;
-import innercircle.member.domain.Member;
+import innercircle.member.domain.member.Email;
+import innercircle.member.domain.member.Member;
 
 import java.util.Optional;
 

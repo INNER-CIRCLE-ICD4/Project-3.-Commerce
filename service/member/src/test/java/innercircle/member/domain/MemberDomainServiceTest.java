@@ -2,6 +2,9 @@ package innercircle.member.domain;
 
 import com.sun.jdi.request.DuplicateRequestException;
 import innercircle.member.application.port.out.MemberRepository;
+import innercircle.member.domain.member.Email;
+import innercircle.member.domain.member.Member;
+import innercircle.member.domain.member.MemberDomainService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;

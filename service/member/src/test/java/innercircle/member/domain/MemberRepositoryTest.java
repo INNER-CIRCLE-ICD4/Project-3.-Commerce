@@ -1,5 +1,9 @@
 package innercircle.member.domain;
 
+import innercircle.member.domain.member.Email;
+import innercircle.member.domain.member.Member;
+import innercircle.member.domain.member.MemberStatus;
+import innercircle.member.domain.member.RoleType;
 import innercircle.member.infrastructure.persistence.MemberJpaRepository;
 import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.Test;

@@ -1,4 +1,4 @@
-package innercircle.member.domain;
+package innercircle.member.domain.member;
 
 
 import lombok.Getter;

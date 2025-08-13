@@ -1,7 +1,7 @@
 package innercircle.member.infrastructure.persistence;
 
-import innercircle.member.domain.Email;
-import innercircle.member.domain.Member;
+import innercircle.member.domain.member.Email;
+import innercircle.member.domain.member.Member;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Optional;

@@ -1,6 +1,8 @@
 package innercircle.member.application;
 
-import innercircle.member.domain.*;
+import innercircle.member.domain.member.Member;
+import innercircle.member.domain.member.MemberRole;
+import innercircle.member.domain.member.MemberStatus;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;

@@ -1,7 +1,7 @@
 package innercircle.member.infrastructure.adapter.out;
 
-import innercircle.member.domain.Email;
-import innercircle.member.domain.Member;
+import innercircle.member.domain.member.Email;
+import innercircle.member.domain.member.Member;
 import innercircle.member.application.port.out.MemberRepository;
 import innercircle.member.infrastructure.persistence.MemberJpaRepository;
 import lombok.RequiredArgsConstructor;

@@ -1,4 +1,4 @@
-package innercircle.member.domain;
+package innercircle.member.domain.member;
 
 import com.sun.jdi.request.DuplicateRequestException;
 import innercircle.member.application.port.out.MemberRepository;

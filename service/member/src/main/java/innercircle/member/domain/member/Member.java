@@ -1,4 +1,4 @@
-package innercircle.member.domain;
+package innercircle.member.domain.member;
 
 import jakarta.persistence.*;
 import lombok.AccessLevel;
@@ -13,7 +13,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-import static innercircle.member.domain.ValidationMember.*;
+import static innercircle.member.domain.member.ValidationMember.*;
 
 @Entity
 @Table(name = "member", uniqueConstraints = {
