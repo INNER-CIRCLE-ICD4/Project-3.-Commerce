@@ -59,10 +59,6 @@ public class UserContextFilter implements GlobalFilter, Ordered {
                     addTraceHeaders(modifiedExchange);
                     return chain.filter(modifiedExchange);
                 });
-//                .flatMap(chain::filter)
-//                .doOnSuccess(signalType -> {
-//                    addTraceHeaders(exchange);
-//                });
     }
 
     private void addTraceHeaders(ServerWebExchange exchange) {
