@@ -98,6 +98,14 @@ public class Member extends BaseEntity {
         return roles.stream().anyMatch(role -> role.getRoleType() == roleType);
     }
 
+
+    public void inActivate() {
+        if (this.status == MemberStatus.INACTIVE) {
+            throw new IllegalStateException("이미 비활성화 상태입니다.");
+        }
+        this.status = MemberStatus.INACTIVE;
+    }
+
     public List<String> getRoleNames() {
         return roles.stream()
                 .map(role -> role.getRoleType().name())

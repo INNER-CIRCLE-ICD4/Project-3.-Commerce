@@ -30,7 +30,6 @@ public class UserAuthInfo {
         return userAuthInfo;
     }
 
-
     public boolean hasRole(String role) {
         return roles.contains(role);
     }

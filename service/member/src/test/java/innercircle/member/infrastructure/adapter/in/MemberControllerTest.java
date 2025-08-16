@@ -26,9 +26,12 @@ import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import org.springframework.context.annotation.Import;
+import innercircle.config.SecurityConfig;
 
 @WebMvcTest(MemberController.class)
 @AutoConfigureMockMvc
+@Import(SecurityConfig.class)
 class MemberControllerTest {
 
     @Autowired
