@@ -98,6 +98,16 @@ public class Member extends BaseEntity {
         return roles.stream().anyMatch(role -> role.getRoleType() == roleType);
     }
 
+    public List<String> getRoleNames() {
+        return roles.stream()
+                .map(role -> role.getRoleType().name())
+                .toList();
+    }
+
+    public boolean isActive() {
+        return this.status == MemberStatus.ACTIVE;
+    }
+
 
     @Override
     public boolean equals(Object o) {

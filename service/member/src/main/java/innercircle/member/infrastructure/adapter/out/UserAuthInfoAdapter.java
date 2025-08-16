@@ -20,7 +20,11 @@ public class UserAuthInfoAdapter implements UserAuthInfoProvider {
     @Override
     public UserAuthInfo findByEmail(String email) {
 
-        Member member = memberRepository.findByEmail(new Email(email)).orElseThrow(() -> new UsernameNotFoundException("존재하지 않는 계정입니다."));
+        Member member = memberRepository.findByEmail(new Email(email)).orElseThrow(() -> new UsernameNotFoundException("사용자를 찾을 수 없습니다."));
+
+        if (!member.getStatus().isActive()) {
+            throw new IllegalArgumentException("사용자가 비활성화 상태입니다. user_status=" + member.getStatus());
+        }
 
         return UserAuthInfo.create(
                 member.getId(),
@@ -31,3 +35,4 @@ public class UserAuthInfoAdapter implements UserAuthInfoProvider {
         );
     }
 }
+

@@ -3,6 +3,11 @@ server:
     context-path: /api/v1
   port: 8080
 
+jasypt:
+  encryptor:
+    password: ${JASYPT_ENCRYPTOR_PASSWORD}
+    bean: jasyptEncryptor
+
 spring:
   profiles:
     active: test
@@ -29,3 +34,8 @@ spring:
     config:
       enabled: false
 
+# JWT 설정 추가
+jwt:
+  secret: ${JWT_SECRET:mySecretKey123456789012345678901234567890123456789012345678901234567890}
+  access-token-expiry: ${JWT_ACCESS_TOKEN_EXPIRY:3600000}  # 1시간 (밀리초)
+  refresh-token-expiry: ${JWT_REFRESH_TOKEN_EXPIRY:604800000}  # 7일 (밀리초)
