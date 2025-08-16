@@ -79,6 +79,23 @@ class AuthControllerTest {
 
     }
 
+    @Test
+    void login_withInvalidCredentials_shouldReturnUnauthorized() throws Exception {
+
+
+        LoginRequest loginRequest = new LoginRequest("sw.noh@gmail.com", "password1234");
+
+        when(authUseCase.login(loginRequest))
+                .thenThrow(new IllegalArgumentException("비밀번호가 일치하지 않습니다."));
+
+        // When & Then
+        mockMvc.perform(post("/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(loginRequest)))
+                .andExpect(status().is5xxServerError())
+                .andExpect(jsonPath("$.detail").value("비밀번호가 일치하지 않습니다."));
+
+    }
 
 
 }

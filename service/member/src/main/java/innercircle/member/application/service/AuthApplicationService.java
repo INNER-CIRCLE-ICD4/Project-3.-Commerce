@@ -7,6 +7,7 @@ import innercircle.member.application.port.out.UserAuthInfoProvider;
 import innercircle.member.domain.auth.LoginRequest;
 import innercircle.member.domain.auth.LoginResponse;
 import innercircle.member.domain.auth.UserAuthInfo;
+import io.jsonwebtoken.security.Password;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
