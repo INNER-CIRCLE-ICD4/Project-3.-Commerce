@@ -23,8 +23,8 @@ public class JwtTokenAdapter implements TokenPort {
 
     public JwtTokenAdapter(
             @Value("${jwt.secret}") String secretKey,
-            @Value("jwt.access-token-expiry") long accessTokenExpiry,
-            @Value("jwt.refresh-token-expiry") long refreshTokenExpiry) {
+            @Value("${jwt.access-token-expiry}") long accessTokenExpiry,
+            @Value("${jwt.refresh-token-expiry}") long refreshTokenExpiry) {
         this.secretKey = Keys.hmacShaKeyFor(secretKey.getBytes(StandardCharsets.UTF_8));
         this.accessTokenExpiry = accessTokenExpiry;
         this.refreshTokenExpiry = refreshTokenExpiry;
@@ -32,13 +32,13 @@ public class JwtTokenAdapter implements TokenPort {
 
 
     @Override
-    public String generateToken(Long userId, String email, List<String> roles) {
+    public String generateAccessToken(Long userId, String email, List<String> roles) {
         return generateToken(userId, email, roles, TokenType.ACCESS, accessTokenExpiry);
     }
 
     @Override
     public String generateRefreshToken(Long userId, String email, List<String> roles) {
-        return generateToken(userId, email, roles, TokenType.ACCESS, refreshTokenExpiry);
+        return generateToken(userId, email, roles, TokenType.REFRESH, refreshTokenExpiry);
     }
 
     @Override

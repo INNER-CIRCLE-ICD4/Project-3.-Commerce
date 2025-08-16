@@ -1,16 +1,18 @@
 package innercircle.member.infrastructure.adapter.in;
 
+import innercircle.member.application.port.in.AuthUseCase;
+import innercircle.member.domain.auth.LoginRequest;
+import innercircle.member.domain.auth.LoginResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RequiredArgsConstructor
 @RestController
 @RequestMapping("/auth")
 public class AuthController {
+
+    private final AuthUseCase authUseCase;
 
     @GetMapping("/health")
     public ResponseEntity<String> healthCheck() {
@@ -18,9 +20,11 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<String> login() {
+    public ResponseEntity<LoginResponse> login(@RequestBody LoginRequest request) {
 
-        return ResponseEntity.ok("로그인 성공");
+        LoginResponse login = authUseCase.login(request);
+
+        return ResponseEntity.ok(login);
     }
 
     @PostMapping("/refresh")

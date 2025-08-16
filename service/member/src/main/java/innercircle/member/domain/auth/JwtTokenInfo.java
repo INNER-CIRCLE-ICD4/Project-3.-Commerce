@@ -14,7 +14,7 @@ public class JwtTokenInfo {
     private Long userId;
     private String email;
     private List<String> roles = new ArrayList<>();
-    private TokenType tokenType;
+    private TokenType type;
     private LocalDateTime issuedAt;
     private LocalDateTime expiresAt;
 
@@ -31,9 +31,58 @@ public class JwtTokenInfo {
         token.userId = userId;
         token.email = email;
         token.roles = roles;
-        token.tokenType = type;
+        token.type = type;
         token.issuedAt = LocalDateTime.now();
         token.expiresAt = LocalDateTime.now().plusSeconds(expirySeconds);
         return token;
+    }
+
+
+    /**
+     * 토큰 만료 여부 확인
+     */
+    public boolean isExpired() {
+        return LocalDateTime.now().isAfter(expiresAt);
+    }
+
+    /**
+     * Access Token 여부 확인
+     */
+    public boolean isAccessToken() {
+        return type == TokenType.ACCESS;
+    }
+
+    /**
+     * Refresh Token 여부 확인
+     */
+    public boolean isRefreshToken() {
+        return type == TokenType.REFRESH;
+    }
+
+    /**
+     * 특정 역할 보유 여부 확인
+     */
+    public boolean hasRole(String role) {
+        return roles != null && roles.contains(role);
+    }
+
+    /**
+     * 관리자 권한 여부 확인
+     * todo: 역할 상수로 관리하는 것이 좋다.
+     */
+    public boolean isAdmin() {
+        return hasRole("ADMIN");
+    }
+
+    @Override
+    public String toString() {
+        return "JwtTokenInfo{" +
+                "userId=" + userId +
+                ", email='" + email + '\'' +
+                ", roles=" + roles +
+                ", type=" + type +
+                ", issuedAt=" + issuedAt +
+                ", expiresAt=" + expiresAt +
+                '}';
     }
 }
