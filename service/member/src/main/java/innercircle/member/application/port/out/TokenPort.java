@@ -8,7 +8,7 @@ public interface TokenPort {
     /**
      * Access Token 생성
     */
-    String generateToken(Long userId, String email, List<String> roles);
+    String generateAccessToken(Long userId, String email, List<String> roles);
 
 
     /**
