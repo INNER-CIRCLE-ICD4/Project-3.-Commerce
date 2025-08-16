@@ -37,14 +37,12 @@ class MemberControllerTest {
     @Autowired
     private MockMvc mockMvc;
 
-    @MockitoBean
-    private MemberUseCase memberUseCase;
-
-    @Autowired
-    private ObjectMapper mapper;
 
     @Autowired
     private ObjectMapper objectMapper;
+
+    @MockitoBean
+    private MemberUseCase memberUseCase;
 
 
     @Test
