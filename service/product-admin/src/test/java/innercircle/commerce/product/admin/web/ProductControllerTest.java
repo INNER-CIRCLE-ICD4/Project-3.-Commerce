@@ -10,7 +10,7 @@ import innercircle.commerce.product.admin.application.exception.NotFoundTempImag
 import innercircle.commerce.product.admin.fixtures.ProductCreateRequestFixtures;
 import innercircle.commerce.product.admin.fixtures.ProductFixtures;
 import innercircle.commerce.product.admin.web.dto.ProductCreateRequest;
-import innercircle.commerce.product.core.domain.entity.Product;
+import innercircle.commerce.product.core.domain.Product;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -66,8 +66,8 @@ class ProductControllerTest {
 				   .andExpect(jsonPath("$.data.id").exists())
 				   .andExpect(jsonPath("$.data.name").value(mockProduct.getName()))
 				   .andExpect(jsonPath("$.data.brandId").value(mockProduct.getBrandId()))
-				   .andExpect(jsonPath("$.data.leafCategoryId").value(mockProduct.getLeafCategoryId()))
-				   .andExpect(jsonPath("$.data.basePrice").value(mockProduct.getBasePrice()))
+				   .andExpect(jsonPath("$.data.categoryId").value(mockProduct.getCategoryId()))
+				   .andExpect(jsonPath("$.data.price").value(mockProduct.getPrice()))
 				   .andExpect(jsonPath("$.data.stock").value(mockProduct.getStock()))
 				   .andExpect(jsonPath("$.data.status").value(mockProduct.getStatus().toString()))
 				   .andExpect(jsonPath("$.data.saleType").value(mockProduct.getSaleType().toString()))

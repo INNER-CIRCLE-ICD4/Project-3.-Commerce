@@ -2,7 +2,7 @@ package innercircle.commerce.product.admin.web.dto;
 
 import innercircle.commerce.product.admin.application.dto.ProductCreateCommand;
 import innercircle.commerce.product.admin.application.dto.ProductImageInfo;
-import innercircle.commerce.product.core.domain.entity.ProductOption;
+import innercircle.commerce.product.core.domain.ProductOption;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;

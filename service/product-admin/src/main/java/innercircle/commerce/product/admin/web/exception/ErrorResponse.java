@@ -1,6 +1,4 @@
-package innercircle.commerce.product.admin.web.dto;
-
-import innercircle.commerce.product.admin.web.exception.ErrorCode;
+package innercircle.commerce.product.admin.web.exception;
 
 public record ErrorResponse(
 		String code,

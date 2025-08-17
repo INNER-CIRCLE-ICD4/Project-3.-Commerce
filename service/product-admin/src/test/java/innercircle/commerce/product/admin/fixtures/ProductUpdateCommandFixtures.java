@@ -4,8 +4,8 @@ import innercircle.commerce.product.admin.application.dto.ProductImageUpdateComm
 import innercircle.commerce.product.admin.application.dto.ProductSaleTypeChangeCommand;
 import innercircle.commerce.product.admin.application.dto.ProductStatusChangeCommand;
 import innercircle.commerce.product.admin.application.dto.ProductUpdateCommand;
-import innercircle.commerce.product.core.domain.entity.ProductStatus;
-import innercircle.commerce.product.core.domain.entity.SaleType;
+import innercircle.commerce.product.core.domain.ProductStatus;
+import innercircle.commerce.product.core.domain.SaleType;
 
 public class ProductUpdateCommandFixtures {
     

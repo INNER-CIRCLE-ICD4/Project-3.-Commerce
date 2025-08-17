@@ -1,36 +1,39 @@
 package innercircle.commerce.product.admin.fixtures;
 
-import innercircle.commerce.product.core.domain.entity.ProductImage;
+import innercircle.commerce.product.core.domain.ProductImage;
 
 import java.util.List;
 
 public class ProductImageFixtures {
 
 	public static ProductImage createMainImage () {
-		return ProductImage.builder()
-						   .url("http://example.com/main-image.jpg")
-						   .originalName("main-image.jpg")
-						   .isMain(true)
-						   .sortOrder(1)
-						   .build();
+		return ProductImage.create(
+				1L,
+				"http://example.com/main-image.jpg",
+				"main-image.jpg",
+				true,
+				1
+		);
 	}
 
 	public static ProductImage createSubImage () {
-		return ProductImage.builder()
-						   .url("http://example.com/sub-image.jpg")
-						   .originalName("sub-image.jpg")
-						   .isMain(false)
-						   .sortOrder(2)
-						   .build();
+		return ProductImage.create(
+				1L,
+				"http://example.com/sub-image.jpg",
+				"sub-image.jpg",
+				false,
+				2
+		);
 	}
 
 	public static ProductImage createImage (String fileName, boolean isMain) {
-		return ProductImage.builder()
-						   .url("http://example.com/" + fileName)
-						   .originalName(fileName)
-						   .isMain(isMain)
-						   .sortOrder(1)
-						   .build();
+		return ProductImage.create(
+				1L,
+				"http://example.com/" + fileName,
+				fileName,
+				isMain,
+				1
+		);
 	}
 
 	public static List<ProductImage> createValidImages () {

@@ -1,48 +1,72 @@
-package innercircle.commerce.product.core.domain.entity;
+package innercircle.commerce.product.core.domain;
 
-import lombok.Builder;
+import lombok.AccessLevel;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import org.springframework.util.CollectionUtils;
 
 import java.util.Collections;
 import java.util.List;
 
+import static innercircle.commerce.product.core.domain.ProductOptionValidator.*;
+
 @Getter
-@Builder
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class ProductOption {
 	private Long id;
 	private Long productId;
 	private String name;
 	private boolean isRequired;
 	private int sortOrder;
-	@Builder.Default
-	private List<ProductOptionItem> items = Collections.emptyList();
+	private List<ProductOptionItem> items;
 
-	/**
-	 * 옵션에 유효한 아이템들이 있는지 확인합니다.
-	 *
-	 * @return 아이템이 1개 이상 있으면 true, 그렇지 않으면 false
-	 */
-	public boolean hasValidItems () {
-		return !CollectionUtils.isEmpty(items);
+	private ProductOption (
+			Long id, Long productId, String name, boolean isRequired,
+			int sortOrder, List<ProductOptionItem> items
+	) {
+		this.id = id == null ? IdGenerator.generateId() : id;
+		this.setProductId(productId);
+		this.setName(name);
+		this.isRequired = isRequired;
+		this.setSortOrder(sortOrder);
+		this.setItems(items);
 	}
 
 	/**
-	 * 옵션 리스트의 유효성을 검증합니다.
-	 * 옵션이 존재하는 경우 최소 1개 이상의 아이템이 필요합니다.
+	 * 상품 옵션을 생성합니다.
+	 * ID가 제공되면 해당 ID를 사용하고, 없으면 Snowflake를 통해 새로운 ID를 생성합니다.
 	 *
-	 * @param options 검증할 옵션 리스트
+	 * @param productId  상품 ID
+	 * @param name       옵션명
+	 * @param isRequired 필수 여부
+	 * @param sortOrder  정렬 순서
+	 * @param items      옵션 아이템 리스트
+	 * @return 생성된 상품 옵션 객체
 	 * @throws IllegalArgumentException 검증 실패 시
 	 */
-	public static void validateOptions (List<ProductOption> options) {
-		if (CollectionUtils.isEmpty(options)) {
-			return;
-		}
+	public static ProductOption create (
+			Long productId, String name, boolean isRequired, int sortOrder, List<ProductOptionItem> items
+	) {
+		return new ProductOption(null, productId, name, isRequired, sortOrder, items);
+	}
 
-		for (ProductOption option : options) {
-			if (!option.hasValidItems()) {
-				throw new IllegalArgumentException("옵션이 존재하는 경우 최소 1개 이상의 옵션 속성이 필요합니다");
-			}
-		}
+	private void setProductId (Long productId) {
+		validateProductId(productId);
+		this.productId = productId;
+	}
+
+	private void setName (String name) {
+		validateName(name);
+		this.name = name;
+	}
+
+	private void setSortOrder (int sortOrder) {
+		validateSortOrder(sortOrder);
+		this.sortOrder = sortOrder;
+	}
+
+	private void setItems (List<ProductOptionItem> items) {
+		validateItems(items);
+		this.items = items;
 	}
 }

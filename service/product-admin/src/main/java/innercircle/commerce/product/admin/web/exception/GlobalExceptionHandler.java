@@ -8,7 +8,6 @@ import innercircle.commerce.product.admin.application.exception.NotFoundTempImag
 import innercircle.commerce.product.admin.application.exception.ProductImageUploadInProgressException;
 import innercircle.commerce.product.admin.application.exception.ProductNotFoundException;
 import innercircle.commerce.product.admin.web.dto.ApiResponse;
-import innercircle.commerce.product.admin.web.dto.ErrorResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindException;

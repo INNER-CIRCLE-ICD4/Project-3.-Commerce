@@ -1,10 +1,10 @@
 package innercircle.commerce.product.admin.fixtures;
 
-import innercircle.commerce.product.core.domain.entity.Product;
-import innercircle.commerce.product.core.domain.entity.ProductImage;
-import innercircle.commerce.product.core.domain.entity.ProductOption;
-import innercircle.commerce.product.core.domain.entity.ProductStatus;
-import innercircle.commerce.product.core.domain.entity.SaleType;
+import innercircle.commerce.product.core.domain.Product;
+import innercircle.commerce.product.core.domain.ProductImage;
+import innercircle.commerce.product.core.domain.ProductOption;
+import innercircle.commerce.product.core.domain.ProductStatus;
+import innercircle.commerce.product.core.domain.SaleType;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -81,22 +81,16 @@ public class ProductFixtures {
 	/**
 	 * 테스트용 - ID를 포함한 저장된 상품 객체를 생성합니다.
 	 */
-	public static Product createSavedProduct() {
-		return Product.builder()
-				.id(1L)
-				.name(VALID_NAME)
-				.code("PRD001")
-				.leafCategoryId(VALID_CATEGORY_ID)
-				.brandId(VALID_BRAND_ID)
-				.basePrice(VALID_BASE_PRICE)
-				.status(ProductStatus.SALE)
-				.saleType(SaleType.NEW)
-				.options(List.of())
-				.images(ProductImageFixtures.createValidImages())
-				.detailContent(VALID_DETAIL_CONTENT)
-				.stock(VALID_STOCK)
-				.createdAt(LocalDateTime.now())
-				.updatedAt(LocalDateTime.now())
-				.build();
+	public static Product createSavedProduct () {
+		return Product.create(
+				VALID_NAME,
+				VALID_CATEGORY_ID,
+				VALID_BRAND_ID,
+				VALID_BASE_PRICE,
+				VALID_STOCK,
+				List.of(),
+				ProductImageFixtures.createValidImages(),
+				VALID_DETAIL_CONTENT
+		);
 	}
 }
