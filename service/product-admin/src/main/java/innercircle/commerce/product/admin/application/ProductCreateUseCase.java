@@ -9,8 +9,8 @@ import innercircle.commerce.product.admin.application.exception.NotFoundTempImag
 import innercircle.commerce.product.core.application.repository.BrandRepository;
 import innercircle.commerce.product.core.application.repository.CategoryRepository;
 import innercircle.commerce.product.core.application.repository.ProductRepository;
-import innercircle.commerce.product.core.domain.entity.Product;
-import innercircle.commerce.product.core.domain.entity.ProductImage;
+import innercircle.commerce.product.core.domain.Product;
+import innercircle.commerce.product.core.domain.ProductImage;
 import innercircle.commerce.product.infra.s3.S3ImageStore;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -120,14 +120,13 @@ public class ProductCreateUseCase {
 				throw new NotFoundTempImageException(imageInfo.id().toString());
 			}
 
-			ProductImage productImage = ProductImage.builder()
-													.id((long) (i + 1))
-													.productId(productId)
-													.url(movedUrl.get())
-													.originalName(imageInfo.originalName())
-													.isMain(imageInfo.isMain())
-													.sortOrder(imageInfo.sortOrder())
-													.build();
+			ProductImage productImage = ProductImage.create(
+					productId,
+					movedUrl.get(),
+					imageInfo.originalName(),
+					imageInfo.isMain(),
+					imageInfo.sortOrder()
+			);
 
 			productImages.add(productImage);
 		}

@@ -1,4 +1,4 @@
-package innercircle.commerce.product.core.application.repository;
+package innercircle.commerce.product.admin.application.repository;
 
 
 public interface BrandRepository {

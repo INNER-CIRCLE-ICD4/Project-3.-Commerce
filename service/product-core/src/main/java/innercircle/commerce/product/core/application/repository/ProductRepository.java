@@ -1,4 +1,4 @@
-package innercircle.commerce.product.core.application.repository;
+package innercircle.commerce.product.admin.application.repository;
 
 import innercircle.commerce.product.core.domain.entity.Product;
 import org.springframework.stereotype.Repository;
