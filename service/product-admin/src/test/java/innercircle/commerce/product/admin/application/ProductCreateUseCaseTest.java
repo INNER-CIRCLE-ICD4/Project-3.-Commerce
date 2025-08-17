@@ -10,7 +10,7 @@ import innercircle.commerce.product.admin.fixtures.ProductCreateCommandFixtures;
 import innercircle.commerce.product.core.application.repository.BrandRepository;
 import innercircle.commerce.product.core.application.repository.CategoryRepository;
 import innercircle.commerce.product.core.application.repository.ProductRepository;
-import innercircle.commerce.product.core.domain.entity.Product;
+import innercircle.commerce.product.core.domain.Product;
 import innercircle.commerce.product.infra.s3.S3ImageStore;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;

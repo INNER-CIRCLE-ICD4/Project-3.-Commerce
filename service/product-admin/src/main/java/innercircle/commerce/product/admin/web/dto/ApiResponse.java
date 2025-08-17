@@ -1,6 +1,7 @@
 package innercircle.commerce.product.admin.web.dto;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import innercircle.commerce.product.admin.web.exception.ErrorResponse;
 import lombok.Getter;
 
 import java.time.LocalDateTime;

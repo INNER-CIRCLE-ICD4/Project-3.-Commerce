@@ -1,4 +1,4 @@
-package innercircle.commerce.product.core.domain.entity;
+package innercircle.commerce.product.core.domain;
 
 public enum ProductStatus {
     SALE,        // 판매중

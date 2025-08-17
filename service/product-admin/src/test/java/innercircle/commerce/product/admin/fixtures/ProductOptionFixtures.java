@@ -1,7 +1,7 @@
 package innercircle.commerce.product.admin.fixtures;
 
-import innercircle.commerce.product.core.domain.entity.ProductOption;
-import innercircle.commerce.product.core.domain.entity.ProductOptionItem;
+import innercircle.commerce.product.core.domain.ProductOption;
+import innercircle.commerce.product.core.domain.ProductOptionItem;
 
 import java.util.Collections;
 import java.util.List;
@@ -9,11 +9,12 @@ import java.util.List;
 public class ProductOptionFixtures {
 
 	public static ProductOptionItem createColorOptionItem (String colorName, Integer additionalPrice) {
-		return ProductOptionItem.builder()
-								.name(colorName)
-								.additionalPrice(additionalPrice)
-								.sortOrder(1)
-								.build();
+		return ProductOptionItem.create(
+				1L,
+				colorName,
+				additionalPrice,
+				1
+		);
 	}
 
 	public static ProductOptionItem createRedOptionItem () {
@@ -30,48 +31,54 @@ public class ProductOptionFixtures {
 				createBlueOptionItem()
 		);
 
-		return ProductOption.builder()
-							.name("색상")
-							.isRequired(true)
-							.sortOrder(1)
-							.items(items)
-							.build();
+		return ProductOption.create(
+				1L,
+				"색상",
+				true,
+				1,
+				items
+		);
 	}
 
 	public static ProductOption createSizeOption () {
 		List<ProductOptionItem> items = List.of(
-				ProductOptionItem.builder()
-								 .name("S")
-								 .additionalPrice(0)
-								 .sortOrder(1)
-								 .build(),
-				ProductOptionItem.builder()
-								 .name("M")
-								 .additionalPrice(0)
-								 .sortOrder(2)
-								 .build(),
-				ProductOptionItem.builder()
-								 .name("L")
-								 .additionalPrice(2000)
-								 .sortOrder(3)
-								 .build()
+				ProductOptionItem.create(
+						1L,
+						"S",
+						0,
+						1
+				),
+				ProductOptionItem.create(
+						1L,
+						"M",
+						0,
+						2
+				),
+				ProductOptionItem.create(
+						1L,
+						"L",
+						2000,
+						3
+				)
 		);
 
-		return ProductOption.builder()
-							.name("사이즈")
-							.isRequired(true)
-							.sortOrder(2)
-							.items(items)
-							.build();
+		return ProductOption.create(
+				1L,
+				"사이즈",
+				true,
+				2,
+				items
+		);
 	}
 
 	public static ProductOption createOptionWithoutItems (String optionName, boolean isRequired) {
-		return ProductOption.builder()
-							.name(optionName)
-							.isRequired(isRequired)
-							.sortOrder(1)
-							.items(Collections.emptyList())
-							.build();
+		return ProductOption.create(
+				1L,
+				optionName,
+				isRequired,
+				1,
+				Collections.emptyList()
+		);
 	}
 
 	public static List<ProductOption> createValidOptions () {

@@ -1,6 +1,6 @@
-package innercircle.commerce.product.admin.application.repository;
+package innercircle.commerce.product.core.application.repository;
 
-import innercircle.commerce.product.core.domain.entity.Product;
+import innercircle.commerce.product.core.domain.Product;
 import org.springframework.stereotype.Repository;
 
 import java.util.Optional;

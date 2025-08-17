@@ -1,7 +1,7 @@
 package innercircle.commerce.product.infra.repository;
 
 import innercircle.commerce.product.core.application.repository.ProductRepository;
-import innercircle.commerce.product.core.domain.entity.Product;
+import innercircle.commerce.product.core.domain.Product;
 import innercircle.commerce.product.infra.entity.ProductJpaEntity;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
