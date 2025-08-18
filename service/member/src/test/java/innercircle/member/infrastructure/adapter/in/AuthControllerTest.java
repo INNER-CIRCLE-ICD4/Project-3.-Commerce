@@ -3,8 +3,10 @@ package innercircle.member.infrastructure.adapter.in;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import innercircle.commerce.common.snowflake.Snowflake;
 import innercircle.config.SecurityConfig;
+import innercircle.global.ErrorCode;
 import innercircle.member.application.port.in.AuthUseCase;
 import innercircle.member.application.port.out.TokenPort;
+import innercircle.member.domain.auth.LoginFailedException;
 import innercircle.member.domain.auth.LoginRequest;
 import innercircle.member.domain.auth.LoginResponse;
 import innercircle.member.infrastructure.adapter.out.JwtTokenAdapter;
@@ -86,14 +88,15 @@ class AuthControllerTest {
         LoginRequest loginRequest = new LoginRequest("sw.noh@gmail.com", "password1234");
 
         when(authUseCase.login(loginRequest))
-                .thenThrow(new IllegalArgumentException("비밀번호가 일치하지 않습니다."));
+                .thenThrow(new LoginFailedException(ErrorCode.LOGIN_FAILED, "비밀번호가 일치하지 않습니다."));
 
         // When & Then
         mockMvc.perform(post("/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(loginRequest)))
-                .andExpect(status().is5xxServerError())
-                .andExpect(jsonPath("$.detail").value("비밀번호가 일치하지 않습니다."));
+                .andExpect(status().is4xxClientError())
+                .andExpect(jsonPath("$.detail").value("비밀번호가 일치하지 않습니다."))
+                .andExpect(jsonPath("$.title").value("로그인에 실패하였습니다. 이메일과 비밀번호를 확인해주세요."));
 
     }
 

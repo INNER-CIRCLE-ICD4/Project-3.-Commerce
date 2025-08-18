@@ -1,9 +1,11 @@
 package innercircle.member.application.service;
 
+import innercircle.global.ErrorCode;
 import innercircle.member.application.port.in.AuthUseCase;
 import innercircle.member.application.port.out.PasswordEncoderPort;
 import innercircle.member.application.port.out.TokenPort;
 import innercircle.member.application.port.out.UserAuthInfoProvider;
+import innercircle.member.domain.auth.LoginFailedException;
 import innercircle.member.domain.auth.LoginRequest;
 import innercircle.member.domain.auth.LoginResponse;
 import innercircle.member.domain.auth.UserAuthInfo;
@@ -30,7 +32,7 @@ public class AuthApplicationService implements AuthUseCase {
 
         //todo 검증
         if (!passwordEncoderPort.matches(request.password(), userInfo.getEncodedPassword())) {
-            throw new IllegalArgumentException("비밀번호가 일치하지 않습니다.");
+            throw new LoginFailedException(ErrorCode.LOGIN_FAILED, "Password mismatch for user: " + userInfo.getEmail());
         }
 
         //jwt 토큰 생성
