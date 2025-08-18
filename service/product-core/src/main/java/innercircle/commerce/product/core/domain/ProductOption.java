@@ -50,6 +50,24 @@ public class ProductOption {
 		return new ProductOption(null, productId, name, isRequired, sortOrder, items);
 	}
 
+	/**
+	 * 기존 상품 옵션을 복원합니다.
+	 * 주로 데이터베이스에서 조회한 데이터로 객체를 복원할 때 사용됩니다.
+	 *
+	 * @param id         상품 옵션 ID
+	 * @param productId  상품 ID
+	 * @param name       옵션명
+	 * @param isRequired 필수 여부
+	 * @param sortOrder  정렬 순서
+	 * @param items      옵션 아이템 리스트
+	 * @return 복원된 상품 옵션 객체
+	 */
+	public static ProductOption restore (
+			Long id, Long productId, String name, boolean isRequired, int sortOrder, List<ProductOptionItem> items
+	) {
+		return new ProductOption(id, productId, name, isRequired, sortOrder, items);
+	}
+
 	private void setProductId (Long productId) {
 		validateProductId(productId);
 		this.productId = productId;

@@ -17,6 +17,7 @@ import java.util.List;
 
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -43,17 +44,16 @@ class S3ImageStoreTest {
         MockMultipartFile file = new MockMultipartFile(
                 "image", "test.jpg", "image/jpeg", content
         );
+        String region = "us-east-1";
         String s3Key = "commerce/temp/images/temp-id/original.jpg";
+        given(amazonS3Client.getRegionName()).willReturn(region);
 
         // when
-        S3ImageStore.UploadedImageInfo result = s3ImageStore.upload(file, s3Key);
+        String result = s3ImageStore.upload(file, s3Key);
 
         // then
-        assertThat(result.originalName()).isEqualTo("test.jpg");
-        assertThat(result.url()).isEqualTo(baseUrl + "/" + s3Key);
-        assertThat(result.s3Key()).isEqualTo(s3Key);
-        assertThat(result.size()).isEqualTo(4);
-        assertThat(result.contentType()).isEqualTo("image/jpeg");
+        String expectedUrl = String.format("https://%s.s3.%s.amazonaws.com/%s", bucketName, region, s3Key);
+        assertThat(result).isEqualTo(expectedUrl);
 
         // S3 업로드 호출 확인
         ArgumentCaptor<PutObjectRequest> requestCaptor = ArgumentCaptor.forClass(PutObjectRequest.class);

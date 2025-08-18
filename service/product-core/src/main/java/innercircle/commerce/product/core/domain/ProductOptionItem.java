@@ -56,6 +56,29 @@ public class ProductOptionItem {
 		return productOptionItem;
 	}
 
+	/**
+	 * 기존 상품 옵션 아이템을 복원합니다.
+	 * 주로 데이터베이스에서 조회한 데이터로 객체를 복원할 때 사용됩니다.
+	 *
+	 * @param id              아이템 ID
+	 * @param optionId        옵션 ID
+	 * @param name            아이템명
+	 * @param additionalPrice 추가 가격
+	 * @param sortOrder       정렬 순서
+	 * @return 복원된 상품 옵션 아이템 객체
+	 */
+	public static ProductOptionItem restore(
+			Long id, Long optionId, String name, Integer additionalPrice, int sortOrder
+	) {
+		ProductOptionItem productOptionItem = new ProductOptionItem();
+		productOptionItem.id = id;
+		productOptionItem.optionId = optionId;
+		productOptionItem.name = name;
+		productOptionItem.additionalPrice = additionalPrice;
+		productOptionItem.sortOrder = sortOrder;
+		return productOptionItem;
+	}
+
 	private void setId(Long id) {
 		this.id = id != null ? id : IdGenerator.generateId();
 	}

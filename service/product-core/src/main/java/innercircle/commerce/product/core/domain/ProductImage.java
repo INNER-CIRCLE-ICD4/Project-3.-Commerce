@@ -46,6 +46,24 @@ public class ProductImage {
 		return new ProductImage(null, productId, url, originalName, isMain, sortOrder);
 	}
 
+	/**
+	 * 기존 상품 이미지를 복원합니다.
+	 * 주로 데이터베이스에서 조회한 데이터로 객체를 복원할 때 사용됩니다.
+	 *
+	 * @param id           상품 이미지 ID
+	 * @param productId    상품 ID
+	 * @param url          이미지 URL
+	 * @param originalName 원본 파일명
+	 * @param isMain       대표 이미지 여부
+	 * @param sortOrder    정렬 순서
+	 * @return 복원된 상품 이미지 객체
+	 */
+	public static ProductImage restore (
+			Long id, Long productId, String url, String originalName, boolean isMain, int sortOrder
+	) {
+		return new ProductImage(id, productId, url, originalName, isMain, sortOrder);
+	}
+
 	protected void setProductId (Long productId) {
 		validateProductId(productId);
 		this.productId = productId;
