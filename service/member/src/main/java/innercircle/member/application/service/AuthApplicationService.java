@@ -9,9 +9,9 @@ import innercircle.member.domain.auth.LoginFailedException;
 import innercircle.member.domain.auth.LoginRequest;
 import innercircle.member.domain.auth.LoginResponse;
 import innercircle.member.domain.auth.UserAuthInfo;
-import io.jsonwebtoken.security.Password;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -21,10 +21,14 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class AuthApplicationService implements AuthUseCase {
 
+    private static final String TOKEN_TYPE_BEARER = "Bearer";
+
     private final UserAuthInfoProvider userAuthInfoProvider;
     private final PasswordEncoderPort passwordEncoderPort;
     private final TokenPort tokenPort;
 
+    @Value("${jwt.access-token-expiry}")
+    private long accessTokenExpiry;
 
     @Override
     public LoginResponse login(LoginRequest request) {
@@ -48,6 +52,11 @@ public class AuthApplicationService implements AuthUseCase {
                 userInfo.getRoles()
         );
 
-        return new LoginResponse(accessToken, refreshTokenToken);
+        return new LoginResponse(
+                accessToken,
+                refreshTokenToken,
+                TOKEN_TYPE_BEARER,
+                accessTokenExpiry
+        );
     }
 }

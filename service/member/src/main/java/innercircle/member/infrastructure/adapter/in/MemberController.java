@@ -20,4 +20,14 @@ public class MemberController {
 
     private final MemberUseCase memberUseCase;
 
+    @PostMapping
+    public ResponseEntity<MemberResponse> createMember(@RequestBody MemberCreateRequest request) {
+        log.info("회원가입 요청 : {}", request.email());
+
+        MemberResponse member = memberUseCase.createMember(request);
+
+        log.info("회원가입 완료, member_id: {}, email: {}", member.memberId(), member.email());
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(member);
+    }
 }

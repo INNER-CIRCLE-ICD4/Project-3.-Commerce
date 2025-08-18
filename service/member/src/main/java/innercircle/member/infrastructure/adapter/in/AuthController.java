@@ -23,9 +23,14 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<LoginResponse> login(@RequestBody LoginRequest request) {
 
-        LoginResponse login = authUseCase.login(request);
+        LoginResponse loginResponse = authUseCase.login(request);
 
-        return ResponseEntity.ok(login);
+        return ResponseEntity.ok()
+                .header("X-Content-Type-Options", "nosniff")
+                .header("X-Frame-Options", "DENY")
+                .header("Cache-Control", "no-store, no-cache, must-revalidate")
+                .body(loginResponse);
+
     }
 
     @PostMapping("/refresh")
