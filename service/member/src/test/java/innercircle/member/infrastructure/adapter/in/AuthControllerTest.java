@@ -95,8 +95,8 @@ class AuthControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(loginRequest)))
                 .andExpect(status().is4xxClientError())
-                .andExpect(jsonPath("$.detail").value("비밀번호가 일치하지 않습니다."))
-                .andExpect(jsonPath("$.title").value("로그인에 실패하였습니다. 이메일과 비밀번호를 확인해주세요."));
+                .andExpect(jsonPath("$.title").value("Login Failed"))
+                .andExpect(jsonPath("$.detail").value("로그인에 실패하였습니다. 이메일과 비밀번호를 확인해주세요."));
 
     }
 

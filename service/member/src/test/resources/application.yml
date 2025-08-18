@@ -5,7 +5,7 @@ server:
 
 jasypt:
   encryptor:
-    password: ${JASYPT_ENCRYPTOR_PASSWORD}
+    password: commerce1
     bean: jasyptEncryptor
 
 spring:

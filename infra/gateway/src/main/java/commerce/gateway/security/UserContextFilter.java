@@ -69,7 +69,7 @@ public class UserContextFilter implements GlobalFilter, Ordered {
     private void removeINternalHeaders(ServerWebExchange exchange) {
         HttpHeaders responseHeaders = exchange.getResponse().getHeaders();
 
-        // 클라이언트에게 노출되면 안 되는 내부 헤더들 제거
+        // 🚨 클라이언트에게 노출되면 안 되는 내부 헤더들 제거
         responseHeaders.remove("X-User-ID");
         responseHeaders.remove("X-EMAIL");
         responseHeaders.remove("X-ROLES");
