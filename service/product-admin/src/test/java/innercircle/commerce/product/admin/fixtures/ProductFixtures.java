@@ -1,12 +1,8 @@
 package innercircle.commerce.product.admin.fixtures;
 
 import innercircle.commerce.product.core.domain.Product;
-import innercircle.commerce.product.core.domain.ProductImage;
 import innercircle.commerce.product.core.domain.ProductOption;
-import innercircle.commerce.product.core.domain.ProductStatus;
-import innercircle.commerce.product.core.domain.SaleType;
 
-import java.time.LocalDateTime;
 import java.util.List;
 
 public class ProductFixtures {
@@ -26,7 +22,6 @@ public class ProductFixtures {
 				VALID_BASE_PRICE,
 				VALID_STOCK,
 				null, // 옵션 없음
-				ProductImageFixtures.createValidImages(),
 				VALID_DETAIL_CONTENT
 		);
 	}
@@ -39,7 +34,6 @@ public class ProductFixtures {
 				VALID_BASE_PRICE,
 				VALID_STOCK,
 				ProductOptionFixtures.createValidOptions(),
-				ProductImageFixtures.createValidImages(),
 				VALID_DETAIL_CONTENT
 		);
 	}
@@ -52,7 +46,6 @@ public class ProductFixtures {
 				VALID_BASE_PRICE,
 				VALID_STOCK,
 				options,
-				ProductImageFixtures.createValidImages(),
 				VALID_DETAIL_CONTENT
 		);
 	}
@@ -63,7 +56,6 @@ public class ProductFixtures {
 			Long brandId,
 			Integer basePrice,
 			Integer stock,
-			List<ProductImage> images,
 			String detailContent
 	) {
 		return Product.create(
@@ -73,7 +65,6 @@ public class ProductFixtures {
 				basePrice,
 				stock,
 				null, // 옵션 없음
-				images,
 				detailContent
 		);
 	}
@@ -89,7 +80,6 @@ public class ProductFixtures {
 				VALID_BASE_PRICE,
 				VALID_STOCK,
 				List.of(),
-				ProductImageFixtures.createValidImages(),
 				VALID_DETAIL_CONTENT
 		);
 	}

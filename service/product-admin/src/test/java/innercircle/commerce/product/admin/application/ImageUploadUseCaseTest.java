@@ -139,53 +139,37 @@ class ImageUploadUseCaseTest {
 		}
 
 		@Test
-		@DisplayName("확장자가 없는 파일명의 경우 기본 확장자 jpg를 사용한다.")
-		void 확장자_없는_파일명_처리 () throws IOException {
+		@DisplayName("확장자가 없는 파일명의 경우 예외가 발생한다.")
+		void 확장자_없는_파일명_예외 () throws IOException {
 			// given
 			MultipartFile file = mock(MultipartFile.class);
 			given(file.getOriginalFilename()).willReturn("testfile");
 
-			String expectedUrl = "https://s3.amazonaws.com/bucket/commerce/temp/images/123/original.jpg";
-			given(s3ImageStore.upload(any(MultipartFile.class), any(String.class)))
-					.willReturn(expectedUrl);
-
 			List<MultipartFile> files = Collections.singletonList(file);
 
-			// when
-			List<ImageUploadInfo> result = imageUploadUseCase.uploadToTemp(files);
+			// when & then
+			assertThatThrownBy(() -> imageUploadUseCase.uploadToTemp(files))
+					.isInstanceOf(IllegalArgumentException.class)
+					.hasMessage("파일 확장자가 없습니다");
 
-			// then
-			assertThat(result).hasSize(1);
-			assertThat(result.get(0).url()).isEqualTo(expectedUrl);
-
-			then(s3ImageStore).should().upload(eq(file), argThat(key ->
-					key.endsWith("/original.jpg")
-			));
+			then(imageValidator).should().validate(eq(file));
 		}
 
 		@Test
-		@DisplayName("null 파일명의 경우 기본 확장자 jpg를 사용한다.")
-		void null_파일명_처리 () throws IOException {
+		@DisplayName("null 파일명의 경우 예외가 발생한다.")
+		void null_파일명_예외 () throws IOException {
 			// given
 			MultipartFile file = mock(MultipartFile.class);
 			given(file.getOriginalFilename()).willReturn(null);
 
-			String expectedUrl = "https://s3.amazonaws.com/bucket/commerce/temp/images/123/original.jpg";
-			given(s3ImageStore.upload(any(MultipartFile.class), any(String.class)))
-					.willReturn(expectedUrl);
-
 			List<MultipartFile> files = Collections.singletonList(file);
 
-			// when
-			List<ImageUploadInfo> result = imageUploadUseCase.uploadToTemp(files);
+			// when & then
+			assertThatThrownBy(() -> imageUploadUseCase.uploadToTemp(files))
+					.isInstanceOf(IllegalArgumentException.class)
+					.hasMessage("파일명이 null입니다");
 
-			// then
-			assertThat(result).hasSize(1);
-			assertThat(result.get(0).originalName()).isNull();
-
-			then(s3ImageStore).should().upload(eq(file), argThat(key ->
-					key.endsWith("/original.jpg")
-			));
+			then(imageValidator).should().validate(eq(file));
 		}
 	}
 }

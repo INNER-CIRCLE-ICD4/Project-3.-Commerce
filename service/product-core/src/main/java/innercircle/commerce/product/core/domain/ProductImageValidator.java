@@ -4,6 +4,9 @@ import org.apache.commons.lang3.StringUtils;
 
 public class ProductImageValidator {
 
+	private ProductImageValidator () {
+	}
+
 	protected static void validateProductId (Long productId) {
 		if (productId == null) {
 			throw new IllegalArgumentException("상품 ID는 필수입니다.");

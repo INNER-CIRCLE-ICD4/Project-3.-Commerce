@@ -2,12 +2,8 @@ package innercircle.commerce.product.admin.application;
 
 import innercircle.commerce.product.admin.application.dto.ProductCreateCommand;
 import innercircle.commerce.product.admin.application.dto.ProductImageInfo;
-import innercircle.commerce.product.admin.application.exception.DuplicateProductNameException;
-import innercircle.commerce.product.admin.application.exception.InvalidBrandException;
-import innercircle.commerce.product.admin.application.exception.InvalidCategoryException;
 import innercircle.commerce.product.admin.application.exception.NotFoundTempImageException;
-import innercircle.commerce.product.core.application.repository.BrandRepository;
-import innercircle.commerce.product.core.application.repository.CategoryRepository;
+import innercircle.commerce.product.admin.application.validator.ProductCreateCommandValidator;
 import innercircle.commerce.product.core.application.repository.ProductRepository;
 import innercircle.commerce.product.core.domain.Product;
 import innercircle.commerce.product.core.domain.ProductImage;
@@ -26,9 +22,8 @@ import java.util.List;
 @RequiredArgsConstructor
 public class ProductCreateUseCase {
 	private final ProductRepository productRepository;
-	private final BrandRepository brandRepository;
-	private final CategoryRepository categoryRepository;
 	private final S3ImageStore s3ImageStore;
+	private final ProductCreateCommandValidator validator;
 
 
 	/**
@@ -36,62 +31,21 @@ public class ProductCreateUseCase {
 	 *
 	 * @param command 상품 등록 명령 (이미지 포함)
 	 * @return 등록된 상품
-	 * @throws DuplicateProductNameException 상품명이 중복된 경우
-	 * @throws InvalidBrandException         유효하지 않은 브랜드 ID인 경우
-	 * @throws InvalidCategoryException      유효하지 않은 카테고리 ID인 경우
-	 * @throws NotFoundTempImageException    임시 이미지를 찾을 수 없는 경우
+	 * @throws NotFoundTempImageException 임시 이미지를 찾을 수 없는 경우
 	 */
 	@Transactional
 	public Product create (ProductCreateCommand command) {
-		validateProductNameDuplicate(command.name());
-		validateBrandExists(command.brandId());
-		validateCategoryExists(command.leafCategoryId());
+		validator.validate(command);
 
 		Product product = command.toDomain();
-		Product savedProduct = productRepository.save(product);
 
-		List<ProductImage> productImages = moveImagesToProduct(savedProduct.getId(), command.imageInfos());
+		List<ProductImage> productImages = moveImagesToProduct(product.getId(), command.imageInfos());
 
-		savedProduct.addImages(productImages);
-
-		return productRepository.save(savedProduct);
+		// 3. 이미지를 상품에 설정하고 다시 저장
+		product.addImages(productImages);
+		return productRepository.save(product);
 	}
 
-	/**
-	 * 상품명 중복 여부를 검증합니다.
-	 *
-	 * @param productName 상품명
-	 * @throws DuplicateProductNameException 중복된 경우
-	 */
-	private void validateProductNameDuplicate (String productName) {
-		if (productRepository.existsByName(productName)) {
-			throw new DuplicateProductNameException(productName);
-		}
-	}
-
-	/**
-	 * 브랜드 존재 여부를 검증합니다.
-	 *
-	 * @param brandId 브랜드 ID
-	 * @throws InvalidBrandException 존재하지 않는 경우
-	 */
-	private void validateBrandExists (Long brandId) {
-		if (!brandRepository.existsById(brandId)) {
-			throw new InvalidBrandException(brandId);
-		}
-	}
-
-	/**
-	 * 카테고리 존재 여부를 검증합니다.
-	 *
-	 * @param categoryId 카테고리 ID
-	 * @throws InvalidCategoryException 존재하지 않는 경우
-	 */
-	private void validateCategoryExists (Long categoryId) {
-		if (!categoryRepository.existsById(categoryId)) {
-			throw new InvalidCategoryException(categoryId);
-		}
-	}
 
 	/**
 	 * 임시 이미지들을 상품 이미지로 이동합니다.

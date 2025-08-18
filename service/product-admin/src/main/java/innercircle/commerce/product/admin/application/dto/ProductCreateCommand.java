@@ -1,6 +1,7 @@
 package innercircle.commerce.product.admin.application.dto;
 
 import innercircle.commerce.product.core.domain.Product;
+import innercircle.commerce.product.core.domain.ProductImage;
 import innercircle.commerce.product.core.domain.ProductOption;
 import org.springframework.util.CollectionUtils;
 
@@ -28,7 +29,7 @@ public record ProductCreateCommand(
 
 	/**
 	 * Command를 도메인 객체로 변환합니다 (이미지 없이).
-	 * 이미지는 별도 프로세스에서 처리 후 업데이트됩니다.
+	 * 이미지는 별도 프로세스에서 처리 후 설정됩니다.
 	 *
 	 * @return 생성된 Product 도메인 객체
 	 */
@@ -40,7 +41,6 @@ public record ProductCreateCommand(
 				basePrice,
 				stock,
 				options != null ? options : Collections.emptyList(),
-				Collections.emptyList(), // 이미지는 나중에 업데이트
 				detailContent
 		);
 	}
