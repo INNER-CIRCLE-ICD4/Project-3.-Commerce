@@ -4,6 +4,7 @@ import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.security.config.annotation.method.configuration.EnableReactiveMethodSecurity;
@@ -47,7 +48,9 @@ public class SecurityConfig {
                 .csrf(ServerHttpSecurity.CsrfSpec::disable)
                 .cors(cors -> cors.configurationSource(corsConfigurationSource(null)))
                 .authorizeExchange(ex ->
-                        ex.pathMatchers(
+                        ex
+                                .pathMatchers(HttpMethod.POST, "/api/member-service/members").permitAll()
+                                .pathMatchers(
                                         "/api/member-service/auth/**",
                                         "/actuator/**",
                                         "/swagger-ui/**",
@@ -99,7 +102,7 @@ public class SecurityConfig {
 
             String body = """
                     {"success":false,"code":"AUTH-401","message":"Unauthorized","traceId":"%s", "spanId": "%s","timestamp":%d}
-                    """.formatted(traceId == null ? "" : traceId,spanId, System.currentTimeMillis());
+                    """.formatted(traceId == null ? "" : traceId, spanId, System.currentTimeMillis());
 
             return res.writeWith(Mono.just(res.bufferFactory().wrap(body.getBytes(StandardCharsets.UTF_8))));
         });

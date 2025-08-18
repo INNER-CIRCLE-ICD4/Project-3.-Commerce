@@ -19,6 +19,7 @@ public class AuthController {
         return ResponseEntity.ok("인증 서버가 정상 작동 중입니다.");
     }
 
+
     @PostMapping("/login")
     public ResponseEntity<LoginResponse> login(@RequestBody LoginRequest request) {
 
