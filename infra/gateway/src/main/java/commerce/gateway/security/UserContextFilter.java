@@ -6,6 +6,7 @@ import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.cloud.gateway.filter.GlobalFilter;
 import org.springframework.core.Ordered;
 
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
@@ -38,6 +39,7 @@ public class UserContextFilter implements GlobalFilter, Ordered {
                 .cast(Authentication.class)
                 .map(auth -> {
                     if (auth instanceof JwtAuthenticationToken token) {
+                        String userId = token.getToken().getSubject();
                         String email = token.getToken().getClaimAsString(principalClaim);
                         String roles = auth.getAuthorities().stream()
                                 .map(GrantedAuthority::getAuthority)
@@ -45,8 +47,10 @@ public class UserContextFilter implements GlobalFilter, Ordered {
 
                         ServerHttpRequest mutated = exchange.getRequest().mutate()
                                 .headers(h -> {
-                                    if (email != null) h.set("X-EMAIL", email);
-                                    if (!roles.isEmpty()) h.set("X-ROLES", roles);
+                                    h.set("X-User-ID", userId);
+                                    h.set("X-EMAIL", email);
+                                    h.set("X-ROLES", roles);
+                                    h.set("X-AUTH-METHOD", "JWT");
                                 })
                                 .build();
                         return exchange.mutate().request(mutated).build();
@@ -56,9 +60,22 @@ public class UserContextFilter implements GlobalFilter, Ordered {
                 })
                 .defaultIfEmpty(exchange)
                 .flatMap(modifiedExchange -> {
+                    removeINternalHeaders(modifiedExchange);
                     addTraceHeaders(modifiedExchange);
                     return chain.filter(modifiedExchange);
                 });
+    }
+
+    private void removeINternalHeaders(ServerWebExchange exchange) {
+        HttpHeaders responseHeaders = exchange.getResponse().getHeaders();
+
+        // 클라이언트에게 노출되면 안 되는 내부 헤더들 제거
+        responseHeaders.remove("X-User-ID");
+        responseHeaders.remove("X-EMAIL");
+        responseHeaders.remove("X-ROLES");
+        responseHeaders.remove("X-AUTH-METHOD");
+
+        System.out.println("✅ 내부 헤더 제거 완료");
     }
 
     private void addTraceHeaders(ServerWebExchange exchange) {

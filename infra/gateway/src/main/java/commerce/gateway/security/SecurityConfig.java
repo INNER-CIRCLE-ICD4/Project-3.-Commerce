@@ -40,6 +40,7 @@ public class SecurityConfig {
 
         JwtGrantedAuthoritiesConverter gac = new JwtGrantedAuthoritiesConverter();
         gac.setAuthoritiesClaimName(authorityClaim);
+        gac.setAuthorityPrefix("ROLE_");
 
         JwtAuthenticationConverter delegate = new JwtAuthenticationConverter();
         delegate.setJwtGrantedAuthoritiesConverter(gac);
@@ -57,6 +58,11 @@ public class SecurityConfig {
                                         "/v3/api-docs/**",
                                         "/swagger-ui.html"
                                 ).permitAll()
+
+                                // 판매자/구매자 공통
+                                .pathMatchers("/api/member-service/members/**").hasAnyRole("BUYER", "SELLER", "ADMIN")
+
+                                // 판매자 전용
                                 .anyExchange().authenticated()
                 )
                 .exceptionHandling(e -> e
@@ -114,14 +120,30 @@ public class SecurityConfig {
             @Value("${jwt.jwk-set-uri:}") String jwkSetUri
     ) {
 
+        // 🔍 실제 secret 값 디버깅
+        System.out.println("🔑 Gateway JWT Secret 전체: '" + secret + "'");
+        System.out.println("🔑 Gateway JWT Secret 길이: " + secret.length());
+        System.out.println("🔑 Gateway JWT Secret 바이트 길이: " + secret.getBytes(StandardCharsets.UTF_8).length);
+
+        if (secret.isEmpty()) {
+            System.out.println("❌ JWT Secret이 비어있습니다!");
+            throw new IllegalArgumentException("JWT secret cannot be empty");
+        }
+
         if (org.springframework.util.StringUtils.hasText(jwkSetUri)) {
             return NimbusReactiveJwtDecoder.withJwkSetUri(jwkSetUri).build();
         }
 
-        SecretKey key = new SecretKeySpec(secret.getBytes(StandardCharsets.UTF_8), "HmacSHA256");
+        SecretKey key = new SecretKeySpec(secret.getBytes(StandardCharsets.UTF_8), "HmacSHA512");
+
+        // 🔍 생성된 키 정보 확인
+        System.out.println("🔧 SecretKey Algorithm: " + key.getAlgorithm());
+        System.out.println("🔧 SecretKey Format: " + key.getFormat());
+
+        System.out.println("✅ JWT Decoder 생성 완료 (HS512)");
 
         return NimbusReactiveJwtDecoder.withSecretKey(key)
-                .macAlgorithm(MacAlgorithm.HS256)
+                .macAlgorithm(MacAlgorithm.HS512)
                 .build();
     }
 
