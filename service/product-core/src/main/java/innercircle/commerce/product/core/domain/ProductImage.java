@@ -3,10 +3,6 @@ package innercircle.commerce.product.core.domain;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.springframework.util.CollectionUtils;
-
-import java.util.List;
-import java.util.Optional;
 
 import static innercircle.commerce.product.core.domain.ProductImageValidator.*;
 
@@ -50,7 +46,7 @@ public class ProductImage {
 		return new ProductImage(null, productId, url, originalName, isMain, sortOrder);
 	}
 
-	private void setProductId (Long productId) {
+	protected void setProductId (Long productId) {
 		validateProductId(productId);
 		this.productId = productId;
 	}

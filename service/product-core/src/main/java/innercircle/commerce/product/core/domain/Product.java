@@ -1,6 +1,7 @@
 package innercircle.commerce.product.core.domain;
 
 import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -27,6 +28,7 @@ public class Product {
 	private LocalDateTime createdAt;
 	private LocalDateTime updatedAt;
 
+	@Builder(access = AccessLevel.PRIVATE)
 	private Product (
 			Long id, String name, Long categoryId, Long brandId, Integer price, Integer stock,
 			List<ProductOption> options, List<ProductImage> images, String detailContent,
@@ -39,7 +41,7 @@ public class Product {
 		setPrice(price);
 		setStock(stock);
 		setOptions(options);
-		setImages(images);
+		this.images = images;
 		setDetailContent(detailContent);
 		this.saleType = saleType;
 		this.status = status;
@@ -57,30 +59,54 @@ public class Product {
 	 * @param price         기본 가격
 	 * @param stock         재고 수량
 	 * @param options       상품 옵션 리스트 (nullable)
-	 * @param images        상품 이미지 리스트
 	 * @param detailContent 상품 상세 내용
 	 * @return 생성된 상품 객체
 	 * @throws IllegalArgumentException 검증 실패 시
 	 */
 	public static Product create (
 			String name, Long categoryId, Long brandId, Integer price,
-			Integer stock, List<ProductOption> options, List<ProductImage> images, String detailContent
+			Integer stock, List<ProductOption> options, String detailContent
 	) {
 		LocalDateTime now = LocalDateTime.now();
-		return new Product(
-				null, name, categoryId, brandId, price, stock, options, images,
-				detailContent, SaleType.NEW, ProductStatus.SALE, now, now
-		);
+
+		return Product.builder()
+					  .id(null)
+					  .name(name)
+					  .categoryId(categoryId)
+					  .brandId(brandId)
+					  .price(price)
+					  .stock(stock)
+					  .options(options)
+					  .detailContent(detailContent)
+					  .saleType(SaleType.NEW)
+					  .status(ProductStatus.SALE)
+					  .createdAt(now)
+					  .updatedAt(now)
+					  .build();
 	}
 
 	public static Product restore (
 			Long id, String name, Long categoryId, Long brandId, Integer price, Integer stock, List<ProductOption> options,
 			List<ProductImage> images, String detailContent, SaleType saleType, ProductStatus status
 	) {
-		return new Product(
-				id, name, categoryId, brandId, price, stock, options,
-				images, detailContent, saleType, status, null, null
-		);
+		return Product.builder()
+					  .id(id)
+					  .name(name)
+					  .categoryId(categoryId)
+					  .brandId(brandId)
+					  .price(price)
+					  .stock(stock)
+					  .options(options)
+					  .images(images)
+					  .detailContent(detailContent)
+					  .saleType(saleType)
+					  .status(status)
+					  .build();
+	}
+
+	public void addImages (List<ProductImage> images) {
+		validateImages(images);
+		this.images = images;
 	}
 
 	public void update (String name, Integer price, String detailContent) {
@@ -116,25 +142,11 @@ public class Product {
 
 	private void setOptions (List<ProductOption> options) {
 		validateOptions(options);
-		this.options = Collections.unmodifiableList(options);
-	}
-
-	private void setImages (List<ProductImage> images) {
-		validateImages(images);
-		this.images = images;
+		this.options = Collections.unmodifiableList(options != null ? options : Collections.emptyList());
 	}
 
 	private void setDetailContent (String detailContent) {
 		validateDetailContent(detailContent);
 		this.detailContent = detailContent;
-	}
-
-	/**
-	 * 상품에 이미지 리스트를 추가합니다.
-	 *
-	 * @param images 추가할 이미지 리스트
-	 */
-	public void addImages (List<ProductImage> images) {
-		setImages(images);
 	}
 }

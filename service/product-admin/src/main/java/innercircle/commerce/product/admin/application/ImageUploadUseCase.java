@@ -1,8 +1,8 @@
 package innercircle.commerce.product.admin.application;
 
-import innercircle.commerce.common.snowflake.Snowflake;
 import innercircle.commerce.product.admin.application.dto.ImageUploadInfo;
 import innercircle.commerce.product.admin.application.validator.ImageValidator;
+import innercircle.commerce.product.core.domain.TempImage;
 import innercircle.commerce.product.infra.s3.S3ImageStore;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -37,25 +37,30 @@ public class ImageUploadUseCase {
 		}
 
 		List<ImageUploadInfo> uploadInfos = new ArrayList<>();
-		Snowflake snowflake = new Snowflake();
+		List<TempImage> tempImages = new ArrayList<>();
 
 		try {
 			for (MultipartFile file : files) {
 				String originalFilename = file.getOriginalFilename();
-				Long tempId = snowflake.nextId();
-				String s3Key = buildTempPath(tempId.toString(), getFileExtension(originalFilename));
-
+				
+				TempImage tempImage = TempImage.createWithoutUrl(originalFilename);
+				
+				String s3Key = buildTempPath(tempImage.getId().toString(), getFileExtension(originalFilename));
 				String uploadUrl = s3ImageStore.upload(file, s3Key);
-				uploadInfos.add(new ImageUploadInfo(tempId, originalFilename, uploadUrl));
+				
+				TempImage finalTempImage = TempImage.restore(tempImage.getId(), originalFilename, uploadUrl);
+				tempImages.add(finalTempImage);
+				
+				uploadInfos.add(new ImageUploadInfo(finalTempImage.getId(), finalTempImage.getOriginalName(), finalTempImage.getUrl()));
 			}
 
 			return uploadInfos;
 
 		} catch (Exception e) {
-			if (!uploadInfos.isEmpty()) {
-				List<String> tempKeys = uploadInfos.stream()
-												   .map(ImageUploadInfo::url)
-												   .toList();
+			if (!tempImages.isEmpty()) {
+				List<String> tempKeys = tempImages.stream()
+												  .map(TempImage::getUrl)
+												  .toList();
 				s3ImageStore.delete(tempKeys);
 			}
 			throw e;
@@ -71,11 +76,16 @@ public class ImageUploadUseCase {
 
 	/**
 	 * 파일명에서 확장자 추출
+	 * ImageValidator에서 이미 검증된 파일이므로 확장자가 존재함을 보장
 	 */
 	private String getFileExtension (String filename) {
-		if (filename == null) return "jpg";
+		if (filename == null) {
+			throw new IllegalArgumentException("파일명이 null입니다");
+		}
 		int lastDotIndex = filename.lastIndexOf('.');
-		if (lastDotIndex == -1) return "jpg";
+		if (lastDotIndex == -1) {
+			throw new IllegalArgumentException("파일 확장자가 없습니다");
+		}
 		return filename.substring(lastDotIndex + 1).toLowerCase();
 	}
 }

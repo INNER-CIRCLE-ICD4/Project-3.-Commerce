@@ -47,7 +47,7 @@ public class ProductValidator {
 	}
 
 	protected static void validateOptions (List<ProductOption> options) {
-		if (options.size() > 10) {
+		if (options != null && options.size() > 10) {
 			throw new IllegalArgumentException("상품 옵션은 10개까지 등록할 수 있습니다.");
 		}
 	}

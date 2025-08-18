@@ -8,17 +8,17 @@ import innercircle.commerce.product.admin.application.exception.DuplicateProduct
 import innercircle.commerce.product.admin.application.exception.ProductNotFoundException;
 import innercircle.commerce.product.core.application.repository.ProductRepository;
 import innercircle.commerce.product.core.domain.Product;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
 
 /**
  * 상품 수정 UseCase
  */
+@Service
+@RequiredArgsConstructor
 public class ProductUpdateUseCase {
 
 	private final ProductRepository productRepository;
-
-	public ProductUpdateUseCase (ProductRepository productRepository) {
-		this.productRepository = productRepository;
-	}
 
 	/**
 	 * 상품 기본 정보를 수정합니다.
