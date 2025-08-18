@@ -66,7 +66,7 @@ class AuthControllerTest {
         String accessToken = tokenPort.generateAccessToken(userId, "sw.noh@gmail.com", List.of("BUYER"));
         String refreshToken = tokenPort.generateRefreshToken(userId, "sw.noh@gmail.com", List.of("BUYER"));
 
-        LoginResponse loginResponse = new LoginResponse(accessToken, refreshToken);
+        LoginResponse loginResponse = new LoginResponse(accessToken, refreshToken, "Bearer", 3600000L);
 
         when(authUseCase.login(loginRequest))
                 .thenReturn(loginResponse);
