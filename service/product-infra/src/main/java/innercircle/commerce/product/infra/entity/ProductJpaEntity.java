@@ -20,23 +20,19 @@ import java.util.Collections;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class ProductJpaEntity {
 	@Id
-	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
 
 	@Column(nullable = false, length = 255)
 	private String name;
 
-	@Column(unique = true, length = 100)
-	private String code;
-
-	@Column(name = "leaf_category_id", nullable = false)
-	private Long leafCategoryId;
+	@Column(name = "category_id", nullable = false)
+	private Long categoryId;
 
 	@Column(name = "brand_id", nullable = false)
 	private Long brandId;
 
-	@Column(name = "base_price", nullable = false)
-	private Integer basePrice;
+	@Column(nullable = false)
+	private Integer price;
 
 	@Enumerated(EnumType.STRING)
 	@Column(nullable = false)
@@ -60,8 +56,23 @@ public class ProductJpaEntity {
 	@Column(name = "updated_at", nullable = false)
 	private LocalDateTime updatedAt;
 
+	/**
+	 * Domain Product 객체에서 JPA Entity로 변환
+	 */
 	public static ProductJpaEntity from (Product product) {
-		return null;
+		ProductJpaEntity entity = new ProductJpaEntity();
+		entity.id = product.getId();
+		entity.name = product.getName();
+		entity.categoryId = product.getCategoryId();
+		entity.brandId = product.getBrandId();
+		entity.price = product.getPrice();
+		entity.status = product.getStatus();
+		entity.saleType = product.getSaleType();
+		entity.detailContent = product.getDetailContent();
+		entity.stock = product.getStock();
+		entity.createdAt = product.getCreatedAt();
+		entity.updatedAt = product.getUpdatedAt();
+		return entity;
 	}
 
 	/**
@@ -71,35 +82,15 @@ public class ProductJpaEntity {
 		return Product.restore(
 			this.id,
 			this.name,
-			this.leafCategoryId,
+			this.categoryId,
 			this.brandId,
-			this.basePrice,
+			this.price,
 			this.stock,
-			Collections.emptyList(), // TODO: ProductOption 구현 후 추가
-			Collections.emptyList(), // TODO: ProductImage 구현 후 추가
+			Collections.emptyList(), // ProductOption은 별도 조회
+			Collections.emptyList(), // ProductImage는 별도 조회
 			this.detailContent,
 			this.saleType,
 			this.status
 		);
 	}
-
-	//	/**
-	//	 * Domain Product 객체에서 JPA Entity로 변환
-	//	 */
-	//	public static ProductJpaEntity from (Product product) {
-	//		return ProductJpaEntity.builder()
-	//							   .id(product.getId())
-	//							   .name(product.getName())
-	//							   .code(product.getCode())
-	//							   .leafCategoryId(product.getLeafCategoryId())
-	//							   .brandId(product.getBrandId())
-	//							   .basePrice(product.getBasePrice())
-	//							   .status(product.getStatus())
-	//							   .saleType(product.getSaleType())
-	//							   .detailContent(product.getDetailContent())
-	//							   .stock(product.getStock())
-	//							   .createdAt(product.getCreatedAt())
-	//							   .updatedAt(product.getUpdatedAt())
-	//							   .build();
-	//	}
 }

@@ -110,16 +110,4 @@ public class S3ImageStore {
 			amazonS3Client.deleteObject(new DeleteObjectRequest(bucketName, s3Key));
 		}
 	}
-
-	/**
-	 * 업로드된 이미지 정보
-	 */
-	public record UploadedImageInfo(
-			String originalName,
-			String url,
-			String s3Key,
-			long size,
-			String contentType
-	) {
-	}
 }
