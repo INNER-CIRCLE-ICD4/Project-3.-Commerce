@@ -227,10 +227,6 @@ curl -H "Authorization: Bearer $TOKEN" \
 docker build -t commerce-gateway .
 ```
 
-### Kubernetes 배포
-```bash
-kubectl apply -f k8s/gateway-deployment.yaml
-```
 
 ### 환경별 설정
 - **local**: `application-local.yml`
@@ -265,4 +261,4 @@ kubectl apply -f k8s/gateway-deployment.yaml
 **Port**: 8000  
 **Profile**: local, prod  
 **Version**: 1.0  
-**Last Updated**: 2025-01-11
+**Last Updated**: 2025-08-18
