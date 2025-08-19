@@ -1,6 +1,6 @@
 package innercircle.member.application.service;
 
-import innercircle.global.ErrorCode;
+import innercircle.global.auth.AuthErrorCode;
 import innercircle.member.application.port.in.AuthUseCase;
 import innercircle.member.application.port.out.PasswordEncoderPort;
 import innercircle.member.application.port.out.TokenPort;
@@ -36,7 +36,7 @@ public class AuthApplicationService implements AuthUseCase {
 
         //todo 검증
         if (!passwordEncoderPort.matches(request.password(), userInfo.getEncodedPassword())) {
-            throw new LoginFailedException(ErrorCode.LOGIN_FAILED, "Password mismatch for user: " + userInfo.getEmail());
+            throw new LoginFailedException(AuthErrorCode.LOGIN_FAILED, "Password mismatch for user: " + userInfo.getEmail());
         }
 
         //jwt 토큰 생성

@@ -1,12 +1,11 @@
 package innercircle.member.domain.auth;
 
-import innercircle.global.ErrorCode;
+import innercircle.global.auth.AuthErrorCode;
 import innercircle.global.GlobalException;
-import org.springframework.http.HttpStatus;
 
 public class LoginFailedException extends GlobalException {
 
-    public LoginFailedException(ErrorCode code, String errorMessage) {
+    public LoginFailedException(AuthErrorCode code, String errorMessage) {
         super(code.getStatus(), code.getErrorCode(), code.getTitle(), code.getUserMessage(), errorMessage);
     }
 }

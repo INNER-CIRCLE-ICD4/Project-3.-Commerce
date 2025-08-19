@@ -1,6 +1,6 @@
 package innercircle.member.infrastructure.adapter.out;
 
-import innercircle.global.ErrorCode;
+import innercircle.global.auth.AuthErrorCode;
 import innercircle.member.application.port.out.MemberRepository;
 import innercircle.member.application.port.out.UserAuthInfoProvider;
 import innercircle.member.domain.auth.UserAuthInfo;
@@ -22,7 +22,7 @@ public class UserAuthInfoAdapter implements UserAuthInfoProvider {
     public UserAuthInfo findByEmail(String email) {
 
         Member member = memberRepository.findByEmail(new Email(email))
-                .orElseThrow(() -> new UserNotExistsException(ErrorCode.LOGIN_FAILED, "user not found. email=" + email));
+                .orElseThrow(() -> new UserNotExistsException(AuthErrorCode.LOGIN_FAILED, "user not found. email=" + email));
 
 
         if (!member.getStatus().isActive()) {

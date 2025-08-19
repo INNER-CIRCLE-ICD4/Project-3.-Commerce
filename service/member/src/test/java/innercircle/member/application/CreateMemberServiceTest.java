@@ -45,15 +45,15 @@ class CreateMemberServiceTest {
 
 
         when(passwordEncoderPort.encode(any())).thenReturn("$2a$12$xlARSI2aAoLcFVWJiMoN..XUvDhME0nXYbaMO2UTaoTT6835QhMcu");
-        when(memberDomainService.existsByEmail(memberCreateRequest.email(), memberRepository)).thenReturn(true);
+        when(memberDomainService.existsByEmail(memberCreateRequest.email())).thenReturn(true);
         when(memberRepository.save(any(Member.class))).thenReturn(member);
 
-        MemberResponse response = memberApplicationService.createMember(memberCreateRequest);
+        MemberCreateResponse response = memberApplicationService.createMember(memberCreateRequest);
 
         assertThat(response.memberId()).isEqualTo(id);
         assertThat(response.name()).isEqualTo(member.getName());
 
-        verify(memberDomainService).existsByEmail(memberCreateRequest.email(), memberRepository);
+        verify(memberDomainService).existsByEmail(memberCreateRequest.email());
         verify(memberRepository).save(any(Member.class));
     }
 

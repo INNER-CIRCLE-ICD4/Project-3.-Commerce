@@ -1,10 +1,11 @@
 package innercircle.member.infrastructure.adapter.in;
 
 import innercircle.member.application.MemberCreateRequest;
-import innercircle.member.application.MemberResponse;
+import innercircle.member.application.MemberCreateResponse;
 import innercircle.member.application.port.in.MemberUseCase;
+import innercircle.member.domain.member.Member;
 import innercircle.member.domain.member.MemberStatus;
-import jakarta.servlet.http.HttpServletRequest;
+import innercircle.member.infrastructure.adapter.in.mapper.MemberWebMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -22,24 +23,26 @@ import java.util.List;
 public class MemberController {
 
     private final MemberUseCase memberUseCase;
+    private final MemberWebMapper memberWebMapper;
 
     @PostMapping
-    public ResponseEntity<MemberResponse> createMember(@RequestBody MemberCreateRequest request) {
-        log.info("회원가입 요청 : {}", request.email());
+    public ResponseEntity<MemberCreateResponse> createMember(@RequestBody MemberCreateRequest request) {
 
-        MemberResponse member = memberUseCase.createMember(request);
+        Member member = memberUseCase.createMember(
+                memberWebMapper.reqToEntity(request)
+        );
 
-        log.info("회원가입 완료, member_id: {}, email: {}", member.memberId(), member.email());
-
-        return ResponseEntity.status(HttpStatus.CREATED).body(member);
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(memberWebMapper.entityToRes(member));
     }
 
     @GetMapping("/{memberId}")
-    public ResponseEntity<MemberResponse> getMember(@PathVariable Long memberId,
-                                                    @RequestHeader(value = "X-User-ID", required = false) String userIdHeader,
-                                                    @RequestHeader(value = "X-EMAIL", required = false) String emailHeader,
-                                                    @RequestHeader(value = "X-ROLES", required = false) String rolesHeader,
-                                                    @RequestHeader(value = "X-AUTH-METHOD", required = false) String authMethodHeader) {
+    public ResponseEntity<MemberCreateResponse> getMember(@PathVariable Long memberId,
+                                                          @RequestHeader(value = "X-User-ID", required = false) String userIdHeader,
+                                                          @RequestHeader(value = "X-EMAIL", required = false) String emailHeader,
+                                                          @RequestHeader(value = "X-ROLES", required = false) String rolesHeader,
+                                                          @RequestHeader(value = "X-AUTH-METHOD", required = false) String authMethodHeader) {
 
         // 🔍 헤더 정보 로깅
         log.info("=== Gateway 헤더 정보 ===");
@@ -49,7 +52,7 @@ public class MemberController {
         log.info("X-AUTH-METHOD: {}", authMethodHeader);
         log.info("PathVariable memberId: {}", memberId);
 
-        return ResponseEntity.ok(new MemberResponse(
+        return ResponseEntity.ok(new MemberCreateResponse(
                 1L,
                 "sw.noh@gmail.com",
                 "노성웅",

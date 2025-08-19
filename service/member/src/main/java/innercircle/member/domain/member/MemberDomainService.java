@@ -1,25 +1,32 @@
 package innercircle.member.domain.member;
 
-import com.sun.jdi.request.DuplicateRequestException;
+import innercircle.global.member.MemberErrorCode;
 import innercircle.member.application.port.out.MemberRepository;
+import innercircle.member.application.port.out.PasswordEncoderPort;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.util.Optional;
 
 @Component
+@RequiredArgsConstructor
 public class MemberDomainService {
 
+    private final MemberRepository memberRepository;
+    private final PasswordEncoderPort passwordEncoderPort;
 
-    public boolean existsByEmail(String email, MemberRepository memberRepository) {
+    public boolean existsByEmail(String email) {
 
         Email requestEmail = new Email(email);
 
         Optional<Member> byEmail = memberRepository.findByEmail(requestEmail);
 
-        if(byEmail.isPresent()) {
-            throw new DuplicateRequestException("이미 가입된 이메일입니다. email: " + email);
-        }
+        if (byEmail.isPresent()) throw new DuplicateRequestException(MemberErrorCode.DUPLICATE_EMAIL, "이미 존재하는 이메일입니다. email=" + requestEmail.email());
 
         return true;
+    }
+
+    public String encodePassword(String password) {
+        return passwordEncoderPort.encode(password);
     }
 }

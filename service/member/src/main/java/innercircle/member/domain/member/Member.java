@@ -1,5 +1,6 @@
 package innercircle.member.domain.member;
 
+import innercircle.member.application.port.out.PasswordEncoderPort;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -25,28 +26,21 @@ import static innercircle.member.domain.member.ValidationMember.*;
 public class Member extends BaseEntity {
 
     @NaturalId
-    @Column(name = "email", nullable = false)
     @Embedded
     private Email email;
 
-    @Column(name = "name", nullable = false)
     private String name;
 
-    @Column(name = "password", nullable = false)
     private String password;
 
-    @Column(name = "birth_date")
     private LocalDate birthDate;
 
-    @Column(name = "gender", nullable = false)
     @Enumerated(value = EnumType.STRING)
     private Gender gender;
 
-    @Column(name = "status", nullable = false)
     @Enumerated(value = EnumType.STRING)
     private MemberStatus status;
 
-    @Column(name = "create_at", nullable = false)
     private LocalDateTime createAt;
 
     @OneToMany(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true)
@@ -112,6 +106,17 @@ public class Member extends BaseEntity {
                 .toList();
     }
 
+    public Member withEncodedPassword(String encodedPassword) {
+        return Member.create(
+                this.email.email(),
+                this.name,
+                encodedPassword,
+                this.birthDate != null ? this.birthDate.toString() : null,
+                this.gender.name()
+        );
+
+    }
+
     public boolean isActive() {
         return this.status == MemberStatus.ACTIVE;
     }
@@ -129,18 +134,5 @@ public class Member extends BaseEntity {
     @Override
     public int hashCode() {
         return Objects.hashCode(email);
-    }
-
-    @Override
-    public String toString() {
-        return "Member{" +
-                "email=" + email +
-                ", name='" + name + '\'' +
-                ", password='" + password + '\'' +
-                ", birthDate=" + birthDate +
-                ", gender=" + gender +
-                ", status=" + status +
-                ", createAt=" + createAt +
-                '}';
     }
 }

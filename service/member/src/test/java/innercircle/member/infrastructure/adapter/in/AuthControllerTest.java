@@ -3,7 +3,7 @@ package innercircle.member.infrastructure.adapter.in;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import innercircle.commerce.common.snowflake.Snowflake;
 import innercircle.config.SecurityConfig;
-import innercircle.global.ErrorCode;
+import innercircle.global.auth.AuthErrorCode;
 import innercircle.member.application.port.in.AuthUseCase;
 import innercircle.member.application.port.out.TokenPort;
 import innercircle.member.domain.auth.LoginFailedException;
@@ -88,7 +88,7 @@ class AuthControllerTest {
         LoginRequest loginRequest = new LoginRequest("sw.noh@gmail.com", "password1234");
 
         when(authUseCase.login(loginRequest))
-                .thenThrow(new LoginFailedException(ErrorCode.LOGIN_FAILED, "비밀번호가 일치하지 않습니다."));
+                .thenThrow(new LoginFailedException(AuthErrorCode.LOGIN_FAILED, "비밀번호가 일치하지 않습니다."));
 
         // When & Then
         mockMvc.perform(post("/auth/login")

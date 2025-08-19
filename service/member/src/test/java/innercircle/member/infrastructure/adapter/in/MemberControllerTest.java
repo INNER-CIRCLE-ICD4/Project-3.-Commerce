@@ -3,7 +3,7 @@ package innercircle.member.infrastructure.adapter.in;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import innercircle.commerce.common.snowflake.Snowflake;
 import innercircle.member.application.MemberCreateRequest;
-import innercircle.member.application.MemberResponse;
+import innercircle.member.application.MemberCreateResponse;
 import innercircle.member.application.port.in.MemberUseCase;
 import innercircle.member.domain.member.Gender;
 import innercircle.member.domain.member.MemberStatus;
@@ -50,7 +50,7 @@ class MemberControllerTest {
     void memberCreate() throws Exception {
 
         MemberCreateRequest memberCreateRequest = new MemberCreateRequest("swnoh@google.com", "노성웅", "12345678A", "1996-04-23", "MAIL");
-        MemberResponse response = new MemberResponse(new Snowflake().nextId(), memberCreateRequest.email(), memberCreateRequest.name(), LocalDate.of(1996, Month.APRIL, 23), Gender.MAIL.name(), MemberStatus.ACTIVE, LocalDateTime.now(), List.of(RoleType.BUYER.name()));
+        MemberCreateResponse response = new MemberCreateResponse(new Snowflake().nextId(), memberCreateRequest.email(), memberCreateRequest.name(), LocalDate.of(1996, Month.APRIL, 23), Gender.MAIL.name(), MemberStatus.ACTIVE, LocalDateTime.now(), List.of(RoleType.BUYER.name()));
 
         when(memberUseCase.createMember(memberCreateRequest))
                 .thenReturn(response);

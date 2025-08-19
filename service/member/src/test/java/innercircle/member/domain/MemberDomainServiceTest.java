@@ -36,7 +36,7 @@ class MemberDomainServiceTest {
 
         when(memberRepository.findByEmail(email)).thenReturn(Optional.empty());
 
-        assertThatCode(() -> memberDomainService.existsByEmail("asdz453@gmail.com", memberRepository))
+        assertThatCode(() -> memberDomainService.existsByEmail("asdz453@gmail.com"))
                 .doesNotThrowAnyException();
 
         verify(memberRepository).findByEmail(email);
@@ -48,7 +48,7 @@ class MemberDomainServiceTest {
 
         when(memberRepository.findByEmail(any(Email.class))).thenReturn(Optional.of(Member.create("asdz453@gmail.com", "노성웅", "password1234", "2025-07-21", "MAIL")));
 
-        assertThatThrownBy(() -> memberDomainService.existsByEmail(mail, memberRepository))
+        assertThatThrownBy(() -> memberDomainService.existsByEmail(mail))
                 .isInstanceOf(DuplicateRequestException.class)
                 .hasMessageContaining("이미 가입된 이메일입니다. email");
 
