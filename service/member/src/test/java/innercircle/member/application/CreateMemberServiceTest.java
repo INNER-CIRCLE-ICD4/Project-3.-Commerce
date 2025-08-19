@@ -13,6 +13,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 
+import static org.assertj.core.api.Assertions.*;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
@@ -36,24 +37,28 @@ class CreateMemberServiceTest {
     @Test
     void 회원_가입_신청_성공() {
 
-        MemberCreateRequest memberCreateRequest = new MemberCreateRequest("asdz453@gmail.com", "노성웅", "12345678a", "1996-04-23", "MAIL");
-
         Member member = Member.create("asdz453@gmail.com", "노성웅", "12345678a", "1996-04-23", "MAIL");
+
+        Member encodedMember = member.withEncodedPassword("encodedPassword1234");
 
         long id = SnowFlakeGenerator.GENERATOR.nextId();
         ReflectionTestUtils.setField(member, "id", id);
 
+        when(memberDomainService.existsByEmail("asdz453@gmail.com"))
+                .thenReturn(true);
 
-        when(passwordEncoderPort.encode(any())).thenReturn("$2a$12$xlARSI2aAoLcFVWJiMoN..XUvDhME0nXYbaMO2UTaoTT6835QhMcu");
-        when(memberDomainService.existsByEmail(memberCreateRequest.email())).thenReturn(true);
-        when(memberRepository.save(any(Member.class))).thenReturn(member);
+        when(memberDomainService.encodePassword(any()))
+                .thenReturn("encodedPassword1234");
 
-        MemberCreateResponse response = memberApplicationService.createMember(memberCreateRequest);
+        when(memberRepository.save(any(Member.class)))
+                .thenReturn(encodedMember);
 
-        assertThat(response.memberId()).isEqualTo(id);
-        assertThat(response.name()).isEqualTo(member.getName());
+        Member response = memberApplicationService.createMember(encodedMember);
 
-        verify(memberDomainService).existsByEmail(memberCreateRequest.email());
+        assertThat(response.getEmail().email()).isEqualTo("asdz453@gmail.com");
+        assertThat(response.getName()).isEqualTo(member.getName());
+        assertThat(response.getPassword()).isEqualTo(encodedMember.getPassword());
+
         verify(memberRepository).save(any(Member.class));
     }
 

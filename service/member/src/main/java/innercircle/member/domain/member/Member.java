@@ -1,6 +1,5 @@
 package innercircle.member.domain.member;
 
-import innercircle.member.application.port.out.PasswordEncoderPort;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;

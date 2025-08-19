@@ -1,7 +1,7 @@
 package innercircle.member.domain;
 
-import com.sun.jdi.request.DuplicateRequestException;
 import innercircle.member.application.port.out.MemberRepository;
+import innercircle.member.domain.member.DuplicateRequestException;
 import innercircle.member.domain.member.Email;
 import innercircle.member.domain.member.Member;
 import innercircle.member.domain.member.MemberDomainService;
@@ -50,7 +50,7 @@ class MemberDomainServiceTest {
 
         assertThatThrownBy(() -> memberDomainService.existsByEmail(mail))
                 .isInstanceOf(DuplicateRequestException.class)
-                .hasMessageContaining("이미 가입된 이메일입니다. email");
+                .hasMessageContaining("이미 존재하는 이메일입니다.");
 
         verify(memberRepository).findByEmail(new Email(mail));
 
