@@ -5,6 +5,7 @@ include(
     "common:snowflake",
     "common:logging",
     "common:encryption",
+    "common:web-security",
     "service",
     "service:order",
     "service:review",
