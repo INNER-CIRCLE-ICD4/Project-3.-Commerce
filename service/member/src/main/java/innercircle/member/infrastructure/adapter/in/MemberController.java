@@ -1,5 +1,7 @@
 package innercircle.member.infrastructure.adapter.in;
 
+import innercircle.common.AuthenticatedUser;
+import innercircle.common.CurrentUser;
 import innercircle.member.application.MemberCreateRequest;
 import innercircle.member.application.MemberCreateResponse;
 import innercircle.member.application.port.in.MemberUseCase;
@@ -39,17 +41,13 @@ public class MemberController {
 
     @GetMapping("/{memberId}")
     public ResponseEntity<MemberCreateResponse> getMember(@PathVariable Long memberId,
-                                                          @RequestHeader(value = "X-User-ID", required = false) String userIdHeader,
-                                                          @RequestHeader(value = "X-EMAIL", required = false) String emailHeader,
-                                                          @RequestHeader(value = "X-ROLES", required = false) String rolesHeader,
-                                                          @RequestHeader(value = "X-AUTH-METHOD", required = false) String authMethodHeader) {
+                                                          @CurrentUser AuthenticatedUser authenticatedUser) {
 
         // 🔍 헤더 정보 로깅
         log.info("=== Gateway 헤더 정보 ===");
-        log.info("X-User-ID: {}", userIdHeader);
-        log.info("X-EMAIL: {}", emailHeader);
-        log.info("X-ROLES: {}", rolesHeader);
-        log.info("X-AUTH-METHOD: {}", authMethodHeader);
+        log.info("X-User-ID: {}", authenticatedUser.userId());
+        log.info("X-EMAIL: {}", authenticatedUser.email());
+        log.info("X-AUTH-METHOD: {}", authenticatedUser.authMethod());
         log.info("PathVariable memberId: {}", memberId);
 
         return ResponseEntity.ok(new MemberCreateResponse(
