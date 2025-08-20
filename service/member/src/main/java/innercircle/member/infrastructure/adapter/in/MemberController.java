@@ -29,12 +29,12 @@ public class MemberController {
     public ResponseEntity<MemberCreateResponse> createMember(@RequestBody MemberCreateRequest request) {
 
         Member member = memberUseCase.createMember(
-                memberWebMapper.reqToEntity(request)
+                memberWebMapper.createRequestToEntity(request)
         );
 
         return ResponseEntity
                 .status(HttpStatus.CREATED)
-                .body(memberWebMapper.entityToRes(member));
+                .body(memberWebMapper.entityToCreateResponse(member));
     }
 
     @GetMapping("/{memberId}")

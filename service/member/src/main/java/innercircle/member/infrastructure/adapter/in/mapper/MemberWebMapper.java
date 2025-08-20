@@ -12,7 +12,7 @@ public class MemberWebMapper {
     /**
      * request -> entity
      */
-    public Member reqToEntity(MemberCreateRequest request) {
+    public Member createRequestToEntity(MemberCreateRequest request) {
         return Member.create(
                 request.email(),
                 request.name(),
@@ -25,7 +25,7 @@ public class MemberWebMapper {
     /**
      * entity -> response
      */
-    public MemberCreateResponse entityToRes(Member member) {
+    public MemberCreateResponse entityToCreateResponse(Member member) {
         return new MemberCreateResponse(
                 member.getId(),
                 member.getEmail().email(),

@@ -9,14 +9,12 @@ import innercircle.member.domain.member.*;
 import innercircle.member.infrastructure.adapter.in.mapper.MemberWebMapper;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mock;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.util.ReflectionTestUtils;
-import org.springframework.test.web.reactive.server.WebTestClient;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.LocalDate;
@@ -66,9 +64,9 @@ class MemberControllerTest {
 
         MemberCreateResponse response = new MemberCreateResponse(new Snowflake().nextId(), memberCreateRequest.email(), memberCreateRequest.name(), LocalDate.of(1996, Month.APRIL, 23), Gender.MAIL.name(), MemberStatus.ACTIVE, LocalDateTime.now(), List.of(RoleType.BUYER.name()));
 
-        when(memberWebMapper.reqToEntity(memberCreateRequest)).thenReturn(member);
+        when(memberWebMapper.createRequestToEntity(memberCreateRequest)).thenReturn(member);
         when(memberUseCase.createMember(member)).thenReturn(encodedMember);
-        when(memberWebMapper.entityToRes(encodedMember)).thenReturn(response);  // ✅ 누락된 Mock 추가!
+        when(memberWebMapper.entityToCreateResponse(encodedMember)).thenReturn(response);  // ✅ 누락된 Mock 추가!
 
         mockMvc.perform(post("/members")
                         .contentType(MediaType.APPLICATION_JSON)
