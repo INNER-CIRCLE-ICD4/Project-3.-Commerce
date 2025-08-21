@@ -6,10 +6,12 @@ import innercircle.member.application.port.out.MemberRepository;
 import innercircle.member.infrastructure.persistence.MemberJpaRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
 
 @Repository
+@Transactional(readOnly = true)
 @RequiredArgsConstructor
 public class MemberJpaRepositoryAdapter implements MemberRepository {
 
@@ -17,6 +19,7 @@ public class MemberJpaRepositoryAdapter implements MemberRepository {
 
 
     @Override
+    @Transactional
     public Member save(Member member) {
 
         return jpaRepository.save(member);

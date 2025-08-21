@@ -11,15 +11,15 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
-@Transactional
+@Transactional(readOnly = true)
 @RequiredArgsConstructor
 public class MemberApplicationService implements MemberUseCase {
 
     private final MemberRepository memberRepository;
     private final MemberDomainService memberDomainService;
 
-
     @Override
+    @Transactional
     public Member createMember(Member member) {
 
         memberDomainService.existsByEmail(member.getEmail().email());
