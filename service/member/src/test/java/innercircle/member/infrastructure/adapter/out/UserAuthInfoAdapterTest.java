@@ -1,5 +1,6 @@
 package innercircle.member.infrastructure.adapter.out;
 
+import innercircle.member.application.port.out.MemberQueryRepository;
 import innercircle.member.application.port.out.MemberRepository;
 import innercircle.member.application.port.out.UserAuthInfoProvider;
 import innercircle.member.domain.auth.UserAuthInfo;
@@ -27,6 +28,9 @@ class UserAuthInfoAdapterTest {
     @Mock
     MemberRepository memberRepository;
 
+    @Mock
+    MemberQueryRepository memberQueryRepository;
+
     @InjectMocks
     UserAuthInfoAdapter userAuthInfoProvider;
 
@@ -34,7 +38,7 @@ class UserAuthInfoAdapterTest {
     @DisplayName("findByEmail 메서드 호출 테스트")
     void findByEmailTest() {
 
-        when(memberRepository.findByEmail(any(Email.class))).thenReturn(Optional.of(Member.create("asdz453@gmail.com", "노성웅", "password1234", "2025-07-21", "MAIL")));
+        when(memberQueryRepository.findByEmail(any(Email.class))).thenReturn(Optional.of(Member.create("asdz453@gmail.com", "노성웅", "password1234", "2025-07-21", "MAIL")));
 
         UserAuthInfo byEmail = userAuthInfoProvider.findByEmail("asdz453@gmail.com");
 
@@ -50,7 +54,7 @@ class UserAuthInfoAdapterTest {
         Member member = Member.create("asdz453@gmail.com", "노성웅", "password1234", "2025-07-21", "MAIL");
         member.inActivate();
 
-        OngoingStubbing<Optional<Member>> optionalOngoingStubbing = when(memberRepository.findByEmail(any(Email.class))).thenReturn(Optional.of(member));
+        OngoingStubbing<Optional<Member>> optionalOngoingStubbing = when(memberQueryRepository.findByEmail(any(Email.class))).thenReturn(Optional.of(member));
 
         assertThatThrownBy(() -> userAuthInfoProvider.findByEmail("asdz453@gmail.com"))
                 .isInstanceOf(IllegalArgumentException.class)

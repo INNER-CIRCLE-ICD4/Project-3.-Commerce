@@ -6,5 +6,8 @@ import innercircle.member.domain.member.Member;
 import java.util.Optional;
 
 public interface MemberQueryRepository {
+
+    Optional<Member> findByEmail(Email email);
+
     Optional<Member> findByEmailUsingNaturalId(Email email);
 }
