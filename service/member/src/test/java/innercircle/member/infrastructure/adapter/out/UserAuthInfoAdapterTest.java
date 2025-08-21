@@ -1,8 +1,7 @@
 package innercircle.member.infrastructure.adapter.out;
 
-import innercircle.member.application.port.out.MemberQueryRepository;
-import innercircle.member.application.port.out.MemberRepository;
-import innercircle.member.application.port.out.UserAuthInfoProvider;
+import innercircle.member.application.port.out.MemberQueryPort;
+import innercircle.member.application.port.out.MemberCommandPort;
 import innercircle.member.domain.auth.UserAuthInfo;
 import innercircle.member.domain.member.Email;
 import innercircle.member.domain.member.Member;
@@ -13,7 +12,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.stubbing.OngoingStubbing;
-import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.Optional;
 
@@ -26,10 +24,10 @@ import static org.mockito.Mockito.when;
 class UserAuthInfoAdapterTest {
 
     @Mock
-    MemberRepository memberRepository;
+    MemberCommandPort memberCommandPort;
 
     @Mock
-    MemberQueryRepository memberQueryRepository;
+    MemberQueryPort memberQueryPort;
 
     @InjectMocks
     UserAuthInfoAdapter userAuthInfoProvider;
@@ -38,7 +36,7 @@ class UserAuthInfoAdapterTest {
     @DisplayName("findByEmail 메서드 호출 테스트")
     void findByEmailTest() {
 
-        when(memberQueryRepository.findByEmail(any(Email.class))).thenReturn(Optional.of(Member.create("asdz453@gmail.com", "노성웅", "password1234", "2025-07-21", "MAIL")));
+        when(memberQueryPort.findByEmail(any(Email.class))).thenReturn(Optional.of(Member.create("asdz453@gmail.com", "노성웅", "password1234", "2025-07-21", "MAIL")));
 
         UserAuthInfo byEmail = userAuthInfoProvider.findByEmail("asdz453@gmail.com");
 
@@ -54,7 +52,7 @@ class UserAuthInfoAdapterTest {
         Member member = Member.create("asdz453@gmail.com", "노성웅", "password1234", "2025-07-21", "MAIL");
         member.inActivate();
 
-        OngoingStubbing<Optional<Member>> optionalOngoingStubbing = when(memberQueryRepository.findByEmail(any(Email.class))).thenReturn(Optional.of(member));
+        OngoingStubbing<Optional<Member>> optionalOngoingStubbing = when(memberQueryPort.findByEmail(any(Email.class))).thenReturn(Optional.of(member));
 
         assertThatThrownBy(() -> userAuthInfoProvider.findByEmail("asdz453@gmail.com"))
                 .isInstanceOf(IllegalArgumentException.class)

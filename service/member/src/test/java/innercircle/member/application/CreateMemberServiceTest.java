@@ -4,7 +4,7 @@ import innercircle.member.application.port.out.PasswordEncoderPort;
 import innercircle.member.application.service.MemberApplicationService;
 import innercircle.member.domain.member.Member;
 import innercircle.member.domain.member.MemberDomainService;
-import innercircle.member.application.port.out.MemberRepository;
+import innercircle.member.application.port.out.MemberCommandPort;
 import innercircle.member.domain.member.SnowFlakeGenerator;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -13,7 +13,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 
-import static org.assertj.core.api.Assertions.*;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
@@ -23,7 +22,7 @@ import static org.mockito.Mockito.when;
 class CreateMemberServiceTest {
 
     @Mock
-    private MemberRepository memberRepository;
+    private MemberCommandPort memberCommandPort;
 
     @Mock
     private MemberDomainService memberDomainService;
@@ -50,7 +49,7 @@ class CreateMemberServiceTest {
         when(memberDomainService.encodePassword(any()))
                 .thenReturn("encodedPassword1234");
 
-        when(memberRepository.save(any(Member.class)))
+        when(memberCommandPort.save(any(Member.class)))
                 .thenReturn(encodedMember);
 
         Member response = memberApplicationService.createMember(encodedMember);
@@ -59,7 +58,7 @@ class CreateMemberServiceTest {
         assertThat(response.getName()).isEqualTo(member.getName());
         assertThat(response.getPassword()).isEqualTo(encodedMember.getPassword());
 
-        verify(memberRepository).save(any(Member.class));
+        verify(memberCommandPort).save(any(Member.class));
     }
 
 }

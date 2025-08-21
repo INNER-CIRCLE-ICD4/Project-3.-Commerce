@@ -15,7 +15,7 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @DataJpaTest
-public class MemberRepositoryTest {
+public class MemberCommandPortTest {
 
     @Autowired
     EntityManager entityManager;

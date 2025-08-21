@@ -5,7 +5,7 @@ import innercircle.member.domain.member.Member;
 
 import java.util.Optional;
 
-public interface MemberQueryRepository {
+public interface MemberQueryPort {
 
     Optional<Member> findByEmail(Email email);
 

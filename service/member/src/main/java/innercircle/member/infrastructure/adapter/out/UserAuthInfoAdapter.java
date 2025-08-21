@@ -1,8 +1,7 @@
 package innercircle.member.infrastructure.adapter.out;
 
 import innercircle.global.auth.AuthErrorCode;
-import innercircle.member.application.port.out.MemberQueryRepository;
-import innercircle.member.application.port.out.MemberRepository;
+import innercircle.member.application.port.out.MemberQueryPort;
 import innercircle.member.application.port.out.UserAuthInfoProvider;
 import innercircle.member.domain.auth.UserAuthInfo;
 import innercircle.member.domain.auth.UserNotExistsException;
@@ -17,13 +16,12 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class UserAuthInfoAdapter implements UserAuthInfoProvider {
 
-//    private final MemberRepository memberRepository;
-    private final MemberQueryRepository memberQueryRepository;
+    private final MemberQueryPort memberQueryPort;
 
     @Override
     public UserAuthInfo findByEmail(String email) {
 
-        Member member = memberQueryRepository.findByEmail(new Email(email))
+        Member member = memberQueryPort.findByEmail(new Email(email))
                 .orElseThrow(() -> new UserNotExistsException(AuthErrorCode.LOGIN_FAILED, "user not found. email=" + email));
 
         if (!member.getStatus().isActive()) {

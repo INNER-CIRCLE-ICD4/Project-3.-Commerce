@@ -1,7 +1,7 @@
 package innercircle.member.domain;
 
-import innercircle.member.application.port.out.MemberQueryRepository;
-import innercircle.member.application.port.out.MemberRepository;
+import innercircle.member.application.port.out.MemberQueryPort;
+import innercircle.member.application.port.out.MemberCommandPort;
 import innercircle.member.domain.member.DuplicateRequestException;
 import innercircle.member.domain.member.Email;
 import innercircle.member.domain.member.Member;
@@ -24,10 +24,10 @@ import static org.mockito.Mockito.when;
 class MemberDomainServiceTest {
 
     @Mock
-    private MemberRepository memberRepository;
+    private MemberCommandPort memberCommandPort;
 
     @Mock
-    private MemberQueryRepository memberQueryRepository;
+    private MemberQueryPort memberQueryPort;
 
     @InjectMocks
     private MemberDomainService memberDomainService;
@@ -38,24 +38,24 @@ class MemberDomainServiceTest {
 
         Email email = new Email("asdz453@gmail.com");
 
-        when(memberQueryRepository.findByEmailUsingNaturalId(email)).thenReturn(Optional.empty());
+        when(memberQueryPort.findByEmailUsingNaturalId(email)).thenReturn(Optional.empty());
 
         assertThatCode(() -> memberDomainService.existsByEmail("asdz453@gmail.com")).doesNotThrowAnyException();
 
-        verify(memberQueryRepository).findByEmailUsingNaturalId(email);
+        verify(memberQueryPort).findByEmailUsingNaturalId(email);
     }
 
     @Test
     void 이메일_중복_검증_실패() {
         String mail = "asdz453@gmail.com";
 
-        when(memberQueryRepository.findByEmailUsingNaturalId(any(Email.class))).thenReturn(Optional.of(Member.create("asdz453@gmail.com", "노성웅", "password1234", "2025-07-21", "MAIL")));
+        when(memberQueryPort.findByEmailUsingNaturalId(any(Email.class))).thenReturn(Optional.of(Member.create("asdz453@gmail.com", "노성웅", "password1234", "2025-07-21", "MAIL")));
 
         assertThatThrownBy(() -> memberDomainService.existsByEmail(mail))
                 .isInstanceOf(DuplicateRequestException.class)
                 .hasMessageContaining("이미 존재하는 이메일입니다.");
 
-        verify(memberQueryRepository).findByEmailUsingNaturalId(new Email(mail));
+        verify(memberQueryPort).findByEmailUsingNaturalId(new Email(mail));
 
     }
 

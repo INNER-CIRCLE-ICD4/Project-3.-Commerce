@@ -2,10 +2,9 @@ package innercircle.member.application.service;
 
 
 import innercircle.member.application.port.in.MemberUseCase;
-import innercircle.member.application.port.out.PasswordEncoderPort;
 import innercircle.member.domain.member.Member;
 import innercircle.member.domain.member.MemberDomainService;
-import innercircle.member.application.port.out.MemberRepository;
+import innercircle.member.application.port.out.MemberCommandPort;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -15,7 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class MemberApplicationService implements MemberUseCase {
 
-    private final MemberRepository memberRepository;
+    private final MemberCommandPort memberCommandPort;
     private final MemberDomainService memberDomainService;
 
     @Override
@@ -28,6 +27,6 @@ public class MemberApplicationService implements MemberUseCase {
                 memberDomainService.encodePassword(member.getPassword())
         );
 
-        return memberRepository.save(saveMember);
+        return memberCommandPort.save(saveMember);
     }
 }

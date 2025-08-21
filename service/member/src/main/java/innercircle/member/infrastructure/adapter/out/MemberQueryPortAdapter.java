@@ -1,6 +1,6 @@
 package innercircle.member.infrastructure.adapter.out;
 
-import innercircle.member.application.port.out.MemberQueryRepository;
+import innercircle.member.application.port.out.MemberQueryPort;
 import innercircle.member.domain.member.Email;
 import innercircle.member.domain.member.Member;
 import innercircle.member.infrastructure.persistence.MemberJpaRepository;
@@ -18,7 +18,7 @@ import java.util.Optional;
 @Transactional(readOnly = true)
 @Repository
 @RequiredArgsConstructor
-public class MemberQueryRepositoryAdapter implements MemberQueryRepository {
+public class MemberQueryPortAdapter implements MemberQueryPort {
 
     @PersistenceContext
     private EntityManager entityManager;
