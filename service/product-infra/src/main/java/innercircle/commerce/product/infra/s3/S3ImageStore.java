@@ -41,12 +41,9 @@ public class S3ImageStore {
 	 * @throws IOException 파일 처리 중 오류 발생 시
 	 */
 	public String upload (MultipartFile file, String s3Key) throws IOException {
-		String originalName = file.getOriginalFilename();
-
 		ObjectMetadata metadata = new ObjectMetadata();
 		metadata.setContentLength(file.getSize());
 		metadata.setContentType(file.getContentType());
-		metadata.addUserMetadata("original-name", originalName);
 
 		PutObjectRequest request = new PutObjectRequest(
 				bucketName, s3Key, file.getInputStream(), metadata);

@@ -3,10 +3,12 @@ package innercircle.commerce.product.admin.web;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import innercircle.commerce.product.admin.application.ImageUploadUseCase;
 import innercircle.commerce.product.admin.application.ProductCreateUseCase;
+import innercircle.commerce.product.admin.application.ProductUpdateUseCase;
 import innercircle.commerce.product.admin.application.dto.ImageUploadInfo;
 import innercircle.commerce.product.admin.application.exception.DuplicateProductNameException;
 import innercircle.commerce.product.admin.application.exception.InvalidBrandException;
 import innercircle.commerce.product.admin.application.exception.NotFoundTempImageException;
+import innercircle.commerce.product.admin.application.exception.ProductNotFoundException;
 import innercircle.commerce.product.admin.fixtures.ProductCreateRequestFixtures;
 import innercircle.commerce.product.admin.fixtures.ProductFixtures;
 import innercircle.commerce.product.admin.web.dto.ProductCreateRequest;
@@ -39,6 +41,9 @@ class ProductControllerTest {
 
 	@MockitoBean
 	private ProductCreateUseCase productCreateUseCase;
+
+	@MockitoBean
+	private ProductUpdateUseCase productUpdateUseCase;
 
 	@MockitoBean
 	private ImageUploadUseCase imageUploadUseCase;
@@ -218,6 +223,120 @@ class ProductControllerTest {
 				   .andExpect(jsonPath("$.error").doesNotExist());
 
 			verify(imageUploadUseCase).uploadToTemp(any());
+		}
+	}
+
+	@Nested
+	@DisplayName("상품 수정")
+	class UpdateProduct {
+
+		@Test
+		@DisplayName("상품 기본 정보를 정상적으로 수정할 수 있다.")
+		void 상품_기본정보_수정_성공() throws Exception {
+			// given
+			Long productId = 1L;
+			var updateRequest = """
+				{
+					"name": "수정된 상품명",
+					"basePrice": 25000,
+					"detailContent": "수정된 상품 설명"
+				}
+				""";
+			
+			Product updatedProduct = ProductFixtures.createValidProduct();
+			given(productUpdateUseCase.updateBasicInfo(any())).willReturn(updatedProduct);
+
+			// when & then
+			mockMvc.perform(put("/api/admin/products/{id}", productId)
+						   .contentType(MediaType.APPLICATION_JSON)
+						   .content(updateRequest))
+				   .andExpect(status().isOk())
+				   .andExpect(jsonPath("$.success").value(true))
+				   .andExpect(jsonPath("$.data.id").exists())
+				   .andExpect(jsonPath("$.data.name").exists())
+				   .andExpect(jsonPath("$.error").doesNotExist());
+
+			verify(productUpdateUseCase).updateBasicInfo(any());
+		}
+
+		@Test
+		@DisplayName("존재하지 않는 상품 수정 시 404 오류가 발생한다.")
+		void 존재하지_않는_상품_수정_실패() throws Exception {
+			// given
+			Long productId = 999L;
+			var updateRequest = """
+				{
+					"name": "수정된 상품명",
+					"basePrice": 25000,
+					"detailContent": "수정된 상품 설명"
+				}
+				""";
+			
+			given(productUpdateUseCase.updateBasicInfo(any()))
+				.willThrow(new ProductNotFoundException(productId));
+
+			// when & then
+			mockMvc.perform(put("/api/admin/products/{id}", productId)
+						   .contentType(MediaType.APPLICATION_JSON)
+						   .content(updateRequest))
+				   .andExpect(status().isNotFound());
+
+			verify(productUpdateUseCase).updateBasicInfo(any());
+		}
+
+
+		@Test
+		@DisplayName("상품 이미지를 개별 삭제할 수 있다.")
+		void 상품_이미지_개별_삭제_성공() throws Exception {
+			// given
+			Long productId = 1L;
+			String imageUrl = "https://s3.amazonaws.com/commerce/products/1/image1.jpg";
+			
+			Product updatedProduct = ProductFixtures.createValidProduct();
+			given(productUpdateUseCase.deleteImage(eq(productId), eq(imageUrl))).willReturn(updatedProduct);
+
+			// when & then
+			mockMvc.perform(delete("/api/admin/products/{id}/images", productId)
+					   .param("imageUrl", imageUrl))
+				   .andExpect(status().isOk())
+				   .andExpect(jsonPath("$.success").value(true))
+				   .andExpect(jsonPath("$.data").exists())
+				   .andExpect(jsonPath("$.error").doesNotExist());
+
+			verify(productUpdateUseCase).deleteImage(eq(productId), eq(imageUrl));
+		}
+
+		@Test
+		@DisplayName("상품에 새로운 이미지들을 추가할 수 있다.")
+		void 상품_이미지_추가_성공() throws Exception {
+			// given
+			Long productId = 1L;
+			var imageAddRequest = """
+				{
+					"images": [
+						{
+							"url": "https://s3.amazonaws.com/temp/1.jpg",
+							"originalName": "image1.jpg",
+							"isMain": false,
+							"sortOrder": 2
+						}
+					]
+				}
+				""";
+			
+			Product updatedProduct = ProductFixtures.createValidProduct();
+			given(productUpdateUseCase.addImages(any(Long.class), any())).willReturn(updatedProduct);
+
+			// when & then
+			mockMvc.perform(post("/api/admin/products/{id}/images", productId)
+					   .contentType(MediaType.APPLICATION_JSON)
+					   .content(imageAddRequest))
+				   .andExpect(status().isOk())
+				   .andExpect(jsonPath("$.success").value(true))
+				   .andExpect(jsonPath("$.data").exists())
+				   .andExpect(jsonPath("$.error").doesNotExist());
+
+			verify(productUpdateUseCase).addImages(any(Long.class), any());
 		}
 	}
 }

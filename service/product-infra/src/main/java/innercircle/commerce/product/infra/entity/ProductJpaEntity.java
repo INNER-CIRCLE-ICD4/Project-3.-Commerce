@@ -9,7 +9,9 @@ import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 
 /**
  * Product JPA 엔티티
@@ -56,6 +58,10 @@ public class ProductJpaEntity {
 	@Column(name = "updated_at", nullable = false)
 	private LocalDateTime updatedAt;
 
+	@OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+	@JoinColumn(name = "product_id")
+	private List<ProductImageJpaEntity> images = new ArrayList<>();
+
 	/**
 	 * Domain Product 객체에서 JPA Entity로 변환
 	 */
@@ -72,6 +78,16 @@ public class ProductJpaEntity {
 		entity.stock = product.getStock();
 		entity.createdAt = product.getCreatedAt();
 		entity.updatedAt = product.getUpdatedAt();
+		
+		// 이미지 변환
+		if (product.getImages() != null) {
+			List<ProductImageJpaEntity> imageEntities = product.getImages().stream()
+					.map(ProductImageJpaEntity::from)
+					.toList();
+			entity.images.clear();
+			entity.images.addAll(imageEntities);
+		}
+		
 		return entity;
 	}
 
@@ -79,6 +95,11 @@ public class ProductJpaEntity {
 	 * Domain Product 객체로 변환
 	 */
 	public Product toDomain () {
+		List<innercircle.commerce.product.core.domain.ProductImage> domainImages = 
+			this.images != null ? 
+				this.images.stream().map(ProductImageJpaEntity::toDomain).toList() : 
+				Collections.emptyList();
+		
 		return Product.restore(
 			this.id,
 			this.name,
@@ -87,7 +108,7 @@ public class ProductJpaEntity {
 			this.price,
 			this.stock,
 			Collections.emptyList(), // ProductOption은 별도 조회
-			Collections.emptyList(), // ProductImage는 별도 조회
+			domainImages, // ProductImage 포함
 			this.detailContent,
 			this.saleType,
 			this.status
