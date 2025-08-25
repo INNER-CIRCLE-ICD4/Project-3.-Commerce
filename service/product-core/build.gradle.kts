@@ -10,6 +10,9 @@ dependencies {
 
     api("org.apache.commons:commons-lang3")
 
+    api("com.h2database:h2")
+    api("org.postgresql:postgresql")
+
     compileOnly("org.projectlombok:lombok")
     annotationProcessor("org.projectlombok:lombok")
     testCompileOnly("org.projectlombok:lombok")

@@ -61,12 +61,8 @@ public class ProductCreateUseCase {
 		for (int i = 0; i < imageInfos.size(); i++) {
 			ProductImageInfo imageInfo = imageInfos.get(i);
 
-			// URL에서 임시 키 추출 (URL 형식: https://bucket.s3.region.amazonaws.com/key)
 			String tempKey = extractS3KeyFromUrl(imageInfo.url());
-
-			// 확장자 추출 (URL 또는 originalName에서)
 			String extension = extractExtensionFromUrlOrName(imageInfo.url(), imageInfo.originalName());
-
 			String productKey = buildProductPath(productId, (long) (i + 1), extension);
 
 			var movedUrl = s3ImageStore.move(tempKey, productKey);
