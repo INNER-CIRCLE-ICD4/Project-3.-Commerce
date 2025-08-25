@@ -1,13 +1,10 @@
 package innercircle.commerce.review.controller;
 
-import org.springframework.web.bind.annotation.GetMapping;
+import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
+@RequiredArgsConstructor
 public class ReviewController {
 
-    @GetMapping
-    public String test() {
-        return "hello world2";
-    }
 }

@@ -1,0 +1,35 @@
+server.port: 9001
+
+spring:
+  datasource:
+    url: jdbc:h2:mem:reviewdb # 인메모리 H2 DB 사용
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+
+  jpa:
+    hibernate:
+      ddl-auto: create-drop # 실행 시마다 DB 스키마를 새로 생성
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.H2Dialect
+        format_sql: true # SQL 로그를 예쁘게 출력
+
+  # H2 콘솔 활성화 (로컬 개발 시 DB를 웹에서 편하게 볼 수 있음)
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+
+
+eureka:
+  instance:
+    instance-id: ${spring.application.name}:${spring.application.instance_id:${random.value}}
+  client:
+    fetch-registry: true
+    register-with-eureka: true
+    service-url:
+      defaultZone: http://localhost:8761/eureka
+server:
+  servlet:
+    context-path: /api/review-service
