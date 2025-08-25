@@ -1,6 +1,5 @@
 package innercircle.commerce.product.admin.application;
 
-import innercircle.commerce.product.admin.application.dto.ProductImageUpdateCommand;
 import innercircle.commerce.product.admin.application.dto.ProductSaleTypeChangeCommand;
 import innercircle.commerce.product.admin.application.dto.ProductStatusChangeCommand;
 import innercircle.commerce.product.admin.application.dto.ProductUpdateCommand;
@@ -8,7 +7,10 @@ import innercircle.commerce.product.admin.application.exception.DuplicateProduct
 import innercircle.commerce.product.admin.application.exception.ProductNotFoundException;
 import innercircle.commerce.product.core.application.repository.ProductRepository;
 import innercircle.commerce.product.core.domain.Product;
+import innercircle.commerce.product.core.domain.ProductImage;
+import innercircle.commerce.product.infra.s3.S3ImageStore;
 import innercircle.commerce.product.admin.fixtures.ProductFixtures;
+import innercircle.commerce.product.admin.fixtures.ProductImageFixtures;
 import innercircle.commerce.product.admin.fixtures.ProductUpdateCommandFixtures;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -17,11 +19,13 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.List;
 import java.util.Optional;
 
 import static innercircle.commerce.product.admin.fixtures.ProductUpdateCommandFixtures.*;
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.verify;
 
@@ -31,12 +35,15 @@ class ProductUpdateUseCaseTest {
 
 	@Mock
 	private ProductRepository productRepository;
+	
+	@Mock
+	private S3ImageStore s3ImageStore;
 
 	private ProductUpdateUseCase productUpdateUseCase;
 
 	@BeforeEach
 	void setUp () {
-		productUpdateUseCase = new ProductUpdateUseCase(productRepository);
+		productUpdateUseCase = new ProductUpdateUseCase(productRepository, s3ImageStore);
 	}
 
 	@Test
@@ -88,4 +95,5 @@ class ProductUpdateUseCaseTest {
 				.isInstanceOf(DuplicateProductNameException.class)
 				.hasMessageContaining(UPDATED_NAME);
 	}
+	
 }

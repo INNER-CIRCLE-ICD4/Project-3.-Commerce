@@ -1,6 +1,5 @@
 package innercircle.commerce.product.admin.fixtures;
 
-import innercircle.commerce.product.admin.application.dto.ProductImageUpdateCommand;
 import innercircle.commerce.product.admin.application.dto.ProductSaleTypeChangeCommand;
 import innercircle.commerce.product.admin.application.dto.ProductStatusChangeCommand;
 import innercircle.commerce.product.admin.application.dto.ProductUpdateCommand;
@@ -59,17 +58,4 @@ public class ProductUpdateCommandFixtures {
         return new ProductSaleTypeChangeCommand(productId, saleType);
     }
     
-    public static ProductImageUpdateCommand createImageUpdateCommand() {
-        return new ProductImageUpdateCommand(
-                EXISTING_PRODUCT_ID,
-                ProductImageFixtures.createValidImages()
-        );
-    }
-    
-    public static ProductImageUpdateCommand createImageUpdateCommand(Long productId) {
-        return new ProductImageUpdateCommand(
-                productId,
-                ProductImageFixtures.createValidImages()
-        );
-    }
 }

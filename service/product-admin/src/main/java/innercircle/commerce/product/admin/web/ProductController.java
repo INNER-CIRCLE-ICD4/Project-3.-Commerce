@@ -2,11 +2,18 @@ package innercircle.commerce.product.admin.web;
 
 import innercircle.commerce.product.admin.application.ImageUploadUseCase;
 import innercircle.commerce.product.admin.application.ProductCreateUseCase;
+import innercircle.commerce.product.admin.application.ProductUpdateUseCase;
+import innercircle.commerce.product.admin.application.dto.ProductUpdateCommand;
 import innercircle.commerce.product.admin.web.dto.ApiResponse;
 import innercircle.commerce.product.admin.web.dto.ImageUploadResponse;
 import innercircle.commerce.product.admin.web.dto.ProductCreateRequest;
 import innercircle.commerce.product.admin.web.dto.ProductCreateResponse;
+import innercircle.commerce.product.admin.web.dto.ProductImageAddRequest;
+import innercircle.commerce.product.admin.web.dto.ProductImageUpdateResponse;
+import innercircle.commerce.product.admin.web.dto.ProductUpdateRequest;
+import innercircle.commerce.product.admin.web.dto.ProductUpdateResponse;
 import innercircle.commerce.product.core.domain.Product;
+import innercircle.commerce.product.core.domain.ProductImage;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -27,6 +34,7 @@ import java.util.List;
 public class ProductController {
 	private final ImageUploadUseCase imageUploadUseCase;
 	private final ProductCreateUseCase productCreateUseCase;
+	private final ProductUpdateUseCase productUpdateUseCase;
 
 	/**
 	 * 상품을 등록합니다.
@@ -61,5 +69,64 @@ public class ProductController {
 																.toList();
 
 		return ResponseEntity.ok(ApiResponse.success(responses));
+	}
+
+	/**
+	 * 상품 기본 정보를 수정합니다.
+	 *
+	 * @param id 상품 ID
+	 * @param request 상품 수정 요청
+	 * @return 수정된 상품 정보
+	 */
+	@PutMapping("/{id}")
+	public ResponseEntity<ApiResponse<ProductUpdateResponse>> updateProduct(
+			@PathVariable Long id,
+			@Valid @RequestBody ProductUpdateRequest request
+	) {
+		var command = request.toCommand(id);
+		
+		Product updatedProduct = productUpdateUseCase.updateBasicInfo(command);
+		ProductUpdateResponse response = ProductUpdateResponse.from(updatedProduct);
+
+		return ResponseEntity.ok(ApiResponse.success(response));
+	}
+
+
+	/**
+	 * 상품의 특정 이미지를 삭제합니다.
+	 *
+	 * @param id 상품 ID
+	 * @param imageUrl 삭제할 이미지 URL
+	 * @return 수정된 상품 정보
+	 */
+	@DeleteMapping("/{id}/images")
+	public ResponseEntity<ApiResponse<ProductUpdateResponse>> deleteProductImage(
+			@PathVariable Long id,
+			@RequestParam String imageUrl
+	) {
+		Product updatedProduct = productUpdateUseCase.deleteImage(id, imageUrl);
+		ProductUpdateResponse response = ProductUpdateResponse.from(updatedProduct);
+
+		return ResponseEntity.ok(ApiResponse.success(response));
+	}
+
+	/**
+	 * 상품에 새로운 이미지들을 추가합니다.
+	 *
+	 * @param id 상품 ID
+	 * @param request 이미지 추가 요청
+	 * @return 수정된 상품 정보
+	 */
+	@PostMapping("/{id}/images")
+	public ResponseEntity<ApiResponse<ProductImageUpdateResponse>> addProductImages(
+			@PathVariable Long id,
+			@Valid @RequestBody ProductImageAddRequest request
+	) {
+		List<ProductImage> tempImages = request.toProductImages(id);
+		
+		Product updatedProduct = productUpdateUseCase.addImages(id, tempImages);
+		ProductImageUpdateResponse response = ProductImageUpdateResponse.from(updatedProduct);
+
+		return ResponseEntity.ok(ApiResponse.success(response));
 	}
 }
