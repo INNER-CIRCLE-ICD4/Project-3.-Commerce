@@ -32,6 +32,11 @@ Content-Type: application/json
     client.log("Token Type: " + (response.body.tokenType || "Bearer"));
 %}
 
+### POST 로그아웃 - Gateway
+POST http://localhost:8000/api/member-service/auth/logout
+Content-Type: application/json
+Authorization: {{tokenType}} {{accessToken}}
+
 
 ### GET 회원 정보 조회 - Gatewayㅊ
 GET http://localhost:8000/api/member-service/members/1

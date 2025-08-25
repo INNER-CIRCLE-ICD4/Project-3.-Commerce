@@ -12,6 +12,7 @@ import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
 import java.util.List;
+import java.util.UUID;
 
 @Slf4j
 @Component
@@ -89,6 +90,7 @@ public class JwtTokenAdapter implements TokenPort {
 
         Date now = new Date();
         Date expiryDate = new Date(now.getTime() + expiry);
+        String jti = UUID.randomUUID().toString();
 
         return Jwts.builder()
                 .subject(userId.toString())
@@ -96,6 +98,7 @@ public class JwtTokenAdapter implements TokenPort {
                 .claim("roles", String.join(",", roles))
                 .claim("type", tokenType.name())
                 .issuedAt(now)
+                .id(jti)
                 .expiration(expiryDate)
                 .signWith(secretKey)
                 .compact();
