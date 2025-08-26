@@ -6,9 +6,11 @@ import innercircle.config.SecurityConfig;
 import innercircle.global.auth.AuthErrorCode;
 import innercircle.member.application.port.in.AuthUseCase;
 import innercircle.member.application.port.out.TokenPort;
+import innercircle.member.domain.auth.AuthToken;
 import innercircle.member.domain.auth.LoginFailedException;
 import innercircle.member.infrastructure.adapter.in.web.auth.dto.LoginRequest;
 import innercircle.member.infrastructure.adapter.in.web.auth.dto.LoginResponse;
+import innercircle.member.infrastructure.adapter.in.web.auth.mapper.AuthMapper;
 import innercircle.member.infrastructure.adapter.out.JwtTokenAdapter;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -42,6 +44,9 @@ class AuthControllerTest {
     @MockitoBean
     AuthUseCase authUseCase;
 
+    @MockitoBean
+    AuthMapper authMapper;
+
     TokenPort tokenPort;
 
     @BeforeEach
@@ -66,10 +71,11 @@ class AuthControllerTest {
         String accessToken = tokenPort.generateAccessToken(userId, "sw.noh@gmail.com", List.of("BUYER"));
         String refreshToken = tokenPort.generateRefreshToken(userId, "sw.noh@gmail.com", List.of("BUYER"));
 
+        AuthToken authToken = new AuthToken(accessToken, refreshToken, "Bearer", 3600000L);
         LoginResponse loginResponse = new LoginResponse(accessToken, refreshToken, "Bearer", 3600000L);
 
-        when(authUseCase.login(loginRequest))
-                .thenReturn(loginResponse);
+        when(authUseCase.login(loginRequest)).thenReturn(authToken);
+        when(authMapper.authTokenToLoginResponse(authToken)).thenReturn(loginResponse);
 
 
         mockMvc.perform(post("/auth/login")

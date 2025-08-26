@@ -85,6 +85,17 @@ public class JwtTokenAdapter implements TokenPort {
         return List.of(roles.split(","));
     }
 
+    @Override
+    public boolean isRefreshToken(String refreshToken) {
+        try {
+            Claims claimsFromToken = getClaimsFromToken(refreshToken);
+            String tokenType = claimsFromToken.get("type", String.class);
+            return TokenType.REFRESH.name().equals(tokenType);
+        } catch (Exception e) {
+            log.warn("refresh 토큰 타입 확인 실패: {}", e.getMessage());
+            return false;
+        }
+    }
 
     private String generateToken(Long userId, String email, List<String> roles, TokenType tokenType, long expiry) {
 

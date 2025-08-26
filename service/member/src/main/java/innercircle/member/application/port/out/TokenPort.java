@@ -10,7 +10,6 @@ public interface TokenPort {
     */
     String generateAccessToken(Long userId, String email, List<String> roles);
 
-
     /**
      * Refresh Token 생성
      */
@@ -36,4 +35,11 @@ public interface TokenPort {
      * 토큰에서 사용자 정보 추출 - roles
      */
     List<String> getRolesFromToken(String token);
+
+    /**
+     * Refresh Token 검증
+     */
+    boolean isRefreshToken(String refreshToken);
+
+
 }
