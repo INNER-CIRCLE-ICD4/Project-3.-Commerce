@@ -1,6 +1,7 @@
 package innercircle.member.infrastructure.adapter.out;
 
 import innercircle.member.application.port.out.TokenPort;
+import innercircle.member.domain.auth.AuthToken;
 import innercircle.member.domain.auth.TokenType;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
@@ -18,6 +19,8 @@ import java.util.UUID;
 @Component
 public class JwtTokenAdapter implements TokenPort {
 
+    private static final String TOKEN_SCHEME_BEARER = "Bearer";
+
     private final SecretKey secretKey;
     private final long accessTokenExpiry;
     private final long refreshTokenExpiry;
@@ -31,6 +34,15 @@ public class JwtTokenAdapter implements TokenPort {
         this.refreshTokenExpiry = refreshTokenExpiry;
     }
 
+
+    @Override
+    public AuthToken generateTokenPair(Long userId, String email, List<String> roles) {
+
+        String accessToken = this.generateAccessToken(userId, email, roles);
+        String refreshToken = this.generateRefreshToken(userId, email, roles);
+
+        return new AuthToken(accessToken, refreshToken, TOKEN_SCHEME_BEARER, refreshTokenExpiry);
+    }
 
     @Override
     public String generateAccessToken(Long userId, String email, List<String> roles) {

@@ -10,6 +10,8 @@ import innercircle.member.domain.auth.AuthToken;
 import innercircle.member.domain.auth.LoginFailedException;
 import innercircle.member.infrastructure.adapter.in.web.auth.dto.LoginRequest;
 import innercircle.member.infrastructure.adapter.in.web.auth.dto.LoginResponse;
+import innercircle.member.infrastructure.adapter.in.web.auth.dto.RefreshRequest;
+import innercircle.member.infrastructure.adapter.in.web.auth.dto.RefreshResponse;
 import innercircle.member.infrastructure.adapter.in.web.auth.mapper.AuthMapper;
 import innercircle.member.infrastructure.adapter.out.JwtTokenAdapter;
 import org.junit.jupiter.api.BeforeEach;
@@ -103,6 +105,26 @@ class AuthControllerTest {
                 .andExpect(status().is4xxClientError())
                 .andExpect(jsonPath("$.title").value("Login Failed"))
                 .andExpect(jsonPath("$.detail").value("로그인에 실패하였습니다. 이메일과 비밀번호를 확인해주세요."));
+
+    }
+
+    @Test
+    void refresh_만료토큰_refresh_요청_성공() throws Exception {
+
+        RefreshRequest request = new RefreshRequest("refreshToken_sw");
+        AuthToken authToken = new AuthToken("new_access_token_sw", "new_refresh_token_sw", "Bearer", 3600L);
+        RefreshResponse refreshResponse = new RefreshResponse(authToken.accessToken(), authToken.refreshToken(), authToken.tokenType(), authToken.expiresIn());
+
+        when(authUseCase.refresh(request)).thenReturn(authToken);
+        when(authMapper.authTokenToRefreshResponse(authToken)).thenReturn(refreshResponse);
+
+        mockMvc.perform(post("/auth/refresh")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.accessToken").value(authToken.accessToken()))
+                .andExpect(jsonPath("$.refreshToken").value(authToken.refreshToken()));
+
 
     }
 

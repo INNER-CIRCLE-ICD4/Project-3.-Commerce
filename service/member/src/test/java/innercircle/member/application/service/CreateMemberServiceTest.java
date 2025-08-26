@@ -1,10 +1,8 @@
-package innercircle.member.application;
+package innercircle.member.application.service;
 
-import innercircle.member.application.port.out.PasswordEncoderPort;
-import innercircle.member.application.service.MemberApplicationService;
+import innercircle.member.application.port.out.MemberCommandPort;
 import innercircle.member.domain.member.Member;
 import innercircle.member.domain.member.MemberDomainService;
-import innercircle.member.application.port.out.MemberCommandPort;
 import innercircle.member.domain.member.SnowFlakeGenerator;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -26,9 +24,6 @@ class CreateMemberServiceTest {
 
     @Mock
     private MemberDomainService memberDomainService;
-
-    @Mock
-    private PasswordEncoderPort passwordEncoderPort;
 
     @InjectMocks
     private MemberApplicationService memberApplicationService;

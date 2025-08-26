@@ -1,9 +1,16 @@
 package innercircle.member.application.port.out;
 
 
+import innercircle.member.domain.auth.AuthToken;
+
 import java.util.List;
 
 public interface TokenPort {
+
+    /**
+     * JWT 토큰 생성
+     */
+    AuthToken generateTokenPair(Long userId, String email, List<String> roles);
 
     /**
      * Access Token 생성

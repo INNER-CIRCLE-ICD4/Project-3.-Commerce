@@ -1,9 +1,9 @@
 package innercircle.member.infrastructure.adapter.out;
 
+import innercircle.member.domain.auth.AuthToken;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import javax.swing.*;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.*;
@@ -24,10 +24,20 @@ class JwtTokenAdapterTest {
         );
     }
 
+    @Test
+    void generateTokenPair() {
+
+        AuthToken authToken = jwtTokenAdapter.generateTokenPair(1L, "sw.noh@google.com", List.of("BUYER", "SELLER"));
+
+        assertThat(jwtTokenAdapter.getEmailFromToken(authToken.accessToken())).isEqualTo("sw.noh@google.com");
+        assertThat(jwtTokenAdapter.getEmailFromToken(authToken.refreshToken())).isEqualTo("sw.noh@google.com");
+        assertThat(jwtTokenAdapter.isRefreshToken(authToken.accessToken())).isFalse();
+        assertThat(authToken.tokenType()).isEqualTo("Bearer");
+    }
+
 
     @Test
     void generateAccessToken_shouldCreateValidToken() {
-
 
         String token = jwtTokenAdapter.generateAccessToken(1L, "sw.noh@google.com", List.of("BUYER", "SELLER"));
 
@@ -57,14 +67,14 @@ class JwtTokenAdapterTest {
 
     @Test
     void validationToken_shouldReturnFalseForExpiredToken() {
-        JwtTokenAdapter  shortExpiryAdapter = new JwtTokenAdapter(
+        JwtTokenAdapter shortExpiryAdapter = new JwtTokenAdapter(
                 "mySecretKey123456789012345678901234567890abcdefghijklmnopqrstuvwxyz12345",
                 1L,  // 1ms로 즉시 만료
                 1L
         );
 
         String token = shortExpiryAdapter.generateAccessToken(1L, "test@gmail.com", List.of("BUYER"));
-        
+
         try {
             Thread.sleep(10);
         } catch (InterruptedException e) {
@@ -72,5 +82,13 @@ class JwtTokenAdapterTest {
         }
 
         assertThat(shortExpiryAdapter.validateToken(token)).isFalse();
+    }
+
+
+    @Test
+    public void isRefreshToken_shouldReturnTrueForRefreshToken() {
+        String refreshToken = jwtTokenAdapter.generateRefreshToken(1L, "test@gmail.com", List.of("BUYER"));
+
+        assertThat(jwtTokenAdapter.isRefreshToken(refreshToken)).isTrue();
     }
 }
