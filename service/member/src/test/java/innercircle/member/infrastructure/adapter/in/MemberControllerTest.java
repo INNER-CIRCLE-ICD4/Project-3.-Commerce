@@ -2,11 +2,11 @@ package innercircle.member.infrastructure.adapter.in;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import innercircle.commerce.common.snowflake.Snowflake;
-import innercircle.member.infrastructure.adapter.in.web.dto.MemberCreateRequest;
-import innercircle.member.infrastructure.adapter.in.web.dto.MemberCreateResponse;
+import innercircle.member.infrastructure.adapter.in.web.member.dto.MemberCreateRequest;
+import innercircle.member.infrastructure.adapter.in.web.member.dto.MemberCreateResponse;
 import innercircle.member.application.port.in.MemberUseCase;
 import innercircle.member.domain.member.*;
-import innercircle.member.infrastructure.adapter.in.web.mapper.MemberWebMapper;
+import innercircle.member.infrastructure.adapter.in.web.member.mapper.MemberWebMapper;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

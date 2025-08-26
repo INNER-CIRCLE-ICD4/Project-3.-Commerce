@@ -2,12 +2,12 @@ package innercircle.member.infrastructure.adapter.in;
 
 import innercircle.common.AuthenticatedUser;
 import innercircle.common.CurrentUser;
-import innercircle.member.infrastructure.adapter.in.web.dto.MemberCreateRequest;
-import innercircle.member.infrastructure.adapter.in.web.dto.MemberCreateResponse;
+import innercircle.member.infrastructure.adapter.in.web.member.dto.MemberCreateRequest;
+import innercircle.member.infrastructure.adapter.in.web.member.dto.MemberCreateResponse;
 import innercircle.member.application.port.in.MemberUseCase;
 import innercircle.member.domain.member.Member;
 import innercircle.member.domain.member.MemberStatus;
-import innercircle.member.infrastructure.adapter.in.web.mapper.MemberWebMapper;
+import innercircle.member.infrastructure.adapter.in.web.member.mapper.MemberWebMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;

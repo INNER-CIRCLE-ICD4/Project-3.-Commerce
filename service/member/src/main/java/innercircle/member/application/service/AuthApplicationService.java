@@ -6,8 +6,8 @@ import innercircle.member.application.port.out.PasswordEncoderPort;
 import innercircle.member.application.port.out.TokenPort;
 import innercircle.member.application.port.out.UserAuthInfoProvider;
 import innercircle.member.domain.auth.LoginFailedException;
-import innercircle.member.domain.auth.LoginRequest;
-import innercircle.member.domain.auth.LoginResponse;
+import innercircle.member.infrastructure.adapter.in.web.auth.dto.LoginRequest;
+import innercircle.member.infrastructure.adapter.in.web.auth.dto.LoginResponse;
 import innercircle.member.domain.auth.UserAuthInfo;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -17,7 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Slf4j
 @Service
-@Transactional
+@Transactional(readOnly = true)
 @RequiredArgsConstructor
 public class AuthApplicationService implements AuthUseCase {
 
@@ -34,12 +34,22 @@ public class AuthApplicationService implements AuthUseCase {
     public LoginResponse login(LoginRequest request) {
         UserAuthInfo userInfo = userAuthInfoProvider.findByEmail(request.email());
 
-        //todo 검증
         if (!passwordEncoderPort.matches(request.password(), userInfo.getEncodedPassword())) {
             throw new LoginFailedException(AuthErrorCode.LOGIN_FAILED, "Password mismatch for user: " + userInfo.getEmail());
         }
 
         //jwt 토큰 생성
+        return issueTokenResponse(userInfo);
+    }
+
+
+    /**
+     * JWT 토큰 발급 및 응답 생성
+     * access 토큰 및 refresh 토큰
+     * @param userInfo
+     * @return
+     */
+    private LoginResponse issueTokenResponse(UserAuthInfo userInfo) {
         String accessToken = tokenPort.generateAccessToken(
                 userInfo.getUserId(),
                 userInfo.getEmail(),

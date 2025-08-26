@@ -1,8 +1,8 @@
 package innercircle.member.infrastructure.adapter.in;
 
 import innercircle.member.application.port.in.AuthUseCase;
-import innercircle.member.domain.auth.LoginRequest;
-import innercircle.member.domain.auth.LoginResponse;
+import innercircle.member.infrastructure.adapter.in.web.auth.dto.LoginRequest;
+import innercircle.member.infrastructure.adapter.in.web.auth.dto.LoginResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;

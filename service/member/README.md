@@ -681,6 +681,7 @@ public class MemberMetrics {
 ### 인증 & 보안
 - 🔐 [JWT 구현 가이드](docs/JWT_IMPLEMENTATION_GUIDE.md) - JWT 인증 시스템 전체 구현 가이드
 - 🛡️ [JWT 보안 가이드](docs/JWT_SECURITY_GUIDE.md) - 보안 위협과 방어 전략
+- 🔄 [Refresh Token 가이드](docs/REFRESH_TOKEN_GUIDE.md) - 토큰 갱신 시스템 구현 및 사용법
 - 🔒 [JWT-Redis 인증](docs/jwt-redis-authentication.md) - Redis 기반 토큰 관리
 
 ### 인프라 & 설정

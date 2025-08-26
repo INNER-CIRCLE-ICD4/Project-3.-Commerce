@@ -1,4 +1,4 @@
-package innercircle.member.domain.auth;
+package innercircle.member.infrastructure.adapter.in.web.auth.dto;
 
 
 

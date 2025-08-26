@@ -1,4 +1,4 @@
-package innercircle.member.infrastructure.adapter.in.web.dto;
+package innercircle.member.infrastructure.adapter.in.web.member.dto;
 
 import innercircle.member.domain.member.MemberStatus;
 
