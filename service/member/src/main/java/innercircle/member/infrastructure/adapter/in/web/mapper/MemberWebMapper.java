@@ -1,7 +1,7 @@
-package innercircle.member.infrastructure.adapter.in.mapper;
+package innercircle.member.infrastructure.adapter.in.web.mapper;
 
-import innercircle.member.application.MemberCreateRequest;
-import innercircle.member.application.MemberCreateResponse;
+import innercircle.member.infrastructure.adapter.in.web.dto.MemberCreateRequest;
+import innercircle.member.infrastructure.adapter.in.web.dto.MemberCreateResponse;
 import innercircle.member.domain.member.Member;
 import innercircle.member.domain.member.MemberRole;
 import org.springframework.stereotype.Component;

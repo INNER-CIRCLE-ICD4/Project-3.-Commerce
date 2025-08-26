@@ -7,4 +7,6 @@ public interface AuthUseCase {
 
     LoginResponse login(LoginRequest request);
 
+
+
 }

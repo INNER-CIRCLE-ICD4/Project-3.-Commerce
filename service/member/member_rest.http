@@ -32,6 +32,7 @@ Content-Type: application/json
     client.log("Token Type: " + (response.body.tokenType || "Bearer"));
 %}
 
+
 ### POST 로그아웃 - Gateway
 POST http://localhost:8000/api/member-service/auth/logout
 Content-Type: application/json

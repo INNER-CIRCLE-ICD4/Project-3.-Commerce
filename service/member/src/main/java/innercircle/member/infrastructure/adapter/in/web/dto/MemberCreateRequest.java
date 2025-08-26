@@ -1,4 +1,4 @@
-package innercircle.member.application;
+package innercircle.member.infrastructure.adapter.in.web.dto;
 
 public record MemberCreateRequest(
         String email,
