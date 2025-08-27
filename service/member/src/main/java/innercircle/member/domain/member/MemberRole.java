@@ -26,7 +26,6 @@ public class MemberRole extends BaseEntity{
         MemberRole memberRole = new MemberRole();
         memberRole.roleType = RoleType.BUYER;
         memberRole.assignedAt = LocalDateTime.now();
-
         memberRole.member = member;
         member.getRoles().add(memberRole);
 

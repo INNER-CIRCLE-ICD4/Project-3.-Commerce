@@ -37,7 +37,6 @@ public class UserContextFilter implements GlobalFilter, Ordered {
         this.jwtBlacklistService = jwtBlacklistService;
     }
 
-
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
         log.info("=== UserContextFilter STARTED ===");

@@ -139,7 +139,6 @@ public class SecurityConfig {
         // 🔍 생성된 키 정보 확인
         System.out.println("🔧 SecretKey Algorithm: " + key.getAlgorithm());
         System.out.println("🔧 SecretKey Format: " + key.getFormat());
-
         System.out.println("✅ JWT Decoder 생성 완료 (HS512)");
 
         return NimbusReactiveJwtDecoder.withSecretKey(key)

@@ -60,5 +60,4 @@ public class MemberController {
                 List.of("BUYER"))
         );
     }
-
 }

@@ -115,8 +115,8 @@ public class Member extends BaseEntity {
                 this.birthDate != null ? this.birthDate.toString() : null,
                 this.gender.name()
         );
-
     }
+
 
     public boolean isActive() {
         return this.status == MemberStatus.ACTIVE;
