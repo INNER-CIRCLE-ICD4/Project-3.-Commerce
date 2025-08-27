@@ -16,6 +16,7 @@ Commerce MSA 플랫폼의 **회원 관리 및 인증** 마이크로서비스입�
 - [주요 기능](#-주요-기능)
   - [회원 관리](#1-회원-관리)
   - [인증 시스템](#2-인증-시스템)
+    - [로그인 보안 (브루트포스 방어)](#23-로그인-보안-브루트포스-방어-️)
 - [API 가이드](#-api-가이드)
 - [개발 환경 설정](#-개발-환경-설정)
 - [데이터베이스](#-데이터베이스)
@@ -221,7 +222,93 @@ public enum RoleType {
 | 회원 상태 변경 | ❌ | ❌ | ✅ |
 | 상품 등록 | ❌ | ✅ | ✅ |
 
-#### 2.3 Gateway 연동 🌐
+#### 2.3 로그인 보안 (브루트포스 방어) 🛡️
+
+**기능**: IP 기반 로그인 시도 횟수 제한으로 브루트포스 공격 방어
+
+**보안 정책**:
+- **최대 시도 횟수**: 5회
+- **잠금 시간**: 15분 (900초)
+- **추적 단위**: 클라이언트 IP 주소
+- **메모리 기반**: `ConcurrentHashMap` 사용으로 빠른 응답
+
+**동작 플로우**:
+```java
+@PostMapping("/auth/login")
+public ResponseEntity<LoginResponse> login(@RequestBody LoginRequest request, HttpServletRequest httpServletRequest) {
+    String clientIp = getClientIp(httpServletRequest);
+    
+    // 1. IP 차단 상태 확인
+    loginAttemptService.validateIpNotBlocked(clientIp);
+    
+    try {
+        // 2. 로그인 시도
+        AuthToken login = authUseCase.login(request);
+        
+        // 3. 성공 시 카운트 초기화
+        loginAttemptService.recordSuccessfulLogin(clientIp);
+        return ResponseEntity.ok(loginResponse);
+        
+    } catch (LoginFailedException e) {
+        // 4. 실패 시 카운트 증가
+        loginAttemptService.recordFailedAttempt(clientIp);
+        throw e; // GlobalExceptionHandler로 전달
+    }
+}
+```
+
+**차단 로직**:
+```java
+public class LoginAttemptService {
+    private static final int MAX_ATTEMPTS = 5;      // 최대 시도 횟수
+    private static final int LOCK_TIME_MINUTES = 15; // 잠금 시간(분)
+    
+    // IP별 시도 정보 추적
+    private final ConcurrentHashMap<String, AttemptInfo> attemptCache = new ConcurrentHashMap<>();
+    
+    public void validateIpNotBlocked(String clientIp) {
+        if (isBlocked(clientIp)) {
+            throw new TooManyAttemptsException(/* 차단 정보 */);
+        }
+    }
+}
+```
+
+**IP 추출 로직** (Proxy 환경 대응):
+```java
+private String getClientIp(HttpServletRequest request) {
+    // 1. 테스트용 헤더 확인 (개발/테스트 환경)
+    String testIp = request.getHeader("X-Test-Client-IP");
+    if (testIp != null && !testIp.isEmpty()) {
+        return testIp;
+    }
+    
+    // 2. Proxy 헤더 확인 (운영 환경)
+    String xForwardedFor = request.getHeader("X-Forwarded-For");
+    if (xForwardedFor != null && !xForwardedFor.isEmpty()) {
+        return xForwardedFor.split(",")[0].trim();
+    }
+    
+    // 3. 기본 RemoteAddr
+    return request.getRemoteAddr();
+}
+```
+
+**에러 응답**:
+```json
+{
+  "success": false,
+  "code": "AUTH-002",
+  "message": "너무 많은 로그인 시도로 15분간 차단되었습니다.",
+  "timestamp": 1705520430000,
+  "retryAfter": 900
+}
+```
+
+**상태 코드**: `429 Too Many Requests`
+**응답 헤더**: `Retry-After: 900` (초 단위)
+
+#### 2.4 Gateway 연동 🌐
 
 **헤더 기반 사용자 정보 전달**:
 
@@ -262,7 +349,7 @@ Content-Type: application/json
 }
 ```
 
-**응답**:
+**성공 응답 (200 OK)**:
 ```json
 {
   "accessToken": "eyJhbGciOiJIUzUxMiJ9...",
@@ -270,6 +357,31 @@ Content-Type: application/json
   "tokenType": "Bearer",
   "expiresIn": 3600
 }
+```
+
+**실패 응답**:
+
+*로그인 실패 (401 Unauthorized)*:
+```json
+{
+  "success": false,
+  "code": "AUTH-001",
+  "message": "로그인에 실패하였습니다. 이메일과 비밀번호를 확인해주세요.",
+  "timestamp": 1705520430000
+}
+```
+
+*브루트포스 차단 (429 Too Many Requests)*:
+```json
+{
+  "success": false,
+  "code": "AUTH-002",
+  "message": "너무 많은 로그인 시도로 15분간 차단되었습니다.",
+  "timestamp": 1705520430000
+}
+```
+```http
+Retry-After: 900
 ```
 
 #### 로그아웃
@@ -510,6 +622,51 @@ return ResponseEntity.ok()
     .body(loginResponse);
 ```
 
+### 브루트포스 방어
+
+**로그인 시도 제한**:
+```java
+@Component
+public class LoginAttemptService {
+    private static final int MAX_ATTEMPTS = 5;        // 최대 시도 횟수
+    private static final int LOCK_TIME_MINUTES = 15;  // 잠금 시간(분)
+    
+    // Thread-safe 메모리 저장소
+    private final ConcurrentHashMap<String, AttemptInfo> attemptCache = new ConcurrentHashMap<>();
+    
+    public void validateIpNotBlocked(String clientIp) {
+        AttemptInfo attempt = attemptCache.get(clientIp);
+        if (attempt != null && attempt.isBlocked()) {
+            throw new TooManyAttemptsException(
+                AuthErrorCode.TOO_MANY_ATTEMPTS,
+                clientIp,
+                attempt.getAttemptCount(),
+                LOCK_TIME_MINUTES,
+                "IP가 차단되었습니다"
+            );
+        }
+    }
+}
+```
+
+**차단 알고리즘**:
+- **추적 단위**: 클라이언트 IP 주소
+- **저장소**: 메모리 기반 (`ConcurrentHashMap`)
+- **성능**: O(1) 조회 시간
+- **안전성**: Thread-safe 동시성 보장
+- **정책**: 실패 5회 → 15분 차단
+
+**모니터링**:
+```java
+// 현재 상태 확인
+int currentAttempts = loginAttemptService.getCurrentAttempts(clientIp);
+boolean isBlocked = loginAttemptService.isBlocked(clientIp);
+
+// 로깅
+log.warn("🚨 브루트포스 공격 감지: ip={}, 시도횟수={}/{}", 
+         clientIp, currentAttempts, MAX_ATTEMPTS);
+```
+
 ### 권한 검증
 
 **메서드 레벨 보안**:
@@ -597,6 +754,87 @@ class MemberControllerTest {
 }
 ```
 
+#### 브루트포스 방어 테스트
+```java
+@ExtendWith(MockitoExtension.class)
+class LoginAttemptServiceTest {
+    
+    @InjectMocks LoginAttemptService loginAttemptService;
+    
+    @Test
+    void 로그인_5번_실패_후_차단() {
+        String clientIp = "192.168.1.100";
+        
+        // Given: 4번 실패
+        for (int i = 0; i < 4; i++) {
+            loginAttemptService.recordFailedAttempt(clientIp);
+            assertThat(loginAttemptService.isBlocked(clientIp)).isFalse();
+        }
+        
+        // When: 5번째 실패
+        loginAttemptService.recordFailedAttempt(clientIp);
+        
+        // Then: 차단됨
+        assertThat(loginAttemptService.isBlocked(clientIp)).isTrue();
+        assertThatThrownBy(() -> loginAttemptService.validateIpNotBlocked(clientIp))
+                .isInstanceOf(TooManyAttemptsException.class);
+    }
+    
+    @Test
+    void 성공_로그인_시_카운트_초기화() {
+        String clientIp = "192.168.1.100";
+        
+        // Given: 3번 실패
+        for (int i = 0; i < 3; i++) {
+            loginAttemptService.recordFailedAttempt(clientIp);
+        }
+        assertThat(loginAttemptService.getCurrentAttempts(clientIp)).isEqualTo(3);
+        
+        // When: 성공 로그인
+        loginAttemptService.recordSuccessfulLogin(clientIp);
+        
+        // Then: 카운트 초기화
+        assertThat(loginAttemptService.getCurrentAttempts(clientIp)).isEqualTo(0);
+        assertThat(loginAttemptService.isBlocked(clientIp)).isFalse();
+    }
+}
+```
+
+#### 인증 통합 테스트
+```java
+@WebMvcTest(AuthController.class)
+@Import({SecurityConfig.class})
+class AuthControllerBruteForceTest {
+    
+    @MockitoBean LoginAttemptService loginAttemptService;
+    @MockitoBean AuthUseCase authUseCase;
+    
+    @Test
+    void 차단된_IP에서_로그인_시도() throws Exception {
+        // Given: IP 차단 상태
+        String blockedIp = "192.168.1.100";
+        doThrow(new TooManyAttemptsException(
+                AuthErrorCode.TOO_MANY_ATTEMPTS, 
+                blockedIp, 5, 15, "차단됨"
+        )).when(loginAttemptService).validateIpNotBlocked(blockedIp);
+        
+        LoginRequest request = new LoginRequest("test@test.com", "password");
+        
+        // When & Then
+        mockMvc.perform(post("/auth/login")
+                        .contentType("application/json")
+                        .content(objectMapper.writeValueAsString(request))
+                        .header("X-Forwarded-For", blockedIp))
+                .andExpect(status().isTooManyRequests())
+                .andExpect(header().string("Retry-After", "900"))
+                .andExpect(jsonPath("$.code").value("AUTH-002"));
+        
+        // 차단되어서 실제 로그인 시도 안함
+        verify(authUseCase, never()).login(any());
+    }
+}
+```
+
 ### 테스트 실행
 
 ```bash
@@ -639,14 +877,25 @@ logging:
 **주요 로그 포인트**:
 ```java
 // 인증 성공/실패
-log.info("로그인 성공 - 사용자: {} ({})", email, userId);
-log.warn("로그인 실패 - 이메일: {}, 원인: {}", email, reason);
+log.info("🔐 로그인 성공: email={}, ip={}", email, clientIp);
+log.warn("🚫 로그인 실패: email={}, ip={}, reason={}", email, clientIp, reason);
+
+// 브루트포스 방어
+log.warn("🚨 브루트포스 공격 감지: ip={}, 시도횟수={}/{}", 
+         clientIp, currentAttempts, MAX_ATTEMPTS);
+log.warn("⛔ IP 차단됨: ip={}, 시도횟수={}, 잠금시간={}분", 
+         clientIp, attemptCount, lockTimeMinutes);
+log.info("✅ 로그인 성공으로 차단 해제: ip={}", clientIp);
 
 // 권한 체크
-log.warn("권한 부족 - 사용자: {}, 요청: {}", userId, endpoint);
+log.warn("🛡️ 권한 부족: 사용자={}, 요청={}", userId, endpoint);
 
 // 회원 상태 변경
-log.info("회원 상태 변경 - ID: {}, {} → {}", memberId, oldStatus, newStatus);
+log.info("👤 회원 상태 변경: ID={}, {} → {}", memberId, oldStatus, newStatus);
+
+// IP 추출 (개발/디버깅용)
+log.debug("🌐 클라이언트 IP 추출: X-Forwarded-For={}, RemoteAddr={}, 최종IP={}", 
+          xForwardedFor, remoteAddr, finalIp);
 ```
 
 ### 메트릭스
@@ -667,8 +916,31 @@ public class MemberMetrics {
             "result", event.isSuccess() ? "success" : "failure"
         ).increment();
     }
+    
+    // 브루트포스 방어 메트릭스
+    @EventListener
+    public void onBruteForceAttempt(BruteForceAttemptEvent event) {
+        Metrics.counter("auth.brute_force.attempt", 
+            "ip", event.getClientIp(),
+            "status", event.isBlocked() ? "blocked" : "allowed"
+        ).increment();
+    }
+    
+    @EventListener
+    public void onIpBlocked(IpBlockedEvent event) {
+        Metrics.counter("auth.ip.blocked").increment();
+        Metrics.gauge("auth.ip.blocked_count", 
+            loginAttemptService.getBlockedIpCount());
+    }
 }
 ```
+
+**주요 메트릭스**:
+- `auth.login.attempt` - 로그인 시도 횟수 (성공/실패별)
+- `auth.brute_force.attempt` - 브루트포스 시도 횟수 (IP별, 차단여부별)
+- `auth.ip.blocked` - IP 차단 발생 횟수
+- `auth.ip.blocked_count` - 현재 차단된 IP 수
+- `member.created` - 회원 가입 횟수 (역할별)
 
 ---
 
@@ -770,6 +1042,44 @@ Connection refused to PostgreSQL
 3. 방화벽 설정 확인
 ```
 
+#### 4. 브루트포스 차단 관련 문제
+```bash
+# 증상 1: 정상 사용자가 차단됨
+"Too many login attempts. IP blocked for 15 minutes."
+
+# 원인
+- 동일 IP에서 여러 사용자가 로그인 시도
+- 개발 환경에서 모든 요청이 127.0.0.1로 인식
+
+# 해결책
+1. IP 추출 로직 확인 (X-Forwarded-For 헤더)
+2. 개발 환경: X-Test-Client-IP 헤더 사용
+3. 필요시 특정 IP 화이트리스트 추가
+
+# 증상 2: 테스트에서 IP가 127.0.0.1로 고정됨
+MockMvc 테스트에서 실제 IP 추출 불가
+
+# 해결책
+@Test
+void 브루트포스_테스트() throws Exception {
+    mockMvc.perform(post("/auth/login")
+            .header("X-Test-Client-IP", "192.168.1.100")  // 테스트용 IP
+            .content(...))
+            .andExpect(status().isTooManyRequests());
+}
+
+# 증상 3: 메모리 사용량 증가
+ConcurrentHashMap에 차단 정보 누적
+
+# 원인
+만료된 차단 정보가 정리되지 않음
+
+# 해결책
+1. 주기적 정리 작업 확인 (15분마다 실행)
+2. 메모리 사용량 모니터링
+3. 필요시 TTL 기반 캐시로 변경 고려
+```
+
 ### 로그 분석
 
 **디버그 모드 활성화**:
@@ -794,6 +1104,6 @@ logging:
 
 ---
 
-**Last Updated**: 2025-08-18  
-**Version**: 1.0.0  
+**Last Updated**: 2025-08-27  
+**Version**: 1.1.0  
 **Maintainer**: Commerce 개발팀
