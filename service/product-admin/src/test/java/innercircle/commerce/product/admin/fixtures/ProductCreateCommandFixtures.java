@@ -51,7 +51,6 @@ public class ProductCreateCommandFixtures {
 						1234L,
 						"original",
 						"https://s3.amazonaws.com/bucket/commerce/temp/images/1234/original.jpg",
-						true,
 						1
 				))
 		);
@@ -63,16 +62,14 @@ public class ProductCreateCommandFixtures {
 						1234L,
 						"original",
 						"https://s3.amazonaws.com/bucket/commerce/temp/images/1234/original.jpg",
-						true,
 						1
-				),   // 메인 이미지
+				),
 				new ProductImageInfo(
 						2234L,
 						"original",
 						"https://s3.amazonaws.com/bucket/commerce/temp/images/2234/original.jpg",
-						false,
 						2
-				)   // 서브 이미지
+				)
 		);
 	}
 }

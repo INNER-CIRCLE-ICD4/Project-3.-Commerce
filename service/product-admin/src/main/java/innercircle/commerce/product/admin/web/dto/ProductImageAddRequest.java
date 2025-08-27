@@ -19,7 +19,6 @@ public record ProductImageAddRequest(
 						productId,
 						imageRequest.url(),
 						imageRequest.originalName(),
-						imageRequest.isMain(),
 						imageRequest.sortOrder()
 				))
 				.toList();

@@ -83,4 +83,23 @@ public class ProductFixtures {
 				VALID_DETAIL_CONTENT
 		);
 	}
+
+	/**
+	 * 테스트용 - 이미지가 있는 상품 객체를 생성합니다.
+	 */
+	public static Product createValidProductWithImages () {
+		Product product = Product.create(
+				VALID_NAME,
+				VALID_CATEGORY_ID,
+				VALID_BRAND_ID,
+				VALID_BASE_PRICE,
+				VALID_STOCK,
+				null,
+				VALID_DETAIL_CONTENT
+		);
+		
+		// 이미지 추가
+		product.addImages(ProductImageFixtures.createValidImages());
+		return product;
+	}
 }

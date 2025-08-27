@@ -11,7 +11,6 @@ public class ProductImageFixtures {
 				1L,
 				"http://example.com/main-image.jpg",
 				"main-image.jpg",
-				true,
 				1
 		);
 	}
@@ -21,18 +20,16 @@ public class ProductImageFixtures {
 				1L,
 				"http://example.com/sub-image.jpg",
 				"sub-image.jpg",
-				false,
 				2
 		);
 	}
 
-	public static ProductImage createImage (String fileName, boolean isMain) {
+	public static ProductImage createImage (String fileName, int sortOrder) {
 		return ProductImage.create(
 				1L,
 				"http://example.com/" + fileName,
 				fileName,
-				isMain,
-				1
+				sortOrder
 		);
 	}
 
@@ -45,8 +42,17 @@ public class ProductImageFixtures {
 
 	public static List<ProductImage> createImagesWithoutMain () {
 		return List.of(
-				createImage("image1.jpg", false),
-				createImage("image2.jpg", false)
+				createImage("image1.jpg", 1),
+				createImage("image2.jpg", 2)
+		);
+	}
+
+	public static ProductImage createValidProductImage(Long productId) {
+		return ProductImage.create(
+				productId,
+				"http://example.com/temp-image.jpg",
+				"temp-image.jpg",
+				1
 		);
 	}
 }

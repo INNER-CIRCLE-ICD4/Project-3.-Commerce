@@ -33,7 +33,7 @@ class S3ImageStoreTest {
 
     @BeforeEach
     void setUp() {
-        s3ImageStore = new S3ImageStore(amazonS3Client, bucketName, baseUrl);
+        s3ImageStore = new S3ImageStore(amazonS3Client, bucketName);
     }
 
     @Test
@@ -70,15 +70,18 @@ class S3ImageStoreTest {
         // given
         String sourceKey = "commerce/temp/images/temp-uuid-123/original.jpg";
         String targetKey = "commerce/products/100/1.jpg";
+        String region = "us-east-1";
         
         when(amazonS3Client.doesObjectExist(bucketName, sourceKey)).thenReturn(true);
+        given(amazonS3Client.getRegionName()).willReturn(region);
 
         // when
         var result = s3ImageStore.move(sourceKey, targetKey);
 
         // then
         assertThat(result).isPresent();
-        assertThat(result.get()).isEqualTo(baseUrl + "/" + targetKey);
+        String expectedUrl = String.format("https://%s.s3.%s.amazonaws.com/%s", bucketName, region, targetKey);
+        assertThat(result.get()).isEqualTo(expectedUrl);
 
         // 복사와 삭제 호출 확인
         verify(amazonS3Client).copyObject(eq(bucketName), eq(sourceKey), eq(bucketName), eq(targetKey));

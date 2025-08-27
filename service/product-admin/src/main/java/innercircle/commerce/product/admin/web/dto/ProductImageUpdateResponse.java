@@ -31,7 +31,6 @@ public record ProductImageUpdateResponse(
 			Long id,
 			String url,
 			String originalName,
-			boolean isMain,
 			int sortOrder
 	) {
 		public static ImageInfo from(ProductImage image) {
@@ -39,7 +38,6 @@ public record ProductImageUpdateResponse(
 					image.getId(),
 					image.getUrl(),
 					image.getOriginalName(),
-					image.isMain(),
 					image.getSortOrder()
 			);
 		}

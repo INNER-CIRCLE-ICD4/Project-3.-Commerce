@@ -18,7 +18,9 @@ public class ProductUpdateCommandFixtures {
                 EXISTING_PRODUCT_ID,
                 UPDATED_NAME,
                 UPDATED_PRICE,
-                UPDATED_DETAIL_CONTENT
+                UPDATED_DETAIL_CONTENT,
+                null,
+                null
         );
     }
     
@@ -32,7 +34,9 @@ public class ProductUpdateCommandFixtures {
                 productId,
                 name,
                 basePrice,
-                detailContent
+                detailContent,
+                null,
+                null
         );
     }
     
