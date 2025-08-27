@@ -272,4 +272,5 @@ grep "Fetching config from server" logs/spring.log
 **Port**: 9000  
 **Profile**: local, prod  
 **Required ENV**: `JASYPT_ENCRYPTOR_PASSWORD=commerce`  
-**Last Updated**: 2025-01-11
+**Last Updated**: 2025-08-13
+

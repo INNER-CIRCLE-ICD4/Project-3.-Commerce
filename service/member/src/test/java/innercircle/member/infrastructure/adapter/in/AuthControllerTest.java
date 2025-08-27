@@ -14,6 +14,7 @@ import innercircle.member.infrastructure.adapter.in.web.auth.dto.RefreshRequest;
 import innercircle.member.infrastructure.adapter.in.web.auth.dto.RefreshResponse;
 import innercircle.member.infrastructure.adapter.in.web.auth.mapper.AuthMapper;
 import innercircle.member.infrastructure.adapter.out.JwtTokenAdapter;
+import innercircle.member.infrastructure.security.LoginAttemptService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,6 +27,7 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.List;
 
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -42,6 +44,9 @@ class AuthControllerTest {
 
     @Autowired
     ObjectMapper objectMapper;
+
+    @MockitoBean
+    LoginAttemptService loginAttemptService;
 
     @MockitoBean
     AuthUseCase authUseCase;
@@ -78,6 +83,7 @@ class AuthControllerTest {
 
         when(authUseCase.login(loginRequest)).thenReturn(authToken);
         when(authMapper.authTokenToLoginResponse(authToken)).thenReturn(loginResponse);
+        when(loginAttemptService.isBlocked(any(String.class))).thenReturn(Boolean.FALSE);
 
 
         mockMvc.perform(post("/auth/login")
@@ -117,6 +123,7 @@ class AuthControllerTest {
 
         when(authUseCase.refresh(request)).thenReturn(authToken);
         when(authMapper.authTokenToRefreshResponse(authToken)).thenReturn(refreshResponse);
+        when(loginAttemptService.isBlocked(any(String.class))).thenReturn(Boolean.FALSE);
 
         mockMvc.perform(post("/auth/refresh")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -124,9 +131,6 @@ class AuthControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.accessToken").value(authToken.accessToken()))
                 .andExpect(jsonPath("$.refreshToken").value(authToken.refreshToken()));
-
-
     }
-
 
 }
