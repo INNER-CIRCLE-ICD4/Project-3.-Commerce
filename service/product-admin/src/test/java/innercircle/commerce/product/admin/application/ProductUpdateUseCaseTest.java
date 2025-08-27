@@ -59,7 +59,7 @@ class ProductUpdateUseCaseTest {
 		given(productRepository.save(any(Product.class))).willReturn(updatedProduct);
 
 		// when
-		Product result = productUpdateUseCase.updateBasicInfo(command);
+		Product result = productUpdateUseCase.updateProduct(command);
 
 		// then
 		assertThat(result).isNotNull();
@@ -75,7 +75,7 @@ class ProductUpdateUseCaseTest {
 		given(productRepository.findById(EXISTING_PRODUCT_ID)).willReturn(Optional.empty());
 
 		// when & then
-		assertThatThrownBy(() -> productUpdateUseCase.updateBasicInfo(command))
+		assertThatThrownBy(() -> productUpdateUseCase.updateProduct(command))
 				.isInstanceOf(ProductNotFoundException.class)
 				.hasMessageContaining(EXISTING_PRODUCT_ID.toString());
 	}
@@ -91,9 +91,71 @@ class ProductUpdateUseCaseTest {
 		given(productRepository.existsByNameAndIdNot(UPDATED_NAME, EXISTING_PRODUCT_ID)).willReturn(true);
 
 		// when & then
-		assertThatThrownBy(() -> productUpdateUseCase.updateBasicInfo(command))
+		assertThatThrownBy(() -> productUpdateUseCase.updateProduct(command))
 				.isInstanceOf(DuplicateProductNameException.class)
 				.hasMessageContaining(UPDATED_NAME);
 	}
-	
+
+	@Test
+	@DisplayName("이미지 삭제와 함께 상품 수정이 성공한다.")
+	void 이미지_삭제와_함께_상품_수정_성공 () {
+		// given
+		List<String> imagesToDelete = List.of("http://example.com/sub-image.jpg");
+		ProductUpdateCommand command = new ProductUpdateCommand(
+				EXISTING_PRODUCT_ID,
+				UPDATED_NAME,
+				UPDATED_PRICE,
+				UPDATED_DETAIL_CONTENT,
+				imagesToDelete,
+				null
+		);
+
+		Product existingProduct = ProductFixtures.createValidProductWithImages();
+		Product updatedProduct = ProductFixtures.createValidProduct();
+
+		given(productRepository.findById(EXISTING_PRODUCT_ID)).willReturn(Optional.of(existingProduct));
+		given(productRepository.existsByNameAndIdNot(UPDATED_NAME, EXISTING_PRODUCT_ID)).willReturn(false);
+		given(productRepository.save(any(Product.class))).willReturn(updatedProduct);
+
+		// when
+		Product result = productUpdateUseCase.updateProduct(command);
+
+		// then
+		assertThat(result).isNotNull();
+		verify(s3ImageStore).delete(anyString());
+		verify(productRepository).save(any(Product.class));
+	}
+
+	@Test
+	@DisplayName("이미지 추가와 함께 상품 수정이 성공한다.")
+	void 이미지_추가와_함께_상품_수정_성공 () {
+		// given
+		List<ProductImage> imagesToAdd = List.of(
+				ProductImageFixtures.createValidProductImage(EXISTING_PRODUCT_ID)
+		);
+		ProductUpdateCommand command = new ProductUpdateCommand(
+				EXISTING_PRODUCT_ID,
+				UPDATED_NAME,
+				UPDATED_PRICE,
+				UPDATED_DETAIL_CONTENT,
+				null,
+				imagesToAdd
+		);
+
+		Product existingProduct = ProductFixtures.createValidProductWithImages();
+		Product updatedProduct = ProductFixtures.createValidProduct();
+
+		given(productRepository.findById(EXISTING_PRODUCT_ID)).willReturn(Optional.of(existingProduct));
+		given(productRepository.existsByNameAndIdNot(UPDATED_NAME, EXISTING_PRODUCT_ID)).willReturn(false);
+		given(s3ImageStore.move(anyString(), anyString())).willReturn(Optional.of("https://example.com/final/image.jpg"));
+		given(productRepository.save(any(Product.class))).willReturn(updatedProduct);
+
+		// when
+		Product result = productUpdateUseCase.updateProduct(command);
+
+		// then
+		assertThat(result).isNotNull();
+		verify(s3ImageStore).move(anyString(), anyString());
+		verify(productRepository).save(any(Product.class));
+	}
 }

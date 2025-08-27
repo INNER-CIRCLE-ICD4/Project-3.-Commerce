@@ -9,6 +9,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * 이미지 임시 업로드 UseCase
@@ -60,7 +61,7 @@ public class ImageUploadUseCase {
 			if (!tempImages.isEmpty()) {
 				List<String> tempKeys = tempImages.stream()
 												  .map(TempImage::getUrl)
-												  .toList();
+												  .collect(Collectors.toCollection(ArrayList::new));
 				s3ImageStore.delete(tempKeys);
 			}
 			throw e;

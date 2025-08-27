@@ -1,10 +1,14 @@
 package innercircle.commerce.product.admin.web.dto;
 
 import innercircle.commerce.product.admin.application.dto.ProductUpdateCommand;
+import innercircle.commerce.product.core.domain.ProductImage;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
+
+import java.util.Collections;
+import java.util.List;
 
 public record ProductUpdateRequest(
 		@NotBlank(message = "상품명은 필수입니다")
@@ -15,14 +19,25 @@ public record ProductUpdateRequest(
 		Integer basePrice,
 		
 		@NotBlank(message = "상품 상세 내용은 필수입니다")
-		String detailContent
+		String detailContent,
+		
+		List<String> imagesToDelete,
+		List<ProductImageRequest> imagesToAdd
 ) {
 	public ProductUpdateCommand toCommand(Long productId) {
+		List<ProductImage> productImages = imagesToAdd != null ? 
+			imagesToAdd.stream()
+				.map(request -> request.toProductImage(productId))
+				.toList() : 
+			Collections.emptyList();
+				
 		return new ProductUpdateCommand(
 				productId,
 				name,
 				basePrice,
-				detailContent
+				detailContent,
+				imagesToDelete != null ? imagesToDelete : Collections.emptyList(),
+				productImages
 		);
 	}
 }

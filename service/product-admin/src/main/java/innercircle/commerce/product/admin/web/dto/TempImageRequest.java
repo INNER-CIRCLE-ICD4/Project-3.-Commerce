@@ -13,9 +13,6 @@ public record TempImageRequest(
 		@NotBlank(message = "원본 파일명은 필수입니다") 
 		String originalName,
 		
-		@NotNull(message = "대표 이미지 여부는 필수입니다")
-		Boolean isMain,
-		
 		@NotNull(message = "정렬 순서는 필수입니다")
 		Integer sortOrder
 ) {

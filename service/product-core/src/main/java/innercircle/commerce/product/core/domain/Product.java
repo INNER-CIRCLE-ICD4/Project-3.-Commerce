@@ -4,11 +4,13 @@ import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.apache.commons.lang3.StringUtils;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static innercircle.commerce.product.core.domain.ProductValidator.*;
 
@@ -105,60 +107,42 @@ public class Product {
 					  .build();
 	}
 
-	public void addImages (List<ProductImage> images) {
-		if (images == null || images.isEmpty()) {
-			throw new IllegalArgumentException("추가할 이미지는 최소 1개 이상이어야 합니다.");
-		}
+	public void addImages (List<ProductImage> newImages) {
+		validateImages(newImages);
 
-		if (this.images == null) {
-			// 첫 등록시에는 전체 검증 수행
-			validateImages(images);
-			this.images = images;
-			return;
-		}
-
-		// 기존 이미지 + 새 이미지 총합 검증
-		int totalImageCount = this.images.size() + images.size();
+		List<ProductImage> currentImages = this.images != null ? this.images : new ArrayList<>();
+		int totalImageCount = currentImages.size() + newImages.size();
 		if (totalImageCount > 6) {
 			throw new IllegalArgumentException("상품 이미지는 6개까지 등록할 수 있습니다.");
 		}
 
-		// 기존 이미지에 새 이미지 추가
-		List<ProductImage> newImages = new ArrayList<>(this.images);
-		newImages.addAll(images);
-		this.images = newImages;
+		List<ProductImage> combinedImages = new ArrayList<>(currentImages);
+		combinedImages.addAll(newImages);
+		this.images = combinedImages;
+		this.updatedAt = LocalDateTime.now();
 	}
 
 
 	public void removeImageByUrl (String imageUrl) {
-		if (images == null || images.isEmpty()) {
+		if (StringUtils.isBlank(imageUrl)) {
 			throw new IllegalArgumentException("삭제할 이미지가 없습니다.");
 		}
 
-		// 해당 URL의 이미지가 있는지 확인
 		boolean targetImageExists = images.stream()
 				.anyMatch(image -> image.getUrl().equals(imageUrl));
 		
 		if (!targetImageExists) {
-			throw new IllegalArgumentException("해당 URL의 이미지를 찾을 수 없습니다.");
+			throw new IllegalArgumentException("해당 URL의 이미지를 찾을 수 없습니다. :: " + imageUrl);
 		}
 
-		// 삭제 후 남은 이미지들
 		List<ProductImage> remainingImages = images.stream()
 				.filter(image -> !image.getUrl().equals(imageUrl))
-				.toList();
+				.collect(Collectors.toCollection(ArrayList::new));
 
 		if (remainingImages.isEmpty()) {
 			throw new IllegalArgumentException("상품 이미지는 필수 입니다.");
 		}
-
-		boolean hasMainImageAfterDelete = remainingImages.stream()
-				.anyMatch(ProductImage::isMain);
-
-		if (!hasMainImageAfterDelete) {
-			throw new IllegalArgumentException("메인 이미지는 필수 입니다.");
-		}
-
+		remainingImages.forEach(image -> System.out.println("삭제된 이미지 :: " + image.getId() + ", " + image.getProductId()));
 		this.images = remainingImages;
 	}
 

@@ -20,16 +20,13 @@ public class S3ImageStore {
 
 	private final AmazonS3Client amazonS3Client;
 	private final String bucketName;
-	private final String baseUrl;
 
 	public S3ImageStore (
 			AmazonS3Client amazonS3Client,
-			@Value("${cloud.aws.s3.bucket}") String bucketName,
-			@Value("${cloud.aws.s3.base-url}") String baseUrl
+			@Value("${cloud.aws.s3.bucket}") String bucketName
 	) {
 		this.amazonS3Client = amazonS3Client;
 		this.bucketName = bucketName;
-		this.baseUrl = baseUrl;
 	}
 
 	/**
@@ -65,13 +62,10 @@ public class S3ImageStore {
 			return Optional.empty();
 		}
 
-		// 복사
 		amazonS3Client.copyObject(bucketName, sourceKey, bucketName, targetKey);
-
-		// 원본 삭제
 		amazonS3Client.deleteObject(bucketName, sourceKey);
 
-		return Optional.of(baseUrl + "/" + targetKey);
+		return Optional.of(String.format("https://%s.s3.%s.amazonaws.com/%s", bucketName, amazonS3Client.getRegionName(), targetKey));
 	}
 
 	/**

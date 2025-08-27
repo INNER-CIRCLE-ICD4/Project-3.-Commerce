@@ -58,8 +58,7 @@ public class ProductJpaEntity {
 	@Column(name = "updated_at", nullable = false)
 	private LocalDateTime updatedAt;
 
-	@OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-	@JoinColumn(name = "product_id")
+	@OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
 	private List<ProductImageJpaEntity> images = new ArrayList<>();
 
 	/**
@@ -79,15 +78,18 @@ public class ProductJpaEntity {
 		entity.createdAt = product.getCreatedAt();
 		entity.updatedAt = product.getUpdatedAt();
 		
-		// 이미지 변환
 		if (product.getImages() != null) {
 			List<ProductImageJpaEntity> imageEntities = product.getImages().stream()
-					.map(ProductImageJpaEntity::from)
+					.map(domainImage -> {
+						ProductImageJpaEntity imageEntity = ProductImageJpaEntity.from(domainImage);
+						imageEntity.setProduct(entity);
+
+						return imageEntity;
+					})
 					.toList();
 			entity.images.clear();
 			entity.images.addAll(imageEntities);
 		}
-		
 		return entity;
 	}
 

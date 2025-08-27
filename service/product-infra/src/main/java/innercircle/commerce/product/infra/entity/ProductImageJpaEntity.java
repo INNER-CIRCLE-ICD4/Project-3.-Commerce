@@ -17,8 +17,9 @@ public class ProductImageJpaEntity {
 	@Id
 	private Long id;
 
-	@Column(name = "product_id", nullable = false)
-	private Long productId;
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "product_id", nullable = false)
+	private ProductJpaEntity product;
 
 	@Column(nullable = false, length = 2000)
 	private String url;
@@ -26,8 +27,6 @@ public class ProductImageJpaEntity {
 	@Column(name = "original_name", length = 255)
 	private String originalName;
 
-	@Column(name = "is_main", nullable = false)
-	private boolean isMain;
 
 	@Column(name = "sort_order", nullable = false)
 	private int sortOrder;
@@ -38,12 +37,18 @@ public class ProductImageJpaEntity {
 	public static ProductImageJpaEntity from(ProductImage productImage) {
 		ProductImageJpaEntity entity = new ProductImageJpaEntity();
 		entity.id = productImage.getId();
-		entity.productId = productImage.getProductId();
+		// product는 부모 엔티티에서 설정됨
 		entity.url = productImage.getUrl();
 		entity.originalName = productImage.getOriginalName();
-		entity.isMain = productImage.isMain();
 		entity.sortOrder = productImage.getSortOrder();
 		return entity;
+	}
+
+	/**
+	 * 연관관계 편의 메서드
+	 */
+	public void setProduct(ProductJpaEntity product) {
+		this.product = product;
 	}
 
 	/**
@@ -52,10 +57,9 @@ public class ProductImageJpaEntity {
 	public ProductImage toDomain() {
 		return ProductImage.restore(
 			this.id,
-			this.productId,
+			this.product != null ? this.product.getId() : null,
 			this.url,
 			this.originalName,
-			this.isMain,
 			this.sortOrder
 		);
 	}

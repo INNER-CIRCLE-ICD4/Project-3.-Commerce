@@ -1,6 +1,7 @@
 package innercircle.commerce.product.admin.web.dto;
 
 import innercircle.commerce.product.admin.application.dto.ProductImageInfo;
+import innercircle.commerce.product.core.domain.ProductImage;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -15,9 +16,6 @@ public record ProductImageRequest(
 		@NotBlank(message = "이미지 URL은 필수입니다")
 		String url,
 		
-		@NotNull(message = "대표 이미지 여부는 필수입니다")
-		Boolean isMain,
-		
 		@NotNull(message = "정렬 순서는 필수입니다")
 		Integer sortOrder
 ) {
@@ -26,7 +24,15 @@ public record ProductImageRequest(
 				id,
 				originalName,
 				url,
-				isMain,
+				sortOrder
+		);
+	}
+	
+	public ProductImage toProductImage(Long productId) {
+		return ProductImage.create(
+				productId,
+				url,
+				originalName,
 				sortOrder
 		);
 	}

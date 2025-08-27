@@ -244,10 +244,10 @@ class ProductControllerTest {
 				""";
 			
 			Product updatedProduct = ProductFixtures.createValidProduct();
-			given(productUpdateUseCase.updateBasicInfo(any())).willReturn(updatedProduct);
+			given(productUpdateUseCase.updateProduct(any())).willReturn(updatedProduct);
 
 			// when & then
-			mockMvc.perform(put("/api/admin/products/{id}", productId)
+			mockMvc.perform(patch("/api/admin/products/{id}", productId)
 						   .contentType(MediaType.APPLICATION_JSON)
 						   .content(updateRequest))
 				   .andExpect(status().isOk())
@@ -256,7 +256,7 @@ class ProductControllerTest {
 				   .andExpect(jsonPath("$.data.name").exists())
 				   .andExpect(jsonPath("$.error").doesNotExist());
 
-			verify(productUpdateUseCase).updateBasicInfo(any());
+			verify(productUpdateUseCase).updateProduct(any());
 		}
 
 		@Test
@@ -272,52 +272,65 @@ class ProductControllerTest {
 				}
 				""";
 			
-			given(productUpdateUseCase.updateBasicInfo(any()))
+			given(productUpdateUseCase.updateProduct(any()))
 				.willThrow(new ProductNotFoundException(productId));
 
 			// when & then
-			mockMvc.perform(put("/api/admin/products/{id}", productId)
+			mockMvc.perform(patch("/api/admin/products/{id}", productId)
 						   .contentType(MediaType.APPLICATION_JSON)
 						   .content(updateRequest))
 				   .andExpect(status().isNotFound());
 
-			verify(productUpdateUseCase).updateBasicInfo(any());
+			verify(productUpdateUseCase).updateProduct(any());
 		}
 
 
 		@Test
-		@DisplayName("상품 이미지를 개별 삭제할 수 있다.")
-		void 상품_이미지_개별_삭제_성공() throws Exception {
+		@DisplayName("상품 정보와 이미지 삭제를 함께 수행할 수 있다.")
+		void 상품_정보_및_이미지_삭제_성공() throws Exception {
 			// given
 			Long productId = 1L;
-			String imageUrl = "https://s3.amazonaws.com/commerce/products/1/image1.jpg";
+			var updateRequest = """
+				{
+					"name": "수정된 상품명",
+					"basePrice": 25000,
+					"detailContent": "수정된 상품 설명",
+					"imagesToDelete": [
+						"https://s3.amazonaws.com/commerce/products/1/image1.jpg"
+					]
+				}
+				""";
 			
 			Product updatedProduct = ProductFixtures.createValidProduct();
-			given(productUpdateUseCase.deleteImage(eq(productId), eq(imageUrl))).willReturn(updatedProduct);
+			given(productUpdateUseCase.updateProduct(any())).willReturn(updatedProduct);
 
 			// when & then
-			mockMvc.perform(delete("/api/admin/products/{id}/images", productId)
-					   .param("imageUrl", imageUrl))
+			mockMvc.perform(patch("/api/admin/products/{id}", productId)
+						   .contentType(MediaType.APPLICATION_JSON)
+						   .content(updateRequest))
 				   .andExpect(status().isOk())
 				   .andExpect(jsonPath("$.success").value(true))
 				   .andExpect(jsonPath("$.data").exists())
 				   .andExpect(jsonPath("$.error").doesNotExist());
 
-			verify(productUpdateUseCase).deleteImage(eq(productId), eq(imageUrl));
+			verify(productUpdateUseCase).updateProduct(any());
 		}
 
 		@Test
-		@DisplayName("상품에 새로운 이미지들을 추가할 수 있다.")
-		void 상품_이미지_추가_성공() throws Exception {
+		@DisplayName("상품 정보와 이미지 추가를 함께 수행할 수 있다.")
+		void 상품_정보_및_이미지_추가_성공() throws Exception {
 			// given
 			Long productId = 1L;
-			var imageAddRequest = """
+			var updateRequest = """
 				{
-					"images": [
+					"name": "수정된 상품명",
+					"basePrice": 25000,
+					"detailContent": "수정된 상품 설명",
+					"imagesToAdd": [
 						{
+							"id": 1,
 							"url": "https://s3.amazonaws.com/temp/1.jpg",
 							"originalName": "image1.jpg",
-							"isMain": false,
 							"sortOrder": 2
 						}
 					]
@@ -325,18 +338,18 @@ class ProductControllerTest {
 				""";
 			
 			Product updatedProduct = ProductFixtures.createValidProduct();
-			given(productUpdateUseCase.addImages(any(Long.class), any())).willReturn(updatedProduct);
+			given(productUpdateUseCase.updateProduct(any())).willReturn(updatedProduct);
 
 			// when & then
-			mockMvc.perform(post("/api/admin/products/{id}/images", productId)
+			mockMvc.perform(patch("/api/admin/products/{id}", productId)
 					   .contentType(MediaType.APPLICATION_JSON)
-					   .content(imageAddRequest))
+					   .content(updateRequest))
 				   .andExpect(status().isOk())
 				   .andExpect(jsonPath("$.success").value(true))
 				   .andExpect(jsonPath("$.data").exists())
 				   .andExpect(jsonPath("$.error").doesNotExist());
 
-			verify(productUpdateUseCase).addImages(any(Long.class), any());
+			verify(productUpdateUseCase).updateProduct(any());
 		}
 	}
 }

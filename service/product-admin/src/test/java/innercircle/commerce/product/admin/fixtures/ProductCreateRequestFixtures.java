@@ -80,14 +80,12 @@ public class ProductCreateRequestFixtures {
 						1234L,
 						"main-image.jpg",
 						"https://s3.amazonaws.com/bucket/commerce/temp/images/1234/original.jpg",
-						true,  // 대표 이미지
 						1
 				),
 				new ProductImageRequest(
 						2234L,
 						"sub-image.jpg", 
 						"https://s3.amazonaws.com/bucket/commerce/temp/images/2234/original.jpg",
-						false,  // 서브 이미지
 						2
 				)
 		);

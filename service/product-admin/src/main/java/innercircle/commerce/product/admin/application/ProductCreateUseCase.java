@@ -41,7 +41,6 @@ public class ProductCreateUseCase {
 
 		List<ProductImage> productImages = moveImagesToProduct(product.getId(), command.imageInfos());
 
-		// 3. 이미지를 상품에 설정하고 다시 저장
 		product.addImages(productImages);
 		return productRepository.save(product);
 	}
@@ -58,12 +57,10 @@ public class ProductCreateUseCase {
 	private List<ProductImage> moveImagesToProduct (Long productId, List<ProductImageInfo> imageInfos) {
 		List<ProductImage> productImages = new ArrayList<>();
 
-		for (int i = 0; i < imageInfos.size(); i++) {
-			ProductImageInfo imageInfo = imageInfos.get(i);
-
+		for (ProductImageInfo imageInfo : imageInfos) {
 			String tempKey = extractS3KeyFromUrl(imageInfo.url());
 			String extension = extractExtensionFromUrlOrName(imageInfo.url(), imageInfo.originalName());
-			String productKey = buildProductPath(productId, (long) (i + 1), extension);
+			String productKey = buildProductPath(productId, imageInfo.id(), extension);
 
 			var movedUrl = s3ImageStore.move(tempKey, productKey);
 			if (movedUrl.isEmpty()) {
@@ -74,7 +71,6 @@ public class ProductCreateUseCase {
 					productId,
 					movedUrl.get(),
 					imageInfo.originalName(),
-					imageInfo.isMain(),
 					imageInfo.sortOrder()
 			);
 
@@ -85,7 +81,7 @@ public class ProductCreateUseCase {
 	}
 
 	/**
-	 * 상품 이미지 경로 생성
+	 * 상품 이미지 경로 생성 (이미지 ID 기반)
 	 */
 	private String buildProductPath (Long productId, Long imageId, String extension) {
 		return String.format("commerce/products/%d/%d.%s", productId, imageId, extension);
@@ -98,8 +94,6 @@ public class ProductCreateUseCase {
 	 * @return S3 키
 	 */
 	private String extractS3KeyFromUrl (String url) {
-		// URL 형식: https://bucket.s3.region.amazonaws.com/key
-		// 또는: https://bucket.s3.amazonaws.com/key
 		String[] parts = url.split("/");
 		StringBuilder keyBuilder = new StringBuilder();
 		boolean foundAmazonaws = false;
@@ -126,24 +120,21 @@ public class ProductCreateUseCase {
 	 * @return 확장자 (점 제외)
 	 */
 	private String extractExtensionFromUrlOrName (String url, String originalName) {
-		// URL에서 확장자 추출 시도
 		if (url != null && url.contains(".")) {
 			String[] urlParts = url.split("\\.");
 			String extension = urlParts[urlParts.length - 1];
-			// 쿼리 파라미터가 있으면 제거
+
 			if (extension.contains("?")) {
 				extension = extension.split("\\?")[0];
 			}
 			return extension.toLowerCase();
 		}
 
-		// 원본 파일명에서 확장자 추출
 		if (originalName != null && originalName.contains(".")) {
 			String[] nameParts = originalName.split("\\.");
 			return nameParts[nameParts.length - 1].toLowerCase();
 		}
 
-		// 기본값
 		return "jpg";
 	}
 

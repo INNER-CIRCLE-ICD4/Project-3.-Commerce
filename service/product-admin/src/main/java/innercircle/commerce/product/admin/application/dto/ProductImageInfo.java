@@ -4,7 +4,6 @@ public record ProductImageInfo(
 		Long id,
 		String originalName,
 		String url,
-		boolean isMain,
 		Integer sortOrder
 ) {
 }

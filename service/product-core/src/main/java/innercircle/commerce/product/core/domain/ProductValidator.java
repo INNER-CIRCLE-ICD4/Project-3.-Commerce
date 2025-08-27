@@ -60,10 +60,5 @@ public class ProductValidator {
 		if (images.size() > 6) {
 			throw new IllegalArgumentException("상품 이미지는 6개까지 등록할 수 있습니다.");
 		}
-
-		boolean hasMainImage = images.stream().anyMatch(ProductImage::isMain);
-		if (!hasMainImage) {
-			throw new IllegalArgumentException("메인 이미지는 필수 입니다.");
-		}
 	}
 }

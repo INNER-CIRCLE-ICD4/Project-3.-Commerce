@@ -72,60 +72,21 @@ public class ProductController {
 	}
 
 	/**
-	 * 상품 기본 정보를 수정합니다.
+	 * 상품 정보를 수정합니다. (기본 정보 + 이미지 변경사항)
 	 *
 	 * @param id 상품 ID
 	 * @param request 상품 수정 요청
 	 * @return 수정된 상품 정보
 	 */
-	@PutMapping("/{id}")
+	@PatchMapping("/{id}")
 	public ResponseEntity<ApiResponse<ProductUpdateResponse>> updateProduct(
 			@PathVariable Long id,
 			@Valid @RequestBody ProductUpdateRequest request
 	) {
 		var command = request.toCommand(id);
 		
-		Product updatedProduct = productUpdateUseCase.updateBasicInfo(command);
+		Product updatedProduct = productUpdateUseCase.updateProduct(command);
 		ProductUpdateResponse response = ProductUpdateResponse.from(updatedProduct);
-
-		return ResponseEntity.ok(ApiResponse.success(response));
-	}
-
-
-	/**
-	 * 상품의 특정 이미지를 삭제합니다.
-	 *
-	 * @param id 상품 ID
-	 * @param imageUrl 삭제할 이미지 URL
-	 * @return 수정된 상품 정보
-	 */
-	@DeleteMapping("/{id}/images")
-	public ResponseEntity<ApiResponse<ProductUpdateResponse>> deleteProductImage(
-			@PathVariable Long id,
-			@RequestParam String imageUrl
-	) {
-		Product updatedProduct = productUpdateUseCase.deleteImage(id, imageUrl);
-		ProductUpdateResponse response = ProductUpdateResponse.from(updatedProduct);
-
-		return ResponseEntity.ok(ApiResponse.success(response));
-	}
-
-	/**
-	 * 상품에 새로운 이미지들을 추가합니다.
-	 *
-	 * @param id 상품 ID
-	 * @param request 이미지 추가 요청
-	 * @return 수정된 상품 정보
-	 */
-	@PostMapping("/{id}/images")
-	public ResponseEntity<ApiResponse<ProductImageUpdateResponse>> addProductImages(
-			@PathVariable Long id,
-			@Valid @RequestBody ProductImageAddRequest request
-	) {
-		List<ProductImage> tempImages = request.toProductImages(id);
-		
-		Product updatedProduct = productUpdateUseCase.addImages(id, tempImages);
-		ProductImageUpdateResponse response = ProductImageUpdateResponse.from(updatedProduct);
 
 		return ResponseEntity.ok(ApiResponse.success(response));
 	}
