@@ -49,26 +49,23 @@ jobs:
           
           # 🔥 공통 모듈 변경 시 모든 인프라 서비스 포함
           if [[ "${{ steps.filter.outputs.common }}" == "true" ]]; then
-            changed_services='[
-              {"service": "config-server", "priority": 1, "port": 9000},
-              {"service": "eureka-server", "priority": 2, "port": 8761},
-              {"service": "gateway", "priority": 3, "port": 8000}
-            ]'
+            # ✅ 한 줄로 압축된 JSON
+            changed_services='[{"service":"config-server","priority":1,"port":9000},{"service":"eureka-server","priority":2,"port":8761},{"service":"gateway","priority":3,"port":8000}]'
             echo "📋 공통 모듈 변경 - 모든 인프라 서비스 배포"
           else
-            # 🔥 개별 서비스 변경 확인 (올바른 로직)
+            # 🔥 개별 서비스 변경 확인
             if [[ "${{ steps.filter.outputs.config-server }}" == "true" ]]; then
-              changed_services=$(echo $changed_services | jq '. + [{"service": "config-server", "priority": 1, "port": 9000}]')
+              changed_services=$(echo $changed_services | jq -c '. + [{"service":"config-server","priority":1,"port":9000}]')
               echo "✅ config-server 배포 대상"
             fi
           
             if [[ "${{ steps.filter.outputs.eureka-server }}" == "true" ]]; then
-              changed_services=$(echo $changed_services | jq '. + [{"service": "eureka-server", "priority": 2, "port": 8761}]')
+              changed_services=$(echo $changed_services | jq -c '. + [{"service":"eureka-server","priority":2,"port":8761}]')
               echo "✅ eureka-server 배포 대상"
             fi
           
             if [[ "${{ steps.filter.outputs.gateway }}" == "true" ]]; then
-              changed_services=$(echo $changed_services | jq '. + [{"service": "gateway", "priority": 3, "port": 8000}]')
+              changed_services=$(echo $changed_services | jq -c '. + [{"service":"gateway","priority":3,"port":8000}]')
               echo "✅ gateway 배포 대상"
             fi
           fi
@@ -81,7 +78,8 @@ jobs:
             echo "has-changes=false" >> $GITHUB_OUTPUT
           fi
           
-          echo "changed-services=$changed_services" >> $GITHUB_OUTPUT
+          # ✅ JSON을 compact 형태로 출력 (중요!)
+          echo "changed-services=$(echo $changed_services | jq -c '.')" >> $GITHUB_OUTPUT
           echo "🎯 최종 배포 대상 ($service_count개): $changed_services"
 
       - name: Check if any infra changed
