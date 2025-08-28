@@ -10,8 +10,7 @@ on:
 env:
   AWS_REGION: us-east-1
   ECR_REGISTRY: public.ecr.aws/o3q0p5x7
-  ECS_CLUSTER: e-commerce  # infra 전용 클러스터
-
+  ECS_CLUSTER: e-commerce
 
 jobs:
   detect-infra-changes:
@@ -23,6 +22,7 @@ jobs:
       gateway: ${{ steps.filter.outputs.gateway }}
       any-infra-changed: ${{ steps.check.outputs.any-changed }}
       changed-services: ${{ steps.generate-matrix.outputs.changed-services }}
+      has-changes: ${{ steps.generate-matrix.outputs.has-changes }}
     steps:
       - uses: actions/checkout@v4
       - uses: dorny/paths-filter@v3
@@ -47,30 +47,53 @@ jobs:
           
           echo "🔍 변경된 서비스 확인 중..."
           
-          # 공통 모듈 변경 시 모든 서비스 포함
+          # 🔥 공통 모듈 변경 시 모든 인프라 서비스 포함
           if [[ "${{ steps.filter.outputs.common }}" == "true" ]]; then
-            changed_services='["order","product","review","search"]'
-            echo "📋 공통 모듈 변경 - 모든 서비스 배포"
+            changed_services='[
+              {"service": "config-server", "priority": 1, "port": 9000},
+              {"service": "eureka-server", "priority": 2, "port": 8761},
+              {"service": "gateway", "priority": 3, "port": 8000}
+            ]'
+            echo "📋 공통 모듈 변경 - 모든 인프라 서비스 배포"
           else
-            # 개별 서비스 변경 확인
+            # 🔥 개별 서비스 변경 확인 (올바른 로직)
             if [[ "${{ steps.filter.outputs.config-server }}" == "true" ]]; then
-              changed_services=$(echo $changed_services | jq '. + ["config-server"]')
-              echo "✅ order 배포 대상"
+              changed_services=$(echo $changed_services | jq '. + [{"service": "config-server", "priority": 1, "port": 9000}]')
+              echo "✅ config-server 배포 대상"
             fi
           
             if [[ "${{ steps.filter.outputs.eureka-server }}" == "true" ]]; then
-              changed_services=$(echo $changed_services | jq '. + ["eureka-server"]')
-              echo "✅ product 배포 대상"
+              changed_services=$(echo $changed_services | jq '. + [{"service": "eureka-server", "priority": 2, "port": 8761}]')
+              echo "✅ eureka-server 배포 대상"
             fi
           
             if [[ "${{ steps.filter.outputs.gateway }}" == "true" ]]; then
-              changed_services=$(echo $changed_services | jq '. + ["gateway"]')
-              echo "✅ review 배포 대상"
+              changed_services=$(echo $changed_services | jq '. + [{"service": "gateway", "priority": 3, "port": 8000}]')
+              echo "✅ gateway 배포 대상"
             fi
           fi
           
+          # 🔥 변경사항 여부 확인
+          service_count=$(echo $changed_services | jq 'length')
+          if [[ $service_count -gt 0 ]]; then
+            echo "has-changes=true" >> $GITHUB_OUTPUT
+          else
+            echo "has-changes=false" >> $GITHUB_OUTPUT
+          fi
+          
           echo "changed-services=$changed_services" >> $GITHUB_OUTPUT
-          echo "🎯 최종 배포 대상: $changed_services"
+          echo "🎯 최종 배포 대상 ($service_count개): $changed_services"
+
+      - name: Check if any infra changed
+        id: check
+        run: |
+          if [[ "${{ steps.generate-matrix.outputs.has-changes }}" == "true" ]]; then
+            echo "any-changed=true" >> $GITHUB_OUTPUT
+            echo "✅ 인프라 변경사항 있음"
+          else
+            echo "any-changed=false" >> $GITHUB_OUTPUT
+            echo "ℹ️ 인프라 변경사항 없음"
+          fi
 
   cleanup-ecr-images:
     runs-on: ubuntu-latest
@@ -78,10 +101,11 @@ jobs:
     if: |
       github.event_name == 'push' && 
       github.ref == 'refs/heads/main' && 
-      needs.detect-infra-changes.outputs.changed-services != '[]'
+      needs.detect-infra-changes.outputs.has-changes == 'true'
     strategy:
       matrix:
-        service: ${{ fromJson(needs.detect-infra-changes.outputs.changed-services) }}
+        # 🔥 Dynamic Matrix - 변경된 서비스만 포함
+        include: ${{ fromJson(needs.detect-infra-changes.outputs.changed-services) }}
     steps:
       - name: Configure AWS credentials (ECR)
         uses: aws-actions/configure-aws-credentials@v4
@@ -116,30 +140,18 @@ jobs:
           else
             echo "ℹ️ No existing images found in infra/${{ matrix.service }} repository"
           fi
-          
-        
-          # ✅오래된 이미지 삭제
 
   build-infra:
     runs-on: ubuntu-latest
     needs: detect-infra-changes
-    if: needs.detect-infra-changes.outputs.changed-services != '[]'
+    if: needs.detect-infra-changes.outputs.has-changes == 'true'
     strategy:
       fail-fast: false
       matrix:
-        include:
-          - service: config-server
-            priority: 1
-          - service: eureka-server
-            priority: 2
-          - service: gateway
-            priority: 3
+        # 🔥 Dynamic Matrix - 변경된 서비스만 포함
+        include: ${{ fromJson(needs.detect-infra-changes.outputs.changed-services) }}
     steps:
-      - name: Skip if no changes
-        if: needs.detect-infra-changes.outputs.changed-services != '[]'
-        run: |
-          echo "No changes detected for ${{ matrix.service }}, skipping..."
-          exit 0
+      # 🔥 Skip 로직 완전 제거 - Matrix에 변경된 서비스만 있음
 
       - name: Checkout code
         uses: actions/checkout@v4
@@ -163,6 +175,7 @@ jobs:
       - name: Build and test infra service
         run: |
           echo "🔨 Building ${{ matrix.service }}..."
+          echo "📋 Service Info: Priority=${{ matrix.priority }}, Port=${{ matrix.port }}"
           chmod +x ./gradlew
           ./gradlew :infra:${{ matrix.service }}:build :infra:${{ matrix.service }}:test
 
@@ -177,25 +190,15 @@ jobs:
     needs: [detect-infra-changes, build-infra]
     if: |
       github.event_name == 'push' &&
-      github.ref == 'refs/heads/main'  &&
+      github.ref == 'refs/heads/main' &&
       needs.build-infra.result == 'success' &&
-      needs.detect-infra-changes.outputs.changed-services != '[]'
+      needs.detect-infra-changes.outputs.has-changes == 'true'
     strategy:
       matrix:
-        include:
-          - service: config-server
-            priority: 1
-          - service: eureka-server
-            priority: 2
-          - service: gateway
-            priority: 3
+        # 🔥 Dynamic Matrix - 변경된 서비스만 포함
+        include: ${{ fromJson(needs.detect-infra-changes.outputs.changed-services) }}
     steps:
-
-      - name: Skip if no changes
-        if: needs.detect-infra-changes.outputs.changed-services != '[]'
-        run: |
-          echo "No changes detected for ${{ matrix.service }}, skipping deployment..."
-          exit 0
+      # 🔥 Skip 로직 완전 제거
 
       - name: Checkout code
         uses: actions/checkout@v4
@@ -209,6 +212,7 @@ jobs:
       - name: Rebuild and Push Docker image
         run: |
           echo "🔄 Rebuilding ${{ matrix.service }}..."
+          echo "📋 Service Info: Priority=${{ matrix.priority }}, Port=${{ matrix.port }}"
           chmod +x ./gradlew
           ./gradlew :infra:${{ matrix.service }}:build
           
@@ -243,13 +247,13 @@ jobs:
       - name: Update Task Definition and Deploy to ECS
         run: |
           echo "🔄 ${{ matrix.service }} Task Definition 업데이트 및 ECS 배포 중..."
+          echo "📋 Deploy Priority: ${{ matrix.priority }}"
 
           # 기존 Task Definition 가져오기
           aws ecs describe-task-definition \
             --task-definition ${{ matrix.service }} \
             --query 'taskDefinition' \
             --output json > temp-${{ matrix.service }}.json
-
 
           # jq로 안전하게 필드 제거 및 이미지 업데이트
           jq --arg image "${{ env.ECR_REGISTRY }}/infra/${{ matrix.service }}:latest" '
@@ -260,7 +264,6 @@ jobs:
           # Task Definition 등록
           aws ecs register-task-definition \
             --cli-input-json file://clean-${{ matrix.service }}.json
-
 
           # 서비스 존재 여부 확인
           echo "🔍 서비스 존재 여부 확인 중..."
@@ -285,6 +288,7 @@ jobs:
           echo "   - 클러스터: e-commerce"
           echo "   - 서비스 이름: ${{ matrix.service }}-service"
           echo "   - Task Definition: ${{ matrix.service }}:latest"
+          echo "   - 포트: ${{ matrix.port }}"
           fi
 
           # 임시 파일 삭제
@@ -292,7 +296,7 @@ jobs:
 
           echo "🎉 ${{ matrix.service }} 배포 시작 완료!"
 
-  # 4단계: 빌드 결과 요약
+  # 🔥 개선된 Pipeline Summary
   pipeline-summary:
     runs-on: ubuntu-latest
     needs: [detect-infra-changes, build-infra, deploy-infra]
@@ -300,16 +304,27 @@ jobs:
     steps:
       - name: Pipeline Summary
         run: |
-          echo "## 🚀 Multi-Module CI/CD Pipeline Summary" >> $GITHUB_STEP_SUMMARY
-          echo "| Service | Build & Test | ECR Push | Changed |" >> $GITHUB_STEP_SUMMARY
-          echo "|---------|--------------|----------|---------|" >> $GITHUB_STEP_SUMMARY
-          echo "| ConfigServer | ${{ needs.build-infra.result == 'success' && '✅ 성공' || needs.build-infra.result == 'failure' && '❌ 실패' || '⏭️ 건너뜀' }} | ${{ needs.deploy-infra.result == 'success' && '🚀 푸시완료' || needs.deploy-infra.result == 'failure' && '💥 푸시실패' || '⏭️ 건너뜀' }} | ${{ needs.detect-infra-changes.outputs.config-server }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| EurekaServer | ${{ needs.build-infra.result == 'success' && '✅ 성공' || needs.build-infra.result == 'failure' && '❌ 실패' || '⏭️ 건너뜀' }} | ${{ needs.deploy-infra.result == 'success' && '🚀 푸시완료' || needs.deploy-infra.result == 'failure' && '💥 푸시실패' || '⏭️ 건너뜀' }} | ${{ needs.detect-infra-changes.outputs.eureka-server }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| Gateway | ${{ needs.build-infra.result == 'success' && '✅ 성공' || needs.build-infra.result == 'failure' && '❌ 실패' || '⏭️ 건너뜀' }} | ${{ needs.deploy-infra.result == 'success' && '🚀 푸시완료' || needs.deploy-infra.result == 'failure' && '💥 푸시실패' || '⏭️ 건너뜀' }} | ${{ needs.detect-infra-changes.outputs.gateway }} |" >> $GITHUB_STEP_SUMMARY
+          echo "## 🚀 Infrastructure CI/CD Pipeline Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          # 🔥 변경된 서비스 정보 출력
+          changed_services='${{ needs.detect-infra-changes.outputs.changed-services }}'
+          echo "### 📋 Changed Services" >> $GITHUB_STEP_SUMMARY
+          if [[ "$changed_services" == "[]" ]]; then
+            echo "ℹ️ No infrastructure changes detected" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "| Service | Priority | Port | Build Status | Deploy Status |" >> $GITHUB_STEP_SUMMARY
+            echo "|---------|----------|------|--------------|---------------|" >> $GITHUB_STEP_SUMMARY
+          
+            # JSON 파싱해서 각 서비스별 상태 출력
+            echo "$changed_services" | jq -r '.[] | "| \(.service) | \(.priority) | \(.port) | ${{ needs.build-infra.result == 'success' && '✅ 성공' || needs.build-infra.result == 'failure' && '❌ 실패' || '⏭️ 건너뜀' }} | ${{ needs.deploy-infra.result == 'success' && '🚀 완료' || needs.deploy-infra.result == 'failure' && '💥 실패' || '⏭️ 건너뜀' }} |"' >> $GITHUB_STEP_SUMMARY
+          fi
+          
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### 📊 Pipeline Details" >> $GITHUB_STEP_SUMMARY
           echo "- **Event**: ${{ github.event_name }}" >> $GITHUB_STEP_SUMMARY
           echo "- **Branch**: ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
           echo "- **Commit**: ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Has Changes**: ${{ needs.detect-infra-changes.outputs.has-changes }}" >> $GITHUB_STEP_SUMMARY
           echo "- **Common Changed**: ${{ needs.detect-infra-changes.outputs.common-changed }}" >> $GITHUB_STEP_SUMMARY
-          echo "- **ECR Push Condition**: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && '✅ Met' || '❌ Not Met' }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Push to ECR**: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && '✅ Enabled' || '❌ Disabled' }}" >> $GITHUB_STEP_SUMMARY
