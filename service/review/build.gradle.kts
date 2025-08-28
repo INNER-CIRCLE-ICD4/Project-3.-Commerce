@@ -6,7 +6,8 @@ dependencies {
 
     implementation("org.springframework.boot:spring-boot-starter-data-redis")
     implementation("org.springframework.boot:spring-boot-starter-data-jpa")
-    testImplementation("com.h2database:h2")
+    runtimeOnly("com.h2database:h2")
+    testImplementation("org.springframework.security:spring-security-test")
 }
 dependencyManagement {
     imports {
