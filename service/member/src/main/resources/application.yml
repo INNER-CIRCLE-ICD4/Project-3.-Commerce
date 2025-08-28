@@ -1,22 +1,70 @@
 server:
-  port: 9004
+  port: 8080
   servlet:
     context-path: /api/v1
+
+jasypt:
+  encryptor:
+    password: ${JASYPT_ENCRYPTOR_PASSWORD}
+    bean: jasyptEncryptor
+
+spring:
+  profiles:
+    group:
+      local: default, local
+      prod: default, prod
+  application:
+    name: member
+
+
+
+---
+
+spring:
+  config:
+    activate:
+      on-profile: local
+    import: optional:configserver:http://admin:${CONFIG_PASSWORD}@localhost:9000
+  datasource:
+    url: ${db_url}
+    driver-class-name: org.postgresql.Driver
+    username: ${db_username}
+    password: ${db_password}
+  jpa:
+    open-in-view: false
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    hibernate:
+      ddl-auto: create
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+
+# JWT 설정 추가
+jwt:
+  secret: ${JWT_SECRET:mySecretKey123456789012345678901234567890123456789012345678901234567890}
+  access-token-expiry: ${JWT_ACCESS_TOKEN_EXPIRY:3600000}  # 1시간 (밀리초)
+  refresh-token-expiry: ${JWT_REFRESH_TOKEN_EXPIRY:604800000}  # 7일 (밀리초)
+
+
+---
 
 spring:
   application:
     name: member
+  config:
+    activate:
+      on-profile: prod
+    #    import: optional:configserver:http://admin:1234@localhost:9000
+#    import: optional:configserver:http://admin:1234@config-server.commerce.local:8080
   datasource:
-    url: jdbc:h2:mem:testdb
-    driver-class-name: org.h2.Driver
-    username: sa
-    password:
-  h2:
-    console:
-      enabled: true
-      path: /h2-console
+    url: ${db_url}
+    driver-class-name: org.postgresql.Driver
+    username: ${db_username}
+    password: ${db_password}
   jpa:
-    database-platform: org.hibernate.dialect.H2Dialect
+    open-in-view: false
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
     hibernate:
       ddl-auto: create
     show-sql: true

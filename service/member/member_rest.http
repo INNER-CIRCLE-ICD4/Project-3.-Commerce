@@ -1,0 +1,45 @@
+### POST 회원가입 - Gateway
+POST http://localhost:8000/api/member-service/members
+Content-Type: application/json
+
+{
+  "email": "sw.noh@gmail.com",
+  "name": "노성웅",
+  "password":  "Commerce1234",
+  "birthDate": "1996-04-23",
+  "gender":  "MAIL"
+}
+
+
+### POST 로그인 - Gateway
+POST http://localhost:8000/api/member-service/auth/login
+Content-Type: application/json
+
+{
+  "email": "sw.noh@gmail.com",
+  "password": "Commerce12341"
+}
+
+
+> {%
+    // 응답에서 토큰 추출해서 전역 변수로 저장
+    client.global.set("accessToken", response.body.accessToken);
+    client.global.set("refreshToken", response.body.refreshToken);
+    client.global.set("tokenType", response.body.tokenType || "Bearer");
+
+    // 콘솔에 확인 메시지 출력
+    client.log("Access Token: " + response.body.accessToken);
+    client.log("Token Type: " + (response.body.tokenType || "Bearer"));
+%}
+
+
+### POST 로그아웃 - Gateway
+POST http://localhost:8000/api/member-service/auth/logout
+Content-Type: application/json
+Authorization: {{tokenType}} {{accessToken}}
+
+
+### GET 회원 정보 조회 - Gatewayㅊ
+GET http://localhost:8000/api/member-service/members/1
+Content-Type:application/json
+Authorization: {{tokenType}} {{accessToken}}

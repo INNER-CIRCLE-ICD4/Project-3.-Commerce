@@ -1,17 +1,22 @@
 package innercircle.member.infrastructure.adapter.in;
 
-import innercircle.member.application.MemberCreateRequest;
-import innercircle.member.application.MemberResponse;
+import innercircle.common.AuthenticatedUser;
+import innercircle.common.CurrentUser;
+import innercircle.member.infrastructure.adapter.in.web.member.dto.MemberCreateRequest;
+import innercircle.member.infrastructure.adapter.in.web.member.dto.MemberCreateResponse;
 import innercircle.member.application.port.in.MemberUseCase;
-import innercircle.member.domain.Member;
+import innercircle.member.domain.member.Member;
+import innercircle.member.domain.member.MemberStatus;
+import innercircle.member.infrastructure.adapter.in.web.member.mapper.MemberWebMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.List;
 
 @RestController
 @RequestMapping("/members")
@@ -20,15 +25,39 @@ import org.springframework.web.bind.annotation.RestController;
 public class MemberController {
 
     private final MemberUseCase memberUseCase;
+    private final MemberWebMapper memberWebMapper;
 
     @PostMapping
-    public ResponseEntity<MemberResponse> createMember(@RequestBody MemberCreateRequest request) {
-        log.info("회원가입 요청 : {}", request.email());
+    public ResponseEntity<MemberCreateResponse> createMember(@RequestBody MemberCreateRequest request) {
 
-        MemberResponse member = memberUseCase.createMember(request);
+        Member member = memberUseCase.createMember(
+                memberWebMapper.createRequestToEntity(request)
+        );
 
-        log.info("회원가입 완료, member_id: {}, email: {}", member.memberId(), member.email());
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(memberWebMapper.entityToCreateResponse(member));
+    }
 
-        return ResponseEntity.status(HttpStatus.CREATED).body(member);
+    @GetMapping("/{memberId}")
+    public ResponseEntity<MemberCreateResponse> getMember(@PathVariable Long memberId,
+                                                          @CurrentUser AuthenticatedUser authenticatedUser) {
+        // 🔍 헤더 정보 로깅
+        log.info("=== Gateway 헤더 정보 ===");
+        log.info("X-User-ID: {}", authenticatedUser.userId());
+        log.info("X-EMAIL: {}", authenticatedUser.email());
+        log.info("X-AUTH-METHOD: {}", authenticatedUser.authMethod());
+        log.info("PathVariable memberId: {}", memberId);
+
+        return ResponseEntity.ok(new MemberCreateResponse(
+                1L,
+                "sw.noh@gmail.com",
+                "노성웅",
+                LocalDate.now(),
+                "MAIL",
+                MemberStatus.ACTIVE,
+                LocalDateTime.now(),
+                List.of("BUYER"))
+        );
     }
 }
