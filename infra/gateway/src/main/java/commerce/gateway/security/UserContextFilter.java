@@ -92,8 +92,6 @@ public class UserContextFilter implements GlobalFilter, Ordered {
 
         ServerWebExchange modifiedExchange = exchange.mutate().request(mutated).build();
         removeInternalHeaders(modifiedExchange);
-        addTraceHeaders(modifiedExchange);
-
         return chain.filter(modifiedExchange);
     }
 
@@ -102,7 +100,6 @@ public class UserContextFilter implements GlobalFilter, Ordered {
      */
     private Mono<Void> processUnauthenticatedRequest(ServerWebExchange exchange, GatewayFilterChain chain) {
         removeInternalHeaders(exchange);
-        addTraceHeaders(exchange);
         return chain.filter(exchange);
     }
 
@@ -116,20 +113,6 @@ public class UserContextFilter implements GlobalFilter, Ordered {
         responseHeaders.remove("X-AUTH-METHOD");
 
         log.info("🚨 내부 헤더 제거됨: X-User-ID, X-EMAIL, X-ROLES, X-AUTH-METHOD");
-    }
-
-    private void addTraceHeaders(ServerWebExchange exchange) {
-        String traceId = MDC.get("traceId");
-        String spanId = MDC.get("spanId");
-
-        log.info("Trace ID: {}, Span ID: {}", traceId, spanId);
-
-        if (traceId != null) {
-            exchange.getResponse().getHeaders().set("X-TRACE-ID", traceId);
-        }
-        if (spanId != null) {
-            exchange.getResponse().getHeaders().set("X-SPAN-ID", spanId);
-        }
     }
 
     /**

@@ -21,9 +21,6 @@ spring:
   config:
     activate:
       on-profile: local
-  sleuth: # Micrometer에서도 일부 sleuth 설정 인식
-    reactor:
-      instrumentation-type: decorate_queues  # WebFlux용
   cloud:
     gateway:
       server:
@@ -40,6 +37,7 @@ spring:
                 - Path=/api/member-service/**
               filters:
                 - RewritePath=/api/member-service/(?<segment>.*), /api/v1/$\{segment}
+
 jwt:
     secret: ${JWT_SECRET:mySecretKey123456789012345678901234567890123456789012345678901234567890}
     authority-claim: roles
@@ -75,9 +73,6 @@ logging:
 spring:
   reactor:
     context-propagation: AUTO # WebFlux에서 Reactor 컨텍스트 전파 활성화
-  sleuth: # Micrometer에서도 일부 sleuth 설정 인식
-    reactor:
-      instrumentation-type: decorate_queues  # WebFlux용
   config:
     activate:
       on-profile: prod
