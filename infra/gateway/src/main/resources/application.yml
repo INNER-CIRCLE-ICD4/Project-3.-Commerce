@@ -38,6 +38,7 @@ spring:
               filters:
                 - RewritePath=/api/member-service/(?<segment>.*), /api/v1/$\{segment}
 
+
 jwt:
     secret: ${JWT_SECRET:mySecretKey123456789012345678901234567890123456789012345678901234567890}
     authority-claim: roles
@@ -53,20 +54,15 @@ management:
   zipkin:
     tracing:
       endpoint: http://localhost:9411/api/v2/spans
-  observations:
-    web:
-      server:
-        enabled: true
+  metrics:
+    tags:
+      service: gateway
 
 logging:
   pattern:
     level: "%5p [${spring.application.name},%X{traceId:-},%X{spanId:-}]" # MDC 출력
   level:
     root: INFO
-#    io.micrometer.tracing: DEBUG # Micrometer Tracing 디버깅
-#    reactor.netty: DEBUG # Reactor Netty 디버깅
-#    org.springframework.cloud.gateway: DEBUG # Gateway 디버깅
-#    zipkin2: DEBUG # Zipkin 디버깅
 
 ---
 
@@ -107,10 +103,6 @@ management:
   zipkin:
     tracing:
       endpoint: http://localhost:9411/api/v2/spans
-  observations:
-    web:
-      server:
-        enabled: true  # ✅ WebFlux 서버 관찰 활성화
 
 logging:
   pattern:
