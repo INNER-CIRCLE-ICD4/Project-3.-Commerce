@@ -1,22 +1,55 @@
 plugins {
+    id("base")
     id("java-library")
-    id("org.springframework.boot") version "3.5.3"
-    id("io.spring.dependency-management") version "1.1.7"
 }
 
-repositories {
-    mavenCentral()
+allprojects {
+    group = "innercircle.commerce"
+    version = "0.0.1-SNAPSHOT"
+
+    repositories {
+        mavenCentral()
+    }
 }
 
-dependencies {
-    implementation("org.springframework.boot:spring-boot-starter-web")
-    implementation(project(":common:snowflake"))
-    implementation(project(":common:logging"))
+subprojects {
+    apply(plugin = "java-library")
 
-    testImplementation(platform("org.junit:junit-bom:5.10.0"))
-    testImplementation("org.junit.jupiter:junit-jupiter")
+    java {
+        sourceCompatibility = JavaVersion.VERSION_21
+        targetCompatibility = JavaVersion.VERSION_21
+    }
+
+    tasks.withType<JavaCompile> {
+        options.encoding = "UTF-8"
+    }
+
+    tasks.withType<Test> {
+        useJUnitPlatform()
+    }
+
+    dependencies {
+        // Logging
+        implementation("org.slf4j:slf4j-api")
+        
+        // Testing
+        testImplementation("org.junit.jupiter:junit-jupiter")
+        testImplementation("org.assertj:assertj-core:3.24.2")
+        testImplementation("org.mockito:mockito-core")
+        testImplementation("org.mockito:mockito-junit-jupiter")
+    }
+
+//    configure<io.spring.gradle.dependencymanagement.dsl.DependencyManagementExtension> {
+//        imports {
+//            mavenBom("org.springframework.boot:spring-boot-dependencies:2.7.14")
+//        }
+//    }
 }
 
-tasks.test {
-    useJUnitPlatform()
+tasks.bootJar {
+    enabled = false
+}
+
+tasks.jar {
+    enabled = true
 }
