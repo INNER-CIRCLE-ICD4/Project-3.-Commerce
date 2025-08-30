@@ -32,6 +32,7 @@ public enum ErrorCode {
 	// === 409 Conflict (도메인_901~999) ===
 	DUPLICATE_PRODUCT_NAME("PRODUCT_901", "상품명이 중복되었습니다: %s", HttpStatus.CONFLICT),
 	IMAGE_UPLOAD_IN_PROGRESS("PRODUCT_902", "이미지 업로드가 진행 중입니다", HttpStatus.CONFLICT),
+	STOCK_CONFLICT("PRODUCT_903", "재고 변경 중 충돌이 발생했습니다. 잠시 후 다시 시도해주세요", HttpStatus.CONFLICT),
 	
 	// === 500 Internal Server Error (도메인_501~599) ===
 	INTERNAL_SERVER_ERROR("SYSTEM_501", "서버 내부 오류가 발생했습니다", HttpStatus.INTERNAL_SERVER_ERROR),

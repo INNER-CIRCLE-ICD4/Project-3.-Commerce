@@ -3,17 +3,19 @@ package innercircle.commerce.product.admin.web;
 import innercircle.commerce.product.admin.application.ImageUploadUseCase;
 import innercircle.commerce.product.admin.application.ProductCreateUseCase;
 import innercircle.commerce.product.admin.application.ProductDeleteUseCase;
+import innercircle.commerce.product.admin.application.ProductInventoryUpdateUseCase;
 import innercircle.commerce.product.admin.application.ProductRetrieveUseCase;
 import innercircle.commerce.product.admin.application.ProductUpdateUseCase;
 import innercircle.commerce.product.admin.application.dto.ProductAdminInfo;
 import innercircle.commerce.product.admin.application.dto.ProductListAdminInfo;
 import innercircle.commerce.product.admin.application.dto.ProductListQuery;
-import innercircle.commerce.product.admin.application.dto.ProductUpdateCommand;
 import innercircle.commerce.product.admin.web.dto.ApiResponse;
 import innercircle.commerce.product.admin.web.dto.ImageUploadResponse;
 import innercircle.commerce.product.admin.web.dto.ProductCreateRequest;
 import innercircle.commerce.product.admin.web.dto.ProductCreateResponse;
 import innercircle.commerce.product.admin.web.dto.ProductDetailResponse;
+import innercircle.commerce.product.admin.web.dto.ProductInventoryUpdateRequest;
+import innercircle.commerce.product.admin.web.dto.ProductInventoryUpdateResponse;
 import innercircle.commerce.product.admin.web.dto.ProductListResponse;
 import innercircle.commerce.product.admin.web.dto.ProductUpdateRequest;
 import innercircle.commerce.product.admin.web.dto.ProductUpdateResponse;
@@ -44,6 +46,7 @@ public class ProductController {
 	private final ProductCreateUseCase productCreateUseCase;
 	private final ProductUpdateUseCase productUpdateUseCase;
 	private final ProductDeleteUseCase productDeleteUseCase;
+	private final ProductInventoryUpdateUseCase productInventoryUpdateUseCase;
 	private final ProductRetrieveUseCase productRetrieveUseCase;
 
 	/**
@@ -111,6 +114,24 @@ public class ProductController {
 	public ResponseEntity<Void> deleteProduct(@PathVariable Long id) {
 		productDeleteUseCase.deleteProduct(id);
 		return ResponseEntity.noContent().build();
+	}
+
+	/**
+	 * 상품 재고를 조정합니다.
+	 *
+	 * @param id 상품 ID
+	 * @param request 재고 조정 요청 (양수: 증가, 음수: 감소)
+	 * @return 조정된 재고 정보
+	 */
+	@PatchMapping("/{id}/inventory")
+	public ResponseEntity<ApiResponse<ProductInventoryUpdateResponse>> updateProductInventory(
+			@PathVariable Long id,
+			@Valid @RequestBody ProductInventoryUpdateRequest request
+	) {
+		Product updatedProduct = productInventoryUpdateUseCase.updateStock(request.toCommand(id));
+		ProductInventoryUpdateResponse response = ProductInventoryUpdateResponse.from(updatedProduct);
+
+		return ResponseEntity.ok(ApiResponse.success(response));
 	}
 
 	/**
