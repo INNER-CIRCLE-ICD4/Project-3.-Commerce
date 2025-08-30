@@ -62,7 +62,7 @@ logging:
   pattern:
     level: "%5p [${spring.application.name},%X{traceId:-},%X{spanId:-}]" # MDC 출력
   level:
-    root: INFO
+    root: DEBUG
 
 ---
 
