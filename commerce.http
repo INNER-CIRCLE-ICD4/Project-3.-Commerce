@@ -1,3 +1,5 @@
+
+# 회원가입 및 인증 기능
 ### POST 회원가입 - Gateway
 POST http://localhost:8000/api/member-service/members
 Content-Type: application/json
@@ -19,7 +21,6 @@ Content-Type: application/json
   "email": "sw.noh@gmail.com",
   "password": "Commerce1234"
 }
-
 
 > {%
     // 응답에서 토큰 추출해서 전역 변수로 저장
@@ -44,3 +45,29 @@ Authorization: {{tokenType}} {{accessToken}}
 GET http://localhost:8000/api/member-service/members/1
 Content-Type:application/json
 Authorization: {{tokenType}} {{accessToken}}
+
+
+# 상품 등록
+### POST 상품 등록
+POST http://localhost:8000/api/product-service/admin/products
+Content-Type: application/json
+
+{
+  "name": "테스트 상품1",
+  "leafCategoryId": 1234567,
+  "brandId": 123456,
+  "basePrice": 10000,
+  "stock": 10,
+  "sortOrder": 1,
+  "detailContent": "<html></html>",
+  "options": [],
+  "images": [
+    {
+      "id": 219991886772355072,
+      "originalName": "상품1.jpeg",
+      "url": "https://innercircle-commerce1.s3.ap-southeast-2.amazonaws.com/commerce/temp/images/219991886772355072/original.jpeg",
+      "isMain": true,
+      "sortOrder": 1
+    }
+  ]
+}

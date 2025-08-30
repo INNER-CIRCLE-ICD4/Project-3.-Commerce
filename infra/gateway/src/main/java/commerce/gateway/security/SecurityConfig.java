@@ -53,6 +53,7 @@ public class SecurityConfig {
                 .authorizeExchange(ex ->
                         ex
                                 .pathMatchers(HttpMethod.POST, "/api/member-service/members").permitAll()
+                                .pathMatchers("/api/product-service/**").permitAll()
                                 .pathMatchers(
                                         "/api/member-service/auth/**",
                                         "/actuator/**",
