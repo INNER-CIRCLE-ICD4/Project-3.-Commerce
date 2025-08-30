@@ -1,5 +1,6 @@
 package commerce.gateway.security;
 
+import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -30,6 +31,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.List;
 
+@Slf4j
 @Configuration
 @EnableWebFluxSecurity
 @EnableReactiveMethodSecurity
@@ -121,12 +123,12 @@ public class SecurityConfig {
     ) {
 
         // 🔍 실제 secret 값 디버깅
-        System.out.println("🔑 Gateway JWT Secret 전체: '" + secret + "'");
-        System.out.println("🔑 Gateway JWT Secret 길이: " + secret.length());
-        System.out.println("🔑 Gateway JWT Secret 바이트 길이: " + secret.getBytes(StandardCharsets.UTF_8).length);
+        log.info("🔑 Gateway JWT Secret 전체: '{}'", secret);
+        log.info("🔑 Gateway JWT Secret 길이: {}", secret.length());
+        log.info("🔑 Gateway JWT Secret 바이트 길이: {}", secret.getBytes(StandardCharsets.UTF_8).length);
 
         if (secret.isEmpty()) {
-            System.out.println("❌ JWT Secret이 비어있습니다!");
+            log.warn("❌ JWT Secret이 비어있습니다!");
             throw new IllegalArgumentException("JWT secret cannot be empty");
         }
 
@@ -137,9 +139,9 @@ public class SecurityConfig {
         SecretKey key = new SecretKeySpec(secret.getBytes(StandardCharsets.UTF_8), "HmacSHA512");
 
         // 🔍 생성된 키 정보 확인
-        System.out.println("🔧 SecretKey Algorithm: " + key.getAlgorithm());
-        System.out.println("🔧 SecretKey Format: " + key.getFormat());
-        System.out.println("✅ JWT Decoder 생성 완료 (HS512)");
+        log.info("🔧 SecretKey Algorithm: {}", key.getAlgorithm());
+        log.info("🔧 SecretKey Format: {}", key.getFormat());
+        log.info("✅ JWT Decoder 생성 완료 (HS512)");
 
         return NimbusReactiveJwtDecoder.withSecretKey(key)
                 .macAlgorithm(MacAlgorithm.HS512)
