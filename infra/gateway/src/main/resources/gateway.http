@@ -6,3 +6,9 @@ Content-Type: application/json
 ### GET review
 GET http://localhost:9001/api/review
 Content-Type: application/json
+
+
+### GET healthcheck
+GET http://localhost:8000/actuator/health
+Content-Type: application/json
+
