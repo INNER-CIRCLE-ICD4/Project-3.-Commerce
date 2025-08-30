@@ -7,7 +7,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 public record MemberSearchResponse(
-        Long userId,
+        Long memberId,
         String email,
         String name,
         String gender,
@@ -18,13 +18,13 @@ public record MemberSearchResponse(
 
 
     public static MemberSearchResponse of(
-            Long userId,
+            Long memberId,
             String email,
             String name,
             String gender,
             MemberStatus status,
             LocalDateTime createAt,
             List<String> roles) {
-        return new MemberSearchResponse(userId, email, name, gender, status, createAt, roles);
+        return new MemberSearchResponse(memberId, email, name, gender, status, createAt, roles);
     }
 }

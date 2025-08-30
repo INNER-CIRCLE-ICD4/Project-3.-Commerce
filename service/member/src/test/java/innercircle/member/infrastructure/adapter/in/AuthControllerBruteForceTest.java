@@ -62,7 +62,7 @@ public class AuthControllerBruteForceTest {
 
             doNothing().when(loginAttemptService).validateIpNotBlocked(testIp);
 
-            mockMvc.perform(post("/auth/login")
+            mockMvc.perform(post("/api/v1/auth/login")
                             .contentType("application/json")
                             .content(requestBody)
                             .header("X-Forwarded-For", testIp)) // Simulate client IP
@@ -73,7 +73,7 @@ public class AuthControllerBruteForceTest {
         doThrow(new TooManyAttemptsException(AuthErrorCode.TOO_MANY_ATTEMPTS, testIp, 5, 15, "IP " + testIp + "가 차단되었습니다."))
                 .when(loginAttemptService).validateIpNotBlocked(testIp);
 
-        mockMvc.perform(post("/auth/login")
+        mockMvc.perform(post("/api/v1/auth/login")
                         .contentType("application/json")
                         .content(requestBody)
                         .header("X-Forwarded-For", testIp)) // Simulate client IP

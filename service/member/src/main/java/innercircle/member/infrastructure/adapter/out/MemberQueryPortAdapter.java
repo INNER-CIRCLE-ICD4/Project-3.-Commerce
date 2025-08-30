@@ -33,6 +33,11 @@ public class MemberQueryPortAdapter implements MemberQueryPort {
     private final MemberJpaRepository jpaRepository;
 
     @Override
+    public Optional<Member> findById(Long memberId) {
+        return jpaRepository.findById(memberId);
+    }
+
+    @Override
     public Optional<Member> findByEmail(Email email) {
         return jpaRepository.findByEmail(email);
     }

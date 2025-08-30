@@ -20,7 +20,7 @@ import org.springframework.web.bind.annotation.*;
 
 @Slf4j
 @RestController
-@RequestMapping("/auth")
+@RequestMapping("/api/v1/auth")
 @RequiredArgsConstructor
 public class AuthController {
 
@@ -54,7 +54,6 @@ public class AuthController {
             log.warn("로그인 실패: email={}, ip={}, reason={}, 남은 횟수={}/{}", request.email(), clientIp, e.getMessage(), loginAttemptService.getCurrentAttemptCount(clientIp),loginAttemptService.getMaxAttempts());
             throw e;
         }
-
     }
 
     @PostMapping("/refresh")
@@ -64,6 +63,7 @@ public class AuthController {
 
         return getHeader().body(refreshResponse);
     }
+
 
     private static ResponseEntity.BodyBuilder getHeader() {
         return ResponseEntity.ok()

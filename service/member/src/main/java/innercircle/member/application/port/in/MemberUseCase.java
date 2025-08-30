@@ -10,4 +10,5 @@ public interface MemberUseCase {
 
     Page<Member> searchMembers(MemberSearchRequest request);
 
+    Member findByMemberId(Long memberId);
 }

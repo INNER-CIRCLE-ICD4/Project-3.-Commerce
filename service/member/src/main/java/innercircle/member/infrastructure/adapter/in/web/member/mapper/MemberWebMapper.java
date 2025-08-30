@@ -4,6 +4,7 @@ import innercircle.member.infrastructure.adapter.in.web.member.dto.MemberCreateR
 import innercircle.member.infrastructure.adapter.in.web.member.dto.MemberCreateResponse;
 import innercircle.member.domain.member.Member;
 import innercircle.member.domain.member.MemberRole;
+import innercircle.member.infrastructure.adapter.in.web.member.dto.MemberDetailResponse;
 import innercircle.member.infrastructure.adapter.in.web.member.dto.MemberSearchResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -63,6 +64,22 @@ public class MemberWebMapper {
                 .toList();
 
         return new PageImpl<>(memberSearchResponses, members.getPageable(), members.getTotalElements());
+    }
+
+    /**
+     * Entity -> DetailResponse
+     */
+    public MemberDetailResponse entityToDetailResponse(Member member) {
+
+        return MemberDetailResponse.of(
+                member.getId(),
+                member.getEmail().email(),
+                member.getName(),
+                member.getGender().name(),
+                member.getBirthDate(),
+                member.getCreateAt(),
+                member.getRoleNames()
+        );
     }
 }
 

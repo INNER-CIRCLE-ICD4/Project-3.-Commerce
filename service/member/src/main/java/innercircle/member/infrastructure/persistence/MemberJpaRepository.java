@@ -16,8 +16,12 @@ import java.util.List;
 import java.util.Optional;
 
 public interface MemberJpaRepository extends JpaRepository<Member, Long> {
+
+    @Query("select m from Member m join fetch m.roles r where m.id = :memberId and m.status = 'ACTIVE'")
+    Optional<Member> findById(@Param("memberId") Long memberId);
+
     @Query("select m from Member m join fetch m.roles where m.email = :email")
-    Optional<Member> findByEmail(Email email);
+    Optional<Member> findByEmail(@Param("email") Email email);
 
 
     @Query(value = """

@@ -86,7 +86,7 @@ class AuthControllerTest {
         when(loginAttemptService.isBlocked(any(String.class))).thenReturn(Boolean.FALSE);
 
 
-        mockMvc.perform(post("/auth/login")
+        mockMvc.perform(post("/api/v1/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(loginRequest)))
                 .andExpect(status().isOk())
@@ -105,7 +105,7 @@ class AuthControllerTest {
                 .thenThrow(new LoginFailedException(AuthErrorCode.LOGIN_FAILED, "비밀번호가 일치하지 않습니다."));
 
         // When & Then
-        mockMvc.perform(post("/auth/login")
+        mockMvc.perform(post("/api/v1/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(loginRequest)))
                 .andExpect(status().is4xxClientError())
@@ -125,7 +125,7 @@ class AuthControllerTest {
         when(authMapper.authTokenToRefreshResponse(authToken)).thenReturn(refreshResponse);
         when(loginAttemptService.isBlocked(any(String.class))).thenReturn(Boolean.FALSE);
 
-        mockMvc.perform(post("/auth/refresh")
+        mockMvc.perform(post("/api/v1/auth/refresh")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())

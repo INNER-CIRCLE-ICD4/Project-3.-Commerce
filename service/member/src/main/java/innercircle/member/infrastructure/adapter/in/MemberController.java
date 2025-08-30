@@ -2,13 +2,10 @@ package innercircle.member.infrastructure.adapter.in;
 
 import innercircle.common.AuthenticatedUser;
 import innercircle.common.CurrentUser;
-import innercircle.member.infrastructure.adapter.in.web.member.dto.MemberCreateRequest;
-import innercircle.member.infrastructure.adapter.in.web.member.dto.MemberCreateResponse;
+import innercircle.member.infrastructure.adapter.in.web.member.dto.*;
 import innercircle.member.application.port.in.MemberUseCase;
 import innercircle.member.domain.member.Member;
 import innercircle.member.domain.member.MemberStatus;
-import innercircle.member.infrastructure.adapter.in.web.member.dto.MemberSearchRequest;
-import innercircle.member.infrastructure.adapter.in.web.member.dto.MemberSearchResponse;
 import innercircle.member.infrastructure.adapter.in.web.member.mapper.MemberWebMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -48,8 +45,14 @@ public class MemberController {
         return ResponseEntity.ok().body(memberWebMapper.entityToSearchResponse(members));
     }
 
-
     @GetMapping("/{memberId}")
+    public ResponseEntity<MemberDetailResponse> retrieveMember(@PathVariable Long memberId) {
+        Member member = memberUseCase.findByMemberId(memberId);
+        return ResponseEntity.ok(memberWebMapper.entityToDetailResponse(member));
+    }
+
+
+    @GetMapping("/test")
     public ResponseEntity<MemberCreateResponse> getMember(@PathVariable Long memberId,
                                                           @CurrentUser AuthenticatedUser authenticatedUser) {
         // 🔍 헤더 정보 로깅
@@ -70,4 +73,5 @@ public class MemberController {
                 List.of("BUYER"))
         );
     }
+
 }

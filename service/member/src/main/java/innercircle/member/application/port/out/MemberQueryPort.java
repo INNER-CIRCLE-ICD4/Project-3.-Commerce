@@ -11,6 +11,8 @@ import java.util.Optional;
 
 public interface MemberQueryPort {
 
+    Optional<Member> findById(Long memberId);
+
     Optional<Member> findByEmail(Email email);
 
     Optional<Member> findByEmailUsingNaturalId(Email email);

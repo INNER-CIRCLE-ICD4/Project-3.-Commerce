@@ -8,6 +8,7 @@ public enum MemberErrorCode {
 
     // 인증 관련
     DUPLICATE_EMAIL(HttpStatus.BAD_REQUEST, "MEM-01", "Duplicate Email","중복된 이메일입니다."),
+    MEMBER_NOT_FOUND(HttpStatus.NOT_FOUND, "MEM-02", "Not Found", "유저를 찾을 수 없습니다."),
     ;
 
     private final HttpStatus status;
