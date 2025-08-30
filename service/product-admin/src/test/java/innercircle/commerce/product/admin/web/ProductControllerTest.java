@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import innercircle.commerce.product.admin.application.ImageUploadUseCase;
 import innercircle.commerce.product.admin.application.ProductCreateUseCase;
 import innercircle.commerce.product.admin.application.ProductDeleteUseCase;
+import innercircle.commerce.product.admin.application.ProductRetrieveUseCase;
 import innercircle.commerce.product.admin.application.ProductUpdateUseCase;
 import innercircle.commerce.product.admin.application.dto.ImageUploadInfo;
 import innercircle.commerce.product.admin.application.exception.DuplicateProductNameException;
@@ -11,9 +12,14 @@ import innercircle.commerce.product.admin.application.exception.InvalidBrandExce
 import innercircle.commerce.product.admin.application.exception.NotFoundTempImageException;
 import innercircle.commerce.product.admin.application.exception.ProductNotFoundException;
 import innercircle.commerce.product.admin.fixtures.ProductCreateRequestFixtures;
+import innercircle.commerce.product.admin.application.dto.ProductAdminInfo;
+import innercircle.commerce.product.admin.application.dto.ProductListAdminInfo;
 import innercircle.commerce.product.admin.fixtures.ProductFixtures;
 import innercircle.commerce.product.admin.web.dto.ProductCreateRequest;
 import innercircle.commerce.product.core.domain.Product;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -48,6 +54,9 @@ class ProductControllerTest {
 
 	@MockitoBean
 	private ProductDeleteUseCase productDeleteUseCase;
+
+	@MockitoBean
+	private ProductRetrieveUseCase productRetrieveUseCase;
 
 	@MockitoBean
 	private ImageUploadUseCase imageUploadUseCase;
@@ -404,6 +413,126 @@ class ProductControllerTest {
 				   .andExpect(status().isBadRequest());
 
 			verify(productDeleteUseCase).deleteProduct(alreadyDeletedProductId);
+		}
+	}
+
+	@Nested
+	@DisplayName("상품 조회")
+	class RetrieveProduct {
+
+		@Test
+		@DisplayName("상품 목록을 조회할 수 있다.")
+		void 상품_목록_조회_성공() throws Exception {
+			// given
+			List<ProductListAdminInfo> productInfos = List.of(
+					ProductListAdminInfo.from(ProductFixtures.createValidProduct()),
+					ProductListAdminInfo.from(ProductFixtures.createValidProduct())
+			);
+			Page<ProductListAdminInfo> productPage = new PageImpl<>(productInfos, PageRequest.of(0, 20), productInfos.size());
+
+			given(productRetrieveUseCase.getProducts(any()))
+					.willReturn(productPage);
+
+			// when & then
+			mockMvc.perform(get("/api/admin/products")
+							.param("page", "0")
+							.param("size", "20"))
+					.andExpect(status().isOk())
+					.andExpect(jsonPath("$.success").value(true))
+					.andExpect(jsonPath("$.data.content").isArray())
+					.andExpect(jsonPath("$.data.content.length()").value(2))
+					.andExpect(jsonPath("$.data.totalElements").value(2))
+					.andExpect(jsonPath("$.data.content[0].id").exists())
+					.andExpect(jsonPath("$.data.content[0].name").exists());
+
+			verify(productRetrieveUseCase).getProducts(any());
+		}
+
+		@Test
+		@DisplayName("상태별 상품 목록을 조회할 수 있다.")
+		void 상태별_상품_목록_조회_성공() throws Exception {
+			// given
+			List<ProductListAdminInfo> productInfos = List.of(ProductListAdminInfo.from(ProductFixtures.createValidProduct()));
+			Page<ProductListAdminInfo> productPage = new PageImpl<>(productInfos, PageRequest.of(0, 20), productInfos.size());
+
+			given(productRetrieveUseCase.getProducts(any()))
+					.willReturn(productPage);
+
+			// when & then
+			mockMvc.perform(get("/api/admin/products")
+							.param("status", "SALE")
+							.param("page", "0")
+							.param("size", "20"))
+					.andExpect(status().isOk())
+					.andExpect(jsonPath("$.success").value(true))
+					.andExpect(jsonPath("$.data.content").isArray())
+					.andExpect(jsonPath("$.data.content.length()").value(1));
+
+			verify(productRetrieveUseCase).getProducts(any());
+		}
+
+		@Test
+		@DisplayName("카테고리별 상품 목록을 조회할 수 있다.")
+		void 카테고리별_상품_목록_조회_성공() throws Exception {
+			// given
+			List<ProductListAdminInfo> productInfos = List.of(ProductListAdminInfo.from(ProductFixtures.createValidProduct()));
+			Page<ProductListAdminInfo> productPage = new PageImpl<>(productInfos, PageRequest.of(0, 20), productInfos.size());
+
+			given(productRetrieveUseCase.getProducts(any()))
+					.willReturn(productPage);
+
+			// when & then
+			mockMvc.perform(get("/api/admin/products")
+							.param("categoryId", "1")
+							.param("page", "0")
+							.param("size", "20"))
+					.andExpect(status().isOk())
+					.andExpect(jsonPath("$.success").value(true))
+					.andExpect(jsonPath("$.data.content").isArray())
+					.andExpect(jsonPath("$.data.content.length()").value(1));
+
+			verify(productRetrieveUseCase).getProducts(any());
+		}
+
+		@Test
+		@DisplayName("상품 상세 정보를 조회할 수 있다.")
+		void 상품_상세_조회_성공() throws Exception {
+			// given
+			Long productId = 1L;
+			ProductAdminInfo productInfo = ProductAdminInfo.from(ProductFixtures.createValidProduct());
+
+			given(productRetrieveUseCase.getProduct(productId))
+					.willReturn(productInfo);
+
+			// when & then
+			mockMvc.perform(get("/api/admin/products/{id}", productId))
+					.andExpect(status().isOk())
+					.andExpect(jsonPath("$.success").value(true))
+					.andExpect(jsonPath("$.data.id").exists())
+					.andExpect(jsonPath("$.data.name").exists())
+					.andExpect(jsonPath("$.data.categoryId").exists())
+					.andExpect(jsonPath("$.data.brandId").exists())
+					.andExpect(jsonPath("$.data.price").exists())
+					.andExpect(jsonPath("$.data.status").exists())
+					.andExpect(jsonPath("$.data.images").isArray());
+
+			verify(productRetrieveUseCase).getProduct(productId);
+		}
+
+		@Test
+		@DisplayName("존재하지 않는 상품 조회 시 404 에러를 반환한다.")
+		void 존재하지_않는_상품_조회_시_404_에러() throws Exception {
+			// given
+			Long nonExistentProductId = 999L;
+
+			given(productRetrieveUseCase.getProduct(nonExistentProductId))
+					.willThrow(new ProductNotFoundException(nonExistentProductId));
+
+			// when & then
+			mockMvc.perform(get("/api/admin/products/{id}", nonExistentProductId))
+					.andExpect(status().isNotFound());
+
+			verify(productRetrieveUseCase).getProduct(nonExistentProductId);
 		}
 	}
 }
