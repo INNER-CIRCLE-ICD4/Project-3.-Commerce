@@ -11,7 +11,15 @@ import java.util.Objects;
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class MemberRole extends BaseEntity{
+@Table(name = "member_role",
+        uniqueConstraints = {
+                @UniqueConstraint(
+                        name = "UK_MEMBER_ROLE_TYPE",
+                        columnNames = {"member_id", "role_type"}
+                )
+        }
+)
+public class MemberRole extends BaseEntity {
 
     @ManyToOne
     @JoinColumn(name = "member_id", nullable = false)
@@ -23,12 +31,33 @@ public class MemberRole extends BaseEntity{
     private LocalDateTime assignedAt;
 
     public static MemberRole signUp(Member member) {
-        MemberRole memberRole = new MemberRole();
-        memberRole.roleType = RoleType.BUYER;
-        memberRole.assignedAt = LocalDateTime.now();
+        MemberRole memberRole = createMemberRole(RoleType.BUYER);
         memberRole.member = member;
         member.getRoles().add(memberRole);
 
+        return memberRole;
+    }
+
+    public static MemberRole grantAdminRole(Member member) {
+        MemberRole memberAdminRole = createMemberRole(RoleType.ADMIN);
+        memberAdminRole.member = member;
+        member.getRoles().add(memberAdminRole);
+        return memberAdminRole;
+    }
+
+    public static MemberRole grantSellerRole(Member member) {
+
+        MemberRole memberAdminRole = createMemberRole(RoleType.SELLER);
+        memberAdminRole.member = member;
+        member.getRoles().add(memberAdminRole);
+        return memberAdminRole;
+    }
+
+
+    private static MemberRole createMemberRole(RoleType roleType) {
+        MemberRole memberRole = new MemberRole();
+        memberRole.roleType = roleType;
+        memberRole.assignedAt = LocalDateTime.now();
         return memberRole;
     }
 

@@ -7,9 +7,12 @@ import innercircle.member.infrastructure.adapter.in.web.member.dto.MemberCreateR
 import innercircle.member.application.port.in.MemberUseCase;
 import innercircle.member.domain.member.Member;
 import innercircle.member.domain.member.MemberStatus;
+import innercircle.member.infrastructure.adapter.in.web.member.dto.MemberSearchRequest;
+import innercircle.member.infrastructure.adapter.in.web.member.dto.MemberSearchResponse;
 import innercircle.member.infrastructure.adapter.in.web.member.mapper.MemberWebMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -19,7 +22,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @RestController
-@RequestMapping("/members")
+@RequestMapping("/api/v1/members")
 @RequiredArgsConstructor
 @Slf4j
 public class MemberController {
@@ -38,6 +41,13 @@ public class MemberController {
                 .status(HttpStatus.CREATED)
                 .body(memberWebMapper.entityToCreateResponse(member));
     }
+
+    @GetMapping
+    public ResponseEntity<Page<MemberSearchResponse>> retrieveMember(@RequestBody MemberSearchRequest request) {
+        Page<Member> members = memberUseCase.searchMembers(request);
+        return ResponseEntity.ok().body(memberWebMapper.entityToSearchResponse(members));
+    }
+
 
     @GetMapping("/{memberId}")
     public ResponseEntity<MemberCreateResponse> getMember(@PathVariable Long memberId,

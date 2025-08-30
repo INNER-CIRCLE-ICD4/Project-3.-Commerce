@@ -31,7 +31,7 @@ class CreateMemberServiceTest {
     @Test
     void 회원_가입_신청_성공() {
 
-        Member member = Member.create("asdz453@gmail.com", "노성웅", "12345678a", "1996-04-23", "MAIL");
+        Member member = Member.create("asdz453@gmail.com", "노성웅", "12345678a", "1996-04-23", "MALE");
 
         Member encodedMember = member.withEncodedPassword("encodedPassword1234");
 
