@@ -8,7 +8,6 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 
 /**
  * Order API Application
- * 주문 서비스 API 애플리케이션의 진입점
  */
 @SpringBootApplication
 @ComponentScan(basePackages = {

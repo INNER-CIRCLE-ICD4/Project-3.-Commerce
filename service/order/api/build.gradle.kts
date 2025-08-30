@@ -46,25 +46,6 @@ tasks.test {
     outputs.dir(snippetsDir)
     useJUnitPlatform()
 }
-//
-//tasks.asciidoctor {
-//    inputs.dir(snippetsDir)
-//    configurations(asciidoctorExt.name)
-//    dependsOn(tasks.test)
-//
-//    sources {
-//        include("**/index.adoc")
-//    }
-//
-//    baseDirFollowsSourceFile()
-//}
-
-//tasks.bootJar {
-//    dependsOn(tasks.asciidoctor)
-//    from("${tasks.asciidoctor.get().outputDir}") {
-//        into("static/docs")
-//    }
-//}
 
 // OpenAPI 3.0 spec 생성
 tasks.register("generateOpenApiSpec") {

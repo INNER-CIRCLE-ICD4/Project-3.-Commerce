@@ -20,10 +20,6 @@ dependencies {
     // Spring Web (for RestTemplate)
     implementation("org.springframework.boot:spring-boot-starter-web")
     
-    // Kafka
-//    api("org.springframework.kafka:spring-kafka")
-//    testImplementation("org.springframework.kafka:spring-kafka-test")
-    
     // Spring Events (backup)
     implementation("org.springframework:spring-context")
     

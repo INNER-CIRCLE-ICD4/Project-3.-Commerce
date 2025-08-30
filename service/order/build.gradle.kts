@@ -39,11 +39,6 @@ subprojects {
         testImplementation("org.mockito:mockito-junit-jupiter")
     }
 
-//    configure<io.spring.gradle.dependencymanagement.dsl.DependencyManagementExtension> {
-//        imports {
-//            mavenBom("org.springframework.boot:spring-boot-dependencies:2.7.14")
-//        }
-//    }
 }
 
 tasks.bootJar {
