@@ -2,6 +2,7 @@ package innercircle.commerce.product.admin.web;
 
 import innercircle.commerce.product.admin.application.ImageUploadUseCase;
 import innercircle.commerce.product.admin.application.ProductCreateUseCase;
+import innercircle.commerce.product.admin.application.ProductDeleteUseCase;
 import innercircle.commerce.product.admin.application.ProductUpdateUseCase;
 import innercircle.commerce.product.admin.application.dto.ProductUpdateCommand;
 import innercircle.commerce.product.admin.web.dto.ApiResponse;
@@ -35,6 +36,7 @@ public class ProductController {
 	private final ImageUploadUseCase imageUploadUseCase;
 	private final ProductCreateUseCase productCreateUseCase;
 	private final ProductUpdateUseCase productUpdateUseCase;
+	private final ProductDeleteUseCase productDeleteUseCase;
 
 	/**
 	 * 상품을 등록합니다.
@@ -89,5 +91,17 @@ public class ProductController {
 		ProductUpdateResponse response = ProductUpdateResponse.from(updatedProduct);
 
 		return ResponseEntity.ok(ApiResponse.success(response));
+	}
+
+	/**
+	 * 상품을 삭제합니다.
+	 *
+	 * @param id 삭제할 상품 ID
+	 * @return 삭제 완료 응답
+	 */
+	@DeleteMapping("/{id}")
+	public ResponseEntity<Void> deleteProduct(@PathVariable Long id) {
+		productDeleteUseCase.deleteProduct(id);
+		return ResponseEntity.noContent().build();
 	}
 }

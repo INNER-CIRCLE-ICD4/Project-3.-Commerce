@@ -102,4 +102,22 @@ public class ProductFixtures {
 		product.addImages(ProductImageFixtures.createValidImages());
 		return product;
 	}
+
+	/**
+	 * 테스트용 - 삭제된 상태의 상품 객체를 생성합니다.
+	 */
+	public static Product createDeletedProduct() {
+		Product product = Product.create(
+				VALID_NAME,
+				VALID_CATEGORY_ID,
+				VALID_BRAND_ID,
+				VALID_BASE_PRICE,
+				VALID_STOCK,
+				null,
+				VALID_DETAIL_CONTENT
+		);
+		
+		product.delete(); // 삭제 상태로 변경
+		return product;
+	}
 }

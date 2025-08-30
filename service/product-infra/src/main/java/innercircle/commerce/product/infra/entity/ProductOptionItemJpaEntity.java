@@ -17,8 +17,9 @@ public class ProductOptionItemJpaEntity {
 	@Id
 	private Long id;
 
-	@Column(name = "option_id", nullable = false)
-	private Long optionId;
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "option_id", nullable = false)
+	private ProductOptionJpaEntity productOption;
 
 	@Column(nullable = false, length = 100)
 	private String name;
@@ -35,11 +36,18 @@ public class ProductOptionItemJpaEntity {
 	public static ProductOptionItemJpaEntity from(ProductOptionItem productOptionItem) {
 		ProductOptionItemJpaEntity entity = new ProductOptionItemJpaEntity();
 		entity.id = productOptionItem.getId();
-		entity.optionId = productOptionItem.getOptionId();
 		entity.name = productOptionItem.getName();
 		entity.additionalPrice = productOptionItem.getAdditionalPrice();
 		entity.sortOrder = productOptionItem.getSortOrder();
+		// productOption은 부모 엔티티에서 설정됨
 		return entity;
+	}
+
+	/**
+	 * 연관관계 편의 메서드
+	 */
+	protected void setProductOption(ProductOptionJpaEntity productOption) {
+		this.productOption = productOption;
 	}
 
 	/**
@@ -48,7 +56,7 @@ public class ProductOptionItemJpaEntity {
 	public ProductOptionItem toDomain() {
 		return ProductOptionItem.restore(
 			this.id,
-			this.optionId,
+			this.productOption != null ? this.productOption.getId() : null,
 			this.name,
 			this.additionalPrice,
 			this.sortOrder

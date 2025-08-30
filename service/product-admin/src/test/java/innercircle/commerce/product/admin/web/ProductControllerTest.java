@@ -3,6 +3,7 @@ package innercircle.commerce.product.admin.web;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import innercircle.commerce.product.admin.application.ImageUploadUseCase;
 import innercircle.commerce.product.admin.application.ProductCreateUseCase;
+import innercircle.commerce.product.admin.application.ProductDeleteUseCase;
 import innercircle.commerce.product.admin.application.ProductUpdateUseCase;
 import innercircle.commerce.product.admin.application.dto.ImageUploadInfo;
 import innercircle.commerce.product.admin.application.exception.DuplicateProductNameException;
@@ -44,6 +45,9 @@ class ProductControllerTest {
 
 	@MockitoBean
 	private ProductUpdateUseCase productUpdateUseCase;
+
+	@MockitoBean
+	private ProductDeleteUseCase productDeleteUseCase;
 
 	@MockitoBean
 	private ImageUploadUseCase imageUploadUseCase;
@@ -350,6 +354,56 @@ class ProductControllerTest {
 				   .andExpect(jsonPath("$.error").doesNotExist());
 
 			verify(productUpdateUseCase).updateProduct(any());
+		}
+	}
+
+	@Nested
+	@DisplayName("상품 삭제")
+	class DeleteProduct {
+
+		@Test
+		@DisplayName("상품을 정상적으로 삭제할 수 있다.")
+		void 상품_삭제_성공() throws Exception {
+			// given
+			Long productId = 1L;
+
+			// when & then
+			mockMvc.perform(delete("/api/admin/products/{id}", productId))
+				   .andExpect(status().isNoContent());
+
+			verify(productDeleteUseCase).deleteProduct(productId);
+		}
+
+		@Test
+		@DisplayName("존재하지 않는 상품 삭제 시 404 에러를 반환한다.")
+		void 존재하지_않는_상품_삭제_시_404_에러() throws Exception {
+			// given
+			Long nonExistentProductId = 999L;
+
+			doThrow(new ProductNotFoundException(nonExistentProductId))
+					.when(productDeleteUseCase).deleteProduct(nonExistentProductId);
+
+			// when & then
+			mockMvc.perform(delete("/api/admin/products/{id}", nonExistentProductId))
+				   .andExpect(status().isNotFound());
+
+			verify(productDeleteUseCase).deleteProduct(nonExistentProductId);
+		}
+
+		@Test
+		@DisplayName("이미 삭제된 상품을 다시 삭제하면 400 에러를 반환한다.")
+		void 이미_삭제된_상품_삭제_시_400_에러() throws Exception {
+			// given
+			Long alreadyDeletedProductId = 1L;
+
+			doThrow(new IllegalArgumentException("이미 삭제된 상품입니다."))
+					.when(productDeleteUseCase).deleteProduct(alreadyDeletedProductId);
+
+			// when & then
+			mockMvc.perform(delete("/api/admin/products/{id}", alreadyDeletedProductId))
+				   .andExpect(status().isBadRequest());
+
+			verify(productDeleteUseCase).deleteProduct(alreadyDeletedProductId);
 		}
 	}
 }

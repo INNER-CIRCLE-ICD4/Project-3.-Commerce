@@ -186,4 +186,38 @@ public class Product {
 		validateDetailContent(detailContent);
 		this.detailContent = detailContent;
 	}
+
+	/**
+	 * 상품을 삭제 상태로 변경합니다.
+	 * 연관된 이미지와 옵션들도 함께 삭제 상태로 변경됩니다.
+	 * 
+	 * @throws IllegalArgumentException 이미 삭제된 상품인 경우
+	 */
+	public void delete() {
+		if (this.status == ProductStatus.DELETE) {
+			throw new IllegalArgumentException("이미 삭제된 상품입니다.");
+		}
+		
+		// 상품 이미지들을 삭제
+		if (this.images != null) {
+			this.images.forEach(image -> {
+				if (image.getStatus() != ProductStatus.DELETE) {
+					image.delete();
+				}
+			});
+		}
+		
+		// 상품 옵션들을 삭제 (옵션 아이템들도 함께 삭제됨)
+		if (this.options != null) {
+			this.options.forEach(option -> {
+				if (option.getStatus() != ProductStatus.DELETE) {
+					option.delete();
+				}
+			});
+		}
+		
+		// 상품 자체를 삭제 상태로 변경
+		this.status = ProductStatus.DELETE;
+		this.updatedAt = LocalDateTime.now();
+	}
 }

@@ -9,6 +9,7 @@ import innercircle.commerce.product.admin.fixtures.ProductCreateCommandFixtures;
 import innercircle.commerce.product.core.application.repository.ProductRepository;
 import innercircle.commerce.product.core.domain.Product;
 import innercircle.commerce.product.infra.s3.S3ImageStore;
+import innercircle.commerce.product.infra.s3.S3UrlHelper;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -35,6 +36,9 @@ class ProductCreateUseCaseTest {
 
 	@Mock
 	private ProductCreateCommandValidator validator;
+	
+	@Mock
+	private S3UrlHelper s3UrlHelper;
 
 	@InjectMocks
 	private ProductCreateUseCase productCreateUseCase;
@@ -52,6 +56,14 @@ class ProductCreateUseCaseTest {
 
 			willDoNothing().given(validator).validate(eq(command));
 			given(productRepository.save(any(Product.class))).willReturn(product);
+
+			// S3UrlHelper mock 설정
+			given(s3UrlHelper.extractKeyFromUrlComplex(any(String.class)))
+					.willReturn("commerce/temp/1/image.jpg");
+			given(s3UrlHelper.extractExtensionFromUrlOrName(any(String.class), any(String.class)))
+					.willReturn("jpg");
+			given(s3UrlHelper.buildProductImageKey(any(Long.class), any(Long.class), any(String.class)))
+					.willReturn("commerce/products/1/1.jpg");
 
 			// S3 이미지 이동 성공 모킹
 			String movedUrl = "https://s3.amazonaws.com/bucket/commerce/products/1/1.jpg";
@@ -95,6 +107,15 @@ class ProductCreateUseCaseTest {
 			ProductCreateCommand command = ProductCreateCommandFixtures.createValidCommand();
 
 			willDoNothing().given(validator).validate(eq(command));
+
+			// S3UrlHelper mock 설정
+			given(s3UrlHelper.extractKeyFromUrlComplex(any(String.class)))
+					.willReturn("commerce/temp/1/image.jpg");
+			given(s3UrlHelper.extractExtensionFromUrlOrName(any(String.class), any(String.class)))
+					.willReturn("jpg");
+			given(s3UrlHelper.buildProductImageKey(any(Long.class), any(Long.class), any(String.class)))
+					.willReturn("commerce/products/1/1.jpg");
+
 			given(s3ImageStore.move(any(String.class), any(String.class)))
 					.willReturn(Optional.empty());
 

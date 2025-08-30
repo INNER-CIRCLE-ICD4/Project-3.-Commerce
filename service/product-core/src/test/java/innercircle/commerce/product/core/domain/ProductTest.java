@@ -50,19 +50,21 @@ class ProductTest {
         }
 
         @Test
-        @DisplayName("메인 이미지가 모두 삭제되면 예외가 발생한다.")
-        void 메인이미지_모두_삭제_예외() {
+        @DisplayName("첫 번째 이미지를 삭제하면 다음 이미지가 첫 번째가 된다.")
+        void 첫번째_이미지_삭제_후_순서_조정() {
             // given
             Product product = createProductWithImages(List.of(
-                    createProductImageWithMain("image1.jpg", 1, true),  // 메인 이미지
-                    createProductImageWithMain("image2.jpg", 2, false)  // 일반 이미지
+                    createProductImage("image1.jpg", 1),
+                    createProductImage("image2.jpg", 2)
             ));
-            String targetUrl = "https://s3.amazonaws.com/image1.jpg"; // 메인 이미지 URL
+            String targetUrl = "https://s3.amazonaws.com/image1.jpg";
 
-            // when & then
-            assertThatThrownBy(() -> product.removeImageByUrl(targetUrl))
-                    .isInstanceOf(IllegalArgumentException.class)
-                    .hasMessage("메인 이미지는 필수 입니다.");
+            // when
+            product.removeImageByUrl(targetUrl);
+
+            // then
+            assertThat(product.getImages()).hasSize(1);
+            assertThat(product.getImages().get(0).getUrl()).isEqualTo("https://s3.amazonaws.com/image2.jpg");
         }
 
         @Test
@@ -77,7 +79,7 @@ class ProductTest {
             // when & then
             assertThatThrownBy(() -> product.removeImageByUrl(nonExistentUrl))
                     .isInstanceOf(IllegalArgumentException.class)
-                    .hasMessage("해당 URL의 이미지를 찾을 수 없습니다.");
+                    .hasMessage("해당 URL의 이미지를 찾을 수 없습니다. :: " + nonExistentUrl);
         }
     }
 
@@ -140,7 +142,43 @@ class ProductTest {
             // when & then
             assertThatThrownBy(() -> product.addImages(List.of()))
                     .isInstanceOf(IllegalArgumentException.class)
-                    .hasMessage("추가할 이미지는 최소 1개 이상이어야 합니다.");
+                    .hasMessage("상품 이미지는 필수 입니다.");
+        }
+    }
+
+    @Nested
+    @DisplayName("상품 삭제")
+    class Delete {
+
+        @Test
+        @DisplayName("정상 상태의 상품을 삭제할 수 있다.")
+        void 정상_상품_삭제_성공() {
+            // given
+            Product product = createProductWithImages(List.of(
+                    createProductImage("image1.jpg", 1)
+            ));
+
+            // when
+            product.delete();
+
+            // then
+            assertThat(product.getStatus()).isEqualTo(ProductStatus.DELETE);
+            assertThat(product.getUpdatedAt()).isNotNull();
+        }
+
+        @Test
+        @DisplayName("이미 삭제된 상품을 다시 삭제하면 예외가 발생한다.")
+        void 이미_삭제된_상품_삭제_예외() {
+            // given
+            Product product = createProductWithImages(List.of(
+                    createProductImage("image1.jpg", 1)
+            ));
+            product.delete(); // 먼저 삭제
+
+            // when & then
+            assertThatThrownBy(() -> product.delete())
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessage("이미 삭제된 상품입니다.");
         }
     }
 
@@ -167,7 +205,6 @@ class ProductTest {
                 1L, // productId
                 "https://s3.amazonaws.com/" + fileName,
                 fileName,
-                displayOrder == 1, // 첫 번째 이미지를 메인으로 설정
                 displayOrder
         );
     }
@@ -177,7 +214,6 @@ class ProductTest {
                 1L, // productId
                 "https://s3.amazonaws.com/" + fileName,
                 fileName,
-                isMain,
                 displayOrder
         );
     }

@@ -1,14 +1,11 @@
 package innercircle.commerce.product.core.application.repository;
 
-import org.springframework.stereotype.Repository;
+import innercircle.commerce.product.core.domain.Category;
 
-@Repository
+import java.util.Optional;
+
 public interface CategoryRepository {
-    /**
-     * 카테고리 ID로 카테고리 존재 여부를 확인합니다.
-     * 
-     * @param categoryId 카테고리 ID
-     * @return 존재 여부
-     */
+    Category save(Category category);
+    Optional<Category> findById(Long categoryId);
     boolean existsById(Long categoryId);
 }

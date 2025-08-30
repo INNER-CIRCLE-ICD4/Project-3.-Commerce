@@ -9,6 +9,7 @@ import innercircle.commerce.product.core.application.repository.ProductRepositor
 import innercircle.commerce.product.core.domain.Product;
 import innercircle.commerce.product.core.domain.ProductImage;
 import innercircle.commerce.product.infra.s3.S3ImageStore;
+import innercircle.commerce.product.infra.s3.S3UrlHelper;
 import innercircle.commerce.product.admin.fixtures.ProductFixtures;
 import innercircle.commerce.product.admin.fixtures.ProductImageFixtures;
 import innercircle.commerce.product.admin.fixtures.ProductUpdateCommandFixtures;
@@ -38,12 +39,15 @@ class ProductUpdateUseCaseTest {
 	
 	@Mock
 	private S3ImageStore s3ImageStore;
+	
+	@Mock
+	private S3UrlHelper s3UrlHelper;
 
 	private ProductUpdateUseCase productUpdateUseCase;
 
 	@BeforeEach
 	void setUp () {
-		productUpdateUseCase = new ProductUpdateUseCase(productRepository, s3ImageStore);
+		productUpdateUseCase = new ProductUpdateUseCase(productRepository, s3ImageStore, s3UrlHelper);
 	}
 
 	@Test
@@ -117,6 +121,10 @@ class ProductUpdateUseCaseTest {
 		given(productRepository.existsByNameAndIdNot(UPDATED_NAME, EXISTING_PRODUCT_ID)).willReturn(false);
 		given(productRepository.save(any(Product.class))).willReturn(updatedProduct);
 
+		// S3UrlHelper mock 설정
+		given(s3UrlHelper.extractKeyFromUrl(anyString()))
+				.willReturn("commerce/products/1/image.jpg");
+
 		// when
 		Product result = productUpdateUseCase.updateProduct(command);
 
@@ -147,6 +155,15 @@ class ProductUpdateUseCaseTest {
 
 		given(productRepository.findById(EXISTING_PRODUCT_ID)).willReturn(Optional.of(existingProduct));
 		given(productRepository.existsByNameAndIdNot(UPDATED_NAME, EXISTING_PRODUCT_ID)).willReturn(false);
+
+		// S3UrlHelper mock 설정
+		given(s3UrlHelper.extractKeyFromUrl(anyString()))
+				.willReturn("commerce/temp/1/image.jpg");
+		given(s3UrlHelper.extractExtensionFromFilename(anyString()))
+				.willReturn("jpg");
+		given(s3UrlHelper.buildProductImageKey(any(Long.class), any(Long.class), anyString()))
+				.willReturn("commerce/products/1/1.jpg");
+
 		given(s3ImageStore.move(anyString(), anyString())).willReturn(Optional.of("https://example.com/final/image.jpg"));
 		given(productRepository.save(any(Product.class))).willReturn(updatedProduct);
 

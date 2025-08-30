@@ -4,14 +4,14 @@ import innercircle.commerce.product.core.domain.Product;
 import innercircle.commerce.product.core.domain.ProductStatus;
 import innercircle.commerce.product.core.domain.SaleType;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Size;
 import lombok.*;
-import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.annotation.LastModifiedDate;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Product JPA 엔티티
@@ -27,11 +27,13 @@ public class ProductJpaEntity {
 	@Column(nullable = false, length = 255)
 	private String name;
 
-	@Column(name = "category_id", nullable = false)
-	private Long categoryId;
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "category_id", nullable = false)
+	private CategoryJpaEntity category;
 
-	@Column(name = "brand_id", nullable = false)
-	private Long brandId;
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "brand_id", nullable = false)
+	private BrandJpaEntity brand;
 
 	@Column(nullable = false)
 	private Integer price;
@@ -50,26 +52,28 @@ public class ProductJpaEntity {
 	@Column(nullable = false)
 	private Integer stock;
 
-	@CreatedDate
 	@Column(name = "created_at", nullable = false, updatable = false)
 	private LocalDateTime createdAt;
 
-	@LastModifiedDate
 	@Column(name = "updated_at", nullable = false)
 	private LocalDateTime updatedAt;
 
 	@OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
 	private List<ProductImageJpaEntity> images = new ArrayList<>();
 
+	@Size(max = 10)
+	@OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+	private List<ProductOptionJpaEntity> options = new ArrayList<>();
+
 	/**
-	 * Domain Product 객체에서 JPA Entity로 변환
+	 * Domain Product 객체에서 JPA Entity로 변환 (연관 엔티티는 외부에서 설정 필요)
 	 */
-	public static ProductJpaEntity from (Product product) {
+	public static ProductJpaEntity from(Product product, CategoryJpaEntity category, BrandJpaEntity brand) {
 		ProductJpaEntity entity = new ProductJpaEntity();
 		entity.id = product.getId();
 		entity.name = product.getName();
-		entity.categoryId = product.getCategoryId();
-		entity.brandId = product.getBrandId();
+		entity.category = category;
+		entity.brand = brand;
 		entity.price = product.getPrice();
 		entity.status = product.getStatus();
 		entity.saleType = product.getSaleType();
@@ -77,18 +81,29 @@ public class ProductJpaEntity {
 		entity.stock = product.getStock();
 		entity.createdAt = product.getCreatedAt();
 		entity.updatedAt = product.getUpdatedAt();
-		
+
 		if (product.getImages() != null) {
 			List<ProductImageJpaEntity> imageEntities = product.getImages().stream()
 					.map(domainImage -> {
 						ProductImageJpaEntity imageEntity = ProductImageJpaEntity.from(domainImage);
 						imageEntity.setProduct(entity);
-
 						return imageEntity;
 					})
-					.toList();
+					.collect(Collectors.toList());
 			entity.images.clear();
 			entity.images.addAll(imageEntities);
+		}
+
+		if (product.getOptions() != null) {
+			List<ProductOptionJpaEntity> optionEntities = product.getOptions().stream()
+					.map(domainOption -> {
+						ProductOptionJpaEntity optionEntity = ProductOptionJpaEntity.from(domainOption);
+						optionEntity.setProduct(entity);
+						return optionEntity;
+					})
+					.collect(Collectors.toList());
+			entity.options.clear();
+			entity.options.addAll(optionEntities);
 		}
 		return entity;
 	}
@@ -96,24 +111,29 @@ public class ProductJpaEntity {
 	/**
 	 * Domain Product 객체로 변환
 	 */
-	public Product toDomain () {
-		List<innercircle.commerce.product.core.domain.ProductImage> domainImages = 
-			this.images != null ? 
-				this.images.stream().map(ProductImageJpaEntity::toDomain).toList() : 
-				Collections.emptyList();
-		
+	public Product toDomain() {
+		List<innercircle.commerce.product.core.domain.ProductImage> domainImages =
+				this.images != null ?
+						this.images.stream().map(ProductImageJpaEntity::toDomain).collect(Collectors.toList()) :
+						Collections.emptyList();
+
+		List<innercircle.commerce.product.core.domain.ProductOption> domainOptions =
+				this.options != null ?
+						this.options.stream().map(ProductOptionJpaEntity::toDomain).collect(Collectors.toList()) :
+						Collections.emptyList();
+
 		return Product.restore(
-			this.id,
-			this.name,
-			this.categoryId,
-			this.brandId,
-			this.price,
-			this.stock,
-			Collections.emptyList(), // ProductOption은 별도 조회
-			domainImages, // ProductImage 포함
-			this.detailContent,
-			this.saleType,
-			this.status
+				this.id,
+				this.name,
+				this.category != null ? this.category.getId() : null,
+				this.brand != null ? this.brand.getId() : null,
+				this.price,
+				this.stock,
+				domainOptions,
+				domainImages,
+				this.detailContent,
+				this.saleType,
+				this.status
 		);
 	}
 }

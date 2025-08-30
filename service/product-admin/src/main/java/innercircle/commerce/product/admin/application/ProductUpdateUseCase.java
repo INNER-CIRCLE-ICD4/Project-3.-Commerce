@@ -7,6 +7,7 @@ import innercircle.commerce.product.core.application.repository.ProductRepositor
 import innercircle.commerce.product.core.domain.Product;
 import innercircle.commerce.product.core.domain.ProductImage;
 import innercircle.commerce.product.infra.s3.S3ImageStore;
+import innercircle.commerce.product.infra.s3.S3UrlHelper;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -26,6 +27,7 @@ public class ProductUpdateUseCase {
 
 	private final ProductRepository productRepository;
 	private final S3ImageStore s3ImageStore;
+	private final S3UrlHelper s3UrlHelper;
 
 	/**
 	 * 상품 정보를 수정합니다. (기본 정보 + 이미지 변경사항)
@@ -52,7 +54,7 @@ public class ProductUpdateUseCase {
 			for (String imageUrl : command.imagesToDelete()) {
 				product.removeImageByUrl(imageUrl);
 
-				String s3Key = extractS3KeyFromUrl(imageUrl);
+				String s3Key = s3UrlHelper.extractKeyFromUrl(imageUrl);
 				s3ImageStore.delete(s3Key);
 			}
 		}
@@ -98,9 +100,9 @@ public class ProductUpdateUseCase {
 		return tempImages.stream()
 			.map(image -> {
 				// 임시 경로에서 실제 경로로 S3 이미지 이동
-				String tempKey = extractS3KeyFromUrl(image.getUrl());
-				String extension = extractExtensionFromOriginalName(image.getOriginalName());
-				String finalKey = buildFinalImageKey(productId, image.getId(), extension);
+				String tempKey = s3UrlHelper.extractKeyFromUrl(image.getUrl());
+				String extension = s3UrlHelper.extractExtensionFromFilename(image.getOriginalName());
+				String finalKey = s3UrlHelper.buildProductImageKey(productId, image.getId(), extension);
 				
 				Optional<String> finalUrl = s3ImageStore.move(tempKey, finalKey);
 				
@@ -115,35 +117,4 @@ public class ProductUpdateUseCase {
 			.collect(Collectors.toList());
 	}
 
-	/**
-	 * URL에서 S3 키를 추출합니다.
-	 * 예: https://bucket.s3.region.amazonaws.com/commerce/temp/123/image.jpg → commerce/temp/123/image.jpg
-	 */
-	private String extractS3KeyFromUrl(String url) {
-		// 간단한 URL 파싱 (향후 개선 가능)
-		int keyStartIndex = url.indexOf(".com/") + 5;
-		return url.substring(keyStartIndex);
-	}
-
-	/**
-	 * 원본 파일명에서 확장자를 추출합니다.
-	 *
-	 * @param originalName 원본 파일명
-	 * @return 확장자 (점 제외)
-	 */
-	private String extractExtensionFromOriginalName(String originalName) {
-		if (originalName != null && originalName.contains(".")) {
-			String[] nameParts = originalName.split("\\.");
-			return nameParts[nameParts.length - 1].toLowerCase();
-		}
-		return "jpg";
-	}
-
-	/**
-	 * 상품의 최종 이미지 경로를 생성합니다.
-	 * 예: commerce/products/123/456.jpg (이미지 ID 기반)
-	 */
-	private String buildFinalImageKey(Long productId, Long imageId, String extension) {
-		return String.format("commerce/products/%d/%d.%s", productId, imageId, extension);
-	}
 }
