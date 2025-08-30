@@ -37,5 +37,6 @@ out/
 .vscode/
 
 commerce.iml
-CLAUDE.local.md
+CLAUDE.md
+GEMINI.md
 .claude
