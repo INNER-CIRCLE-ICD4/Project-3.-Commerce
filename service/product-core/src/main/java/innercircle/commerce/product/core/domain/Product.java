@@ -28,12 +28,13 @@ public class Product {
 	private List<ProductImage> images;
 	private String detailContent;
 	private Integer stock;
+	private Long version;
 	private LocalDateTime createdAt;
 	private LocalDateTime updatedAt;
 
 	@Builder(access = AccessLevel.PRIVATE)
 	private Product (
-			Long id, String name, Long categoryId, Long brandId, Integer price, Integer stock,
+			Long id, String name, Long categoryId, Long brandId, Integer price, Integer stock, Long version,
 			List<ProductOption> options, List<ProductImage> images, String detailContent,
 			SaleType saleType, ProductStatus status, LocalDateTime createdAt, LocalDateTime updatedAt
 	) {
@@ -43,6 +44,7 @@ public class Product {
 		setBrandId(brandId);
 		setPrice(price);
 		setStock(stock);
+		this.version = version;
 		setOptions(options);
 		this.images = images;
 		setDetailContent(detailContent);
@@ -89,8 +91,9 @@ public class Product {
 	}
 
 	public static Product restore (
-			Long id, String name, Long categoryId, Long brandId, Integer price, Integer stock, List<ProductOption> options,
-			List<ProductImage> images, String detailContent, SaleType saleType, ProductStatus status
+			Long id, String name, Long categoryId, Long brandId, Integer price, Integer stock, Long version,
+			List<ProductOption> options, List<ProductImage> images, String detailContent, 
+			SaleType saleType, ProductStatus status, LocalDateTime createdAt, LocalDateTime updatedAt
 	) {
 		return Product.builder()
 					  .id(id)
@@ -99,11 +102,14 @@ public class Product {
 					  .brandId(brandId)
 					  .price(price)
 					  .stock(stock)
+					  .version(version)
 					  .options(options)
 					  .images(images)
 					  .detailContent(detailContent)
 					  .saleType(saleType)
 					  .status(status)
+					  .createdAt(createdAt)
+					  .updatedAt(updatedAt)
 					  .build();
 	}
 
@@ -150,6 +156,50 @@ public class Product {
 		this.setName(name);
 		this.setPrice(price);
 		this.setDetailContent(detailContent);
+		this.updatedAt = LocalDateTime.now();
+	}
+
+	/**
+	 * 상품의 재고를 증가시킵니다.
+	 * 
+	 * 동시성 제어를 위해 JPA의 낙관적 락킹이 적용되며,
+	 * 수정 시간도 함께 업데이트됩니다.
+	 *
+	 * @param quantity 증가시킬 재고 수량 (양수)
+	 * @throws IllegalArgumentException quantity가 null이거나 0 이하인 경우
+	 */
+	public void increaseStock(Integer quantity) {
+		if (quantity == null) {
+			throw new IllegalArgumentException("증가할 재고 수량은 필수입니다.");
+		}
+		if (quantity <= 0) {
+			throw new IllegalArgumentException("증가할 재고 수량은 양수여야 합니다.");
+		}
+		this.stock += quantity;
+		this.updatedAt = LocalDateTime.now();
+	}
+
+	/**
+	 * 상품의 재고를 감소시킵니다.
+	 * 
+	 * 재고 부족 시 예외가 발생하며, 동시성 제어를 위해 
+	 * JPA의 낙관적 락킹이 적용됩니다.
+	 *
+	 * @param quantity 감소시킬 재고 수량 (양수)
+	 * @throws IllegalArgumentException quantity가 null, 0 이하, 또는 현재 재고보다 큰 경우
+	 */
+	public void decreaseStock(Integer quantity) {
+		if (quantity == null) {
+			throw new IllegalArgumentException("감소할 재고 수량은 필수입니다.");
+		}
+		if (quantity <= 0) {
+			throw new IllegalArgumentException("감소할 재고 수량은 양수여야 합니다.");
+		}
+		if (this.stock < quantity) {
+			throw new IllegalArgumentException("재고가 부족합니다. 현재 재고: " + this.stock + ", 요청 수량: " + quantity);
+		}
+		this.stock -= quantity;
+		this.updatedAt = LocalDateTime.now();
 	}
 
 	private void setName (String name) {

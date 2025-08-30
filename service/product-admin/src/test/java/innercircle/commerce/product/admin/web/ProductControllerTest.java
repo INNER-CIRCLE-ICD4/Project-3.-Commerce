@@ -1,16 +1,13 @@
 package innercircle.commerce.product.admin.web;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import innercircle.commerce.product.admin.application.ImageUploadUseCase;
-import innercircle.commerce.product.admin.application.ProductCreateUseCase;
-import innercircle.commerce.product.admin.application.ProductDeleteUseCase;
-import innercircle.commerce.product.admin.application.ProductRetrieveUseCase;
-import innercircle.commerce.product.admin.application.ProductUpdateUseCase;
+import innercircle.commerce.product.admin.application.*;
 import innercircle.commerce.product.admin.application.dto.ImageUploadInfo;
 import innercircle.commerce.product.admin.application.exception.DuplicateProductNameException;
 import innercircle.commerce.product.admin.application.exception.InvalidBrandException;
 import innercircle.commerce.product.admin.application.exception.NotFoundTempImageException;
 import innercircle.commerce.product.admin.application.exception.ProductNotFoundException;
+import innercircle.commerce.product.admin.application.exception.StockConflictException;
 import innercircle.commerce.product.admin.fixtures.ProductCreateRequestFixtures;
 import innercircle.commerce.product.admin.application.dto.ProductAdminInfo;
 import innercircle.commerce.product.admin.application.dto.ProductListAdminInfo;
@@ -60,6 +57,9 @@ class ProductControllerTest {
 
 	@MockitoBean
 	private ImageUploadUseCase imageUploadUseCase;
+
+	@MockitoBean
+	private ProductInventoryUpdateUseCase productInventoryUpdateUseCase;
 
 	@Nested
 	@DisplayName("상품 등록")
@@ -533,6 +533,151 @@ class ProductControllerTest {
 					.andExpect(status().isNotFound());
 
 			verify(productRetrieveUseCase).getProduct(nonExistentProductId);
+		}
+	}
+
+	@Nested
+	@DisplayName("상품 재고 조정")
+	class UpdateInventory {
+
+		@Test
+		@DisplayName("재고를 정상적으로 증가시킬 수 있다.")
+		void 재고_증가_성공() throws Exception {
+			// given
+			Product updatedProduct = ProductFixtures.createUpdatedProduct();
+			String requestBody = """
+					{
+						"operationType": "INCREASE",
+						"quantity": 10
+					}
+					""";
+
+			given(productInventoryUpdateUseCase.updateStock(any()))
+					.willReturn(updatedProduct);
+
+			// when & then
+			mockMvc.perform(patch("/api/admin/products/{id}/inventory", updatedProduct.getId())
+							.contentType(MediaType.APPLICATION_JSON)
+							.content(requestBody))
+					.andExpect(status().isOk())
+					.andExpect(jsonPath("$.success").value(true))
+					.andExpect(jsonPath("$.data.productId").value(updatedProduct.getId()))
+					.andExpect(jsonPath("$.data.updatedStock").exists())
+					.andExpect(jsonPath("$.data.version").exists());
+
+			verify(productInventoryUpdateUseCase).updateStock(any());
+		}
+
+		@Test
+		@DisplayName("재고를 정상적으로 감소시킬 수 있다.")
+		void 재고_감소_성공() throws Exception {
+			// given
+			Product updatedProduct = ProductFixtures.createUpdatedProduct();
+			String requestBody = """
+					{
+						"operationType": "DECREASE",
+						"quantity": 5
+					}
+					""";
+
+			given(productInventoryUpdateUseCase.updateStock(any()))
+					.willReturn(updatedProduct);
+
+			// when & then
+			mockMvc.perform(patch("/api/admin/products/{id}/inventory", updatedProduct.getId())
+							.contentType(MediaType.APPLICATION_JSON)
+							.content(requestBody))
+					.andExpect(status().isOk())
+					.andExpect(jsonPath("$.success").value(true))
+					.andExpect(jsonPath("$.data.productId").value(updatedProduct.getId()))
+					.andExpect(jsonPath("$.data.updatedStock").exists());
+
+			verify(productInventoryUpdateUseCase).updateStock(any());
+		}
+
+		@Test
+		@DisplayName("존재하지 않는 상품 ID로 재고 조정 시 404 에러를 반환한다.")
+		void 존재하지_않는_상품_재고조정_404_에러() throws Exception {
+			// given
+			Long nonExistentProductId = 999L;
+			String requestBody = """
+					{
+						"operationType": "INCREASE",
+						"quantity": 10
+					}
+					""";
+
+			given(productInventoryUpdateUseCase.updateStock(any()))
+					.willThrow(new ProductNotFoundException(nonExistentProductId));
+
+			// when & then
+			mockMvc.perform(patch("/api/admin/products/{id}/inventory", nonExistentProductId)
+							.contentType(MediaType.APPLICATION_JSON)
+							.content(requestBody))
+					.andExpect(status().isNotFound());
+
+			verify(productInventoryUpdateUseCase).updateStock(any());
+		}
+
+		@Test
+		@DisplayName("재고 충돌 발생 시 409 에러를 반환한다.")
+		void 재고_충돌_409_에러() throws Exception {
+			// given
+			Long productId = 1L;
+			String requestBody = """
+					{
+						"operationType": "INCREASE",
+						"quantity": 10
+					}
+					""";
+
+			given(productInventoryUpdateUseCase.updateStock(any()))
+					.willThrow(new StockConflictException("재고 변경 중 충돌이 발생했습니다."));
+
+			// when & then
+			mockMvc.perform(patch("/api/admin/products/{id}/inventory", productId)
+							.contentType(MediaType.APPLICATION_JSON)
+							.content(requestBody))
+					.andExpect(status().isConflict());
+
+			verify(productInventoryUpdateUseCase).updateStock(any());
+		}
+
+		@Test
+		@DisplayName("음수 수량으로 요청 시 400 에러를 반환한다.")
+		void 음수_수량_400_에러() throws Exception {
+			// given
+			Long productId = 1L;
+			String requestBody = """
+					{
+						"operationType": "INCREASE",
+						"quantity": -5
+					}
+					""";
+
+			// when & then
+			mockMvc.perform(patch("/api/admin/products/{id}/inventory", productId)
+							.contentType(MediaType.APPLICATION_JSON)
+							.content(requestBody))
+					.andExpect(status().isBadRequest());
+		}
+
+		@Test
+		@DisplayName("필수 필드 누락 시 400 에러를 반환한다.")
+		void 필수_필드_누락_400_에러() throws Exception {
+			// given
+			Long productId = 1L;
+			String requestBody = """
+					{
+						"quantity": 10
+					}
+					""";
+
+			// when & then
+			mockMvc.perform(patch("/api/admin/products/{id}/inventory", productId)
+							.contentType(MediaType.APPLICATION_JSON)
+							.content(requestBody))
+					.andExpect(status().isBadRequest());
 		}
 	}
 }

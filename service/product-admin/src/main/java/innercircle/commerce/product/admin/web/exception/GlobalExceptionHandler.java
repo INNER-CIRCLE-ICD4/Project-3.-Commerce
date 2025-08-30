@@ -7,6 +7,7 @@ import innercircle.commerce.product.admin.application.exception.InvalidImageFile
 import innercircle.commerce.product.admin.application.exception.NotFoundTempImageException;
 import innercircle.commerce.product.admin.application.exception.ProductImageUploadInProgressException;
 import innercircle.commerce.product.admin.application.exception.ProductNotFoundException;
+import innercircle.commerce.product.admin.application.exception.StockConflictException;
 import innercircle.commerce.product.admin.web.dto.ApiResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -85,6 +86,16 @@ public class GlobalExceptionHandler {
 	public ResponseEntity<ApiResponse<Void>> handleImageUploadInProgress(ProductImageUploadInProgressException e) {
 		log.warn("이미지 업로드 진행 중: {}", e.getMessage());
 		ErrorCode errorCode = ErrorCode.IMAGE_UPLOAD_IN_PROGRESS;
+		ErrorResponse errorResponse = ErrorResponse.of(errorCode);
+		return ResponseEntity
+				.status(errorCode.getHttpStatus())
+				.body(ApiResponse.failure(errorResponse));
+	}
+
+	@ExceptionHandler(StockConflictException.class)
+	public ResponseEntity<ApiResponse<Void>> handleStockConflict(StockConflictException e) {
+		log.warn("재고 변경 중 충돌 발생: {}", e.getMessage());
+		ErrorCode errorCode = ErrorCode.STOCK_CONFLICT;
 		ErrorResponse errorResponse = ErrorResponse.of(errorCode);
 		return ResponseEntity
 				.status(errorCode.getHttpStatus())

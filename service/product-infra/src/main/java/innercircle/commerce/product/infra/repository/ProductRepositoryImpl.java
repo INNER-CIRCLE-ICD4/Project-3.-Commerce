@@ -6,11 +6,13 @@ import innercircle.commerce.product.core.domain.ProductStatus;
 import innercircle.commerce.product.infra.entity.BrandJpaEntity;
 import innercircle.commerce.product.infra.entity.CategoryJpaEntity;
 import innercircle.commerce.product.infra.entity.ProductJpaEntity;
+import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
 
@@ -24,16 +26,30 @@ public class ProductRepositoryImpl implements ProductRepository {
     private final ProductJpaRepository productJpaRepository;
     private final CategoryJpaRepository categoryJpaRepository;
     private final BrandJpaRepository brandJpaRepository;
+    private final EntityManager entityManager;
 
     @Override
+    @Transactional
     public Product save(Product product) {
         CategoryJpaEntity category = categoryJpaRepository.findById(product.getCategoryId())
                 .orElseThrow(() -> new EntityNotFoundException("Category not found with id: " + product.getCategoryId()));
         BrandJpaEntity brand = brandJpaRepository.findById(product.getBrandId())
                 .orElseThrow(() -> new EntityNotFoundException("Brand not found with id: " + product.getBrandId()));
 
-        ProductJpaEntity entity = ProductJpaEntity.from(product, category, brand);
+        ProductJpaEntity entity;
+        if (product.getId() != null) {
+            // 기존 엔티티 업데이트
+            entity = productJpaRepository.findById(product.getId())
+                    .orElse(ProductJpaEntity.from(product, category, brand));
+            // 기존 엔티티의 값들을 업데이트
+            entity.updateFrom(product, category, brand);
+        } else {
+            // 새로운 엔티티 생성
+            entity = ProductJpaEntity.from(product, category, brand);
+        }
+        
         ProductJpaEntity savedEntity = productJpaRepository.save(entity);
+        entityManager.flush(); // 명시적으로 flush하여 @Version 업데이트 강제 수행
         return savedEntity.toDomain();
     }
 
