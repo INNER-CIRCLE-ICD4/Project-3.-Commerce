@@ -1,7 +1,11 @@
 package innercircle.member.domain;
 
-import com.sun.jdi.request.DuplicateRequestException;
-import innercircle.member.application.port.out.MemberRepository;
+import innercircle.member.application.port.out.MemberQueryPort;
+import innercircle.member.application.port.out.MemberCommandPort;
+import innercircle.member.domain.member.DuplicateRequestException;
+import innercircle.member.domain.member.Email;
+import innercircle.member.domain.member.Member;
+import innercircle.member.domain.member.MemberDomainService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -20,7 +24,10 @@ import static org.mockito.Mockito.when;
 class MemberDomainServiceTest {
 
     @Mock
-    private MemberRepository memberRepository;
+    private MemberCommandPort memberCommandPort;
+
+    @Mock
+    private MemberQueryPort memberQueryPort;
 
     @InjectMocks
     private MemberDomainService memberDomainService;
@@ -31,25 +38,24 @@ class MemberDomainServiceTest {
 
         Email email = new Email("asdz453@gmail.com");
 
-        when(memberRepository.findByEmail(email)).thenReturn(Optional.empty());
+        when(memberQueryPort.findByEmailUsingNaturalId(email)).thenReturn(Optional.empty());
 
-        assertThatCode(() -> memberDomainService.existsByEmail("asdz453@gmail.com", memberRepository))
-                .doesNotThrowAnyException();
+        assertThatCode(() -> memberDomainService.existsByEmail("asdz453@gmail.com")).doesNotThrowAnyException();
 
-        verify(memberRepository).findByEmail(email);
+        verify(memberQueryPort).findByEmailUsingNaturalId(email);
     }
 
     @Test
     void 이메일_중복_검증_실패() {
         String mail = "asdz453@gmail.com";
 
-        when(memberRepository.findByEmail(any(Email.class))).thenReturn(Optional.of(Member.create("asdz453@gmail.com", "노성웅", "password1234", "2025-07-21", "MAIL")));
+        when(memberQueryPort.findByEmailUsingNaturalId(any(Email.class))).thenReturn(Optional.of(Member.create("asdz453@gmail.com", "노성웅", "password1234", "2025-07-21", "MAIL")));
 
-        assertThatThrownBy(() -> memberDomainService.existsByEmail(mail, memberRepository))
+        assertThatThrownBy(() -> memberDomainService.existsByEmail(mail))
                 .isInstanceOf(DuplicateRequestException.class)
-                .hasMessageContaining("이미 가입된 이메일입니다. email");
+                .hasMessageContaining("이미 존재하는 이메일입니다.");
 
-        verify(memberRepository).findByEmail(new Email(mail));
+        verify(memberQueryPort).findByEmailUsingNaturalId(new Email(mail));
 
     }
 
