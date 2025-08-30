@@ -40,7 +40,8 @@ public class MemberController {
     }
 
     @GetMapping
-    public ResponseEntity<Page<MemberSearchResponse>> retrieveMember(@RequestBody MemberSearchRequest request) {
+    public ResponseEntity<Page<MemberSearchResponse>> retrieveMember(@ModelAttribute MemberSearchRequest request) {
+        //todo 반환 타입을 Custom 타입으로 만들기
         Page<Member> members = memberUseCase.searchMembers(request);
         return ResponseEntity.ok().body(memberWebMapper.entityToSearchResponse(members));
     }

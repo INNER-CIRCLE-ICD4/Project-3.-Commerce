@@ -27,10 +27,10 @@ public interface MemberJpaRepository extends JpaRepository<Member, Long> {
     @Query(value = """
             SELECT DISTINCT m FROM Member m
             LEFT JOIN m.roles mr 
-            WHERE(:keyword IS NULL OR LOWER(m.name) LIKE LOWER(CONCAT('%', :keyword, '%')) OR LOWER(m.email.email) LIKE LOWER(CONCAT('%', :keyword, '%')))
-            AND (:name IS NULL OR LOWER(m.name) LIKE LOWER(CONCAT('%', :name, '%')))
-            AND (:email IS NULL OR LOWER(m.email) LIKE LOWER(CONCAT('%', :email, '%')))
-            AND (:status IS NULL OR m.status = :status)
+            WHERE ((LOWER(m.name) LIKE LOWER(CONCAT('%', :keyword, '%')) OR LOWER(m.email) LIKE LOWER(CONCAT('%', :keyword, '%'))) OR :keyword IS NULL)
+            AND LOWER(m.name) LIKE LOWER(CONCAT('%', :name, '%')) OR :name IS NULL
+            AND LOWER(m.email) LIKE LOWER(CONCAT('%', :email, '%')) OR :email IS NULL 
+            AND m.status = :status OR :status IS NULL
             AND (:role IS NULL OR EXISTS (
                 SELECT 1 FROM MemberRole subMr 
                 WHERE subMr.member = m AND subMr.roleType = :role
@@ -39,16 +39,14 @@ public interface MemberJpaRepository extends JpaRepository<Member, Long> {
             """,
             countQuery = """
                     SELECT COUNT(DISTINCT m) FROM Member m
-                    LEFT JOIN  m.roles mr
-                    WHERE (:keyword IS NULL OR
-                        LOWER(m.name) LIKE LOWER(CONCAT('%', :keyword, '%')) OR
-                        LOWER(m.email.email) LIKE LOWER(CONCAT('%', :keyword, '%')))
-                    AND (:name IS NULL OR LOWER(m.name) LIKE LOWER(CONCAT('%', :name, '%')))
-                    AND (:email IS NULL OR LOWER(m.email.email) LIKE LOWER(CONCAT('%', :email, '%')))
-                    AND (:status IS NULL OR m.status = :status)
+                        LEFT JOIN  m.roles mr
+                        WHERE ((LOWER(m.name) LIKE LOWER(CONCAT('%', :keyword, '%')) OR LOWER(m.email) LIKE LOWER(CONCAT('%', :keyword, '%'))) OR :keyword IS NULL)
+                    AND LOWER(m.name) LIKE LOWER(CONCAT('%', :name, '%')) OR :name IS NULL
+                    AND LOWER(m.email) LIKE LOWER(CONCAT('%', :email, '%')) OR :email IS NULL 
+                    AND m.status = :status OR :status IS NULL
                     AND (:role IS NULL OR EXISTS (
-                          SELECT 1 FROM MemberRole subMr
-                          WHERE subMr.member = m AND subMr.roleType = :role
+                        SELECT 1 FROM MemberRole subMr 
+                        WHERE subMr.member = m AND subMr.roleType = :role
                     ))
                     """)
     @QueryHints({
@@ -65,12 +63,53 @@ public interface MemberJpaRepository extends JpaRepository<Member, Long> {
             Pageable pageable
     );
 
+//    @Query(value = """
+//            SELECT DISTINCT m FROM Member m
+//            LEFT JOIN m.roles mr
+//            WHERE(:keyword IS NULL OR LOWER(m.name) LIKE LOWER(CONCAT('%', :keyword, '%')) OR LOWER(m.email) LIKE LOWER(CONCAT('%', :keyword, '%')))
+//            AND (:name IS NULL OR LOWER(m.name) LIKE LOWER(CONCAT('%', :name, '%')))
+//            AND (:email IS NULL OR LOWER(m.email) LIKE LOWER(CONCAT('%', :email, '%')))
+//            AND (:status IS NULL OR m.status = :status)
+//            AND (:role IS NULL OR EXISTS (
+//                SELECT 1 FROM MemberRole subMr
+//                WHERE subMr.member = m AND subMr.roleType = :role
+//            ))
+//            ORDER BY m.createAt DESC
+//            """,
+//            countQuery = """
+//                    SELECT COUNT(DISTINCT m) FROM Member m
+//                    LEFT JOIN  m.roles mr
+//                    WHERE (:keyword IS NULL OR
+//                        LOWER(m.name) LIKE LOWER(CONCAT('%', :keyword, '%')) OR
+//                        LOWER(m.email) LIKE LOWER(CONCAT('%', :keyword, '%')))
+//                    AND (:name IS NULL OR LOWER(m.name) LIKE LOWER(CONCAT('%', :name, '%')))
+//                    AND (:email IS NULL OR LOWER(m.email) LIKE LOWER(CONCAT('%', :email, '%')))
+//                    AND (:status IS NULL OR m.status = :status)
+//                    AND (:role IS NULL OR EXISTS (
+//                          SELECT 1 FROM MemberRole subMr
+//                          WHERE subMr.member = m AND subMr.roleType = :role
+//                    ))
+//                    """)
+//    @QueryHints({
+//            @QueryHint(name = "org.hibernate.cacheable", value = "true"),
+//            @QueryHint(name = "org.hibernate.cacheRegion", value = "member.search"),
+//            @QueryHint(name = "org.hibernate.fetchSize", value = "50")  // 배치 크기 최적화
+//    })
+//    Page<Member> searchMembers(
+//            @Param("keyword") String keyword,
+//            @Param("name") String name,
+//            @Param("email") String email,
+//            @Param("status") MemberStatus status,
+//            @Param("role") RoleType role,
+//            Pageable pageable
+//    );
+
 
     @Query(value = """
                     SELECT m FROM Member m 
                     JOIN FETCH m.roles mr 
-                    WHERE m.id IN :memberIds
-                    ORDER BY m.createAt DESC
+                        WHERE m.id IN :memberIds
+                        ORDER BY m.createAt DESC
             """)
     @QueryHints({
             @QueryHint(name = "org.hibernate.fetchSize", value = "100"),

@@ -13,6 +13,11 @@ public record MemberSearchRequest(
         int page,
         int size) {
 
+    public MemberSearchRequest() {
+        this(null, null, null, null, null, 0, 20);
+
+    }
+
     public MemberSearchRequest {
         if (page < 0) page = 0;
         if (size <= 0 || size > 100) size = 20;
