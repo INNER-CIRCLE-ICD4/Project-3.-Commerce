@@ -42,7 +42,7 @@ public class SecurityConfig {
 
         JwtGrantedAuthoritiesConverter gac = new JwtGrantedAuthoritiesConverter();
         gac.setAuthoritiesClaimName(authorityClaim);
-        gac.setAuthorityPrefix("ROLE_");
+        gac.setAuthorityPrefix("");
 
         JwtAuthenticationConverter delegate = new JwtAuthenticationConverter();
         delegate.setJwtGrantedAuthoritiesConverter(gac);
@@ -52,7 +52,13 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource(null)))
                 .authorizeExchange(ex ->
                         ex
+                                // 회원가입/로그인 등
                                 .pathMatchers(HttpMethod.POST, "/api/member-service/members").permitAll()
+
+                                // 상품 조회
+                                .pathMatchers("/api/product-service/**").permitAll()
+
+                                // 공통 전체 허용
                                 .pathMatchers(
                                         "/api/member-service/auth/**",
                                         "/actuator/**",
@@ -61,8 +67,11 @@ public class SecurityConfig {
                                         "/swagger-ui.html"
                                 ).permitAll()
 
+                                // 관리자 전용
+                                .pathMatchers("/api/member-service/grant/**").hasAnyAuthority("ADMIN")
+
                                 // 판매자/구매자 공통
-                                .pathMatchers("/api/member-service/members/**").hasAnyRole("BUYER", "SELLER", "ADMIN")
+                                .pathMatchers("/api/member-service/members/**").hasAnyAuthority("BUYER", "SELLER", "ADMIN")
 
                                 // 판매자 전용
                                 .anyExchange().authenticated()

@@ -37,6 +37,7 @@ Content-Type: application/json
 POST http://localhost:8000/api/member-service/auth/logout
 Content-Type: application/json
 Authorization: {{tokenType}} {{accessToken}}
+### POST 로그아웃 - Gateway
 
 
 ### GET 회원 정보 조회 - Gatewayㅊ

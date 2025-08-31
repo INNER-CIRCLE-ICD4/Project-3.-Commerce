@@ -34,15 +34,15 @@ class MemberApplicationTests {
                 "노성웅",
                 "12345678A",
                 "1996-04-23",
-                "MAIL"
+                "MALE"
         );
 
-        mockMvc.perform(post("/members")
+        mockMvc.perform(post("/api/v1/members")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(memberCreateRequest)))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.email").value("swnoh@commerce.com"))
-                .andExpect(jsonPath("$.gender").value("MAIL"))
+                .andExpect(jsonPath("$.gender").value("MALE"))
                 .andExpect(jsonPath("$.memberRoles").isArray());
     }
 

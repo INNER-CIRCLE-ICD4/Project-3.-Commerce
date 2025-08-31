@@ -89,7 +89,7 @@ public class Member extends BaseEntity {
         MemberRole.signUp(this);
     }
 
-    private boolean hasRole(RoleType roleType) {
+    public boolean hasRole(RoleType roleType) {
         return roles.stream().anyMatch(role -> role.getRoleType() == roleType);
     }
 
@@ -117,6 +117,11 @@ public class Member extends BaseEntity {
         );
     }
 
+    // todo 추후 동시성 고려
+    public void changeStatus(MemberStatus status) {
+        this.status = status;
+    }
+
 
     public boolean isActive() {
         return this.status == MemberStatus.ACTIVE;
@@ -129,11 +134,11 @@ public class Member extends BaseEntity {
         if (this == o) return true;
         if (!(o instanceof Member member)) return false;
 
-        return Objects.equals(email, member.email);
+        return Objects.equals(getId(), member.getId());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hashCode(email);
+        return Objects.hashCode(getId());
     }
 }

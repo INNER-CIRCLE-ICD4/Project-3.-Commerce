@@ -26,7 +26,7 @@ public class MemberCommandPortTest {
     @Test
     void saveMember() {
 
-        Member member = Member.create("asdz453@gmail.com", "노성웅", "password1234", "2025-07-21", "MAIL");
+        Member member = Member.create("asdz453@gmail.com", "노성웅", "password1234", "2025-07-21", "MALE");
 
         Member save = memberJpaRepository.save(member);
 
@@ -39,7 +39,7 @@ public class MemberCommandPortTest {
     @Test
     void findByEmail() {
 
-        Member member = Member.create("asdz453@gmail.com", "노성웅", "password1234", "2025-07-21", "MAIL");
+        Member member = Member.create("asdz453@gmail.com", "노성웅", "password1234", "2025-07-21", "MALE");
         memberJpaRepository.save(member);
 
         entityManager.flush();
