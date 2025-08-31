@@ -1,0 +1,5 @@
+spring:
+  application:
+    name: commerce-product-infra
+  profiles:
+    include: core

@@ -1,42 +1,32 @@
 package innercircle.member.application.service;
 
 
-import innercircle.member.application.MemberCreateRequest;
-import innercircle.member.application.MemberResponse;
 import innercircle.member.application.port.in.MemberUseCase;
-import innercircle.member.application.port.out.PasswordEncoderPort;
-import innercircle.member.domain.Member;
-import innercircle.member.domain.MemberDomainService;
-import innercircle.member.application.port.out.MemberRepository;
+import innercircle.member.domain.member.Member;
+import innercircle.member.domain.member.MemberDomainService;
+import innercircle.member.application.port.out.MemberCommandPort;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
-@Transactional
+@Transactional(readOnly = true)
 @RequiredArgsConstructor
 public class MemberApplicationService implements MemberUseCase {
 
-    private final MemberRepository memberRepository;
+    private final MemberCommandPort memberCommandPort;
     private final MemberDomainService memberDomainService;
-    private final PasswordEncoderPort passwordEncoderPort;
-
 
     @Override
-    public MemberResponse createMember(MemberCreateRequest request) {
+    @Transactional
+    public Member createMember(Member member) {
 
-        memberDomainService.existsByEmail(request.email(), memberRepository);
+        memberDomainService.existsByEmail(member.getEmail().email());
 
-        Member member = Member.create(
-                request.email(),
-                request.name(),
-                passwordEncoderPort.encode(request.password()),
-                request.birthDate(),
-                request.gender()
+        Member saveMember = member.withEncodedPassword(
+                memberDomainService.encodePassword(member.getPassword())
         );
 
-        Member save = memberRepository.save(member);
-
-        return MemberResponse.from(save);
+        return memberCommandPort.save(saveMember);
     }
 }
