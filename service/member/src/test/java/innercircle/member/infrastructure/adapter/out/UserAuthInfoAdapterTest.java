@@ -36,7 +36,7 @@ class UserAuthInfoAdapterTest {
     @DisplayName("findByEmail 메서드 호출 테스트")
     void findByEmailTest() {
 
-        when(memberQueryPort.findByEmail(any(Email.class))).thenReturn(Optional.of(Member.create("asdz453@gmail.com", "노성웅", "password1234", "2025-07-21", "MAIL")));
+        when(memberQueryPort.findByEmail(any(Email.class))).thenReturn(Optional.of(Member.create("asdz453@gmail.com", "노성웅", "password1234", "2025-07-21", "MALE")));
 
         UserAuthInfo byEmail = userAuthInfoProvider.findByEmail("asdz453@gmail.com");
 
@@ -49,7 +49,7 @@ class UserAuthInfoAdapterTest {
     @DisplayName("findByEmail 메서드 호출 테스트")
     void findByEmailTest_notActive() {
 
-        Member member = Member.create("asdz453@gmail.com", "노성웅", "password1234", "2025-07-21", "MAIL");
+        Member member = Member.create("asdz453@gmail.com", "노성웅", "password1234", "2025-07-21", "MALE");
         member.inActivate();
 
         OngoingStubbing<Optional<Member>> optionalOngoingStubbing = when(memberQueryPort.findByEmail(any(Email.class))).thenReturn(Optional.of(member));

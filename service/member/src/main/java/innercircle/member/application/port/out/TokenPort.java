@@ -28,7 +28,7 @@ public interface TokenPort {
     boolean validateToken(String token);
 
     /**
-     * 토큰에서 사용자 정보 추출 - userId
+     * 토큰에서 사용자 정보 추출 - memberId
      */
     Long getUserIdFromToken(String token);
 

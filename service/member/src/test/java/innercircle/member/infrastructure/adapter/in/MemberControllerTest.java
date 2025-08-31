@@ -54,21 +54,21 @@ class MemberControllerTest {
     void memberCreate() throws Exception {
 
 
-        MemberCreateRequest memberCreateRequest = new MemberCreateRequest("asdz453@gmail.com", "노성웅", "12345678a", "1996-04-23", "MAIL");
+        MemberCreateRequest memberCreateRequest = new MemberCreateRequest("asdz453@gmail.com", "노성웅", "12345678a", "1996-04-23", "MALE");
 
-        Member member = Member.create("asdz453@gmail.com", "노성웅", "12345678a", "1996-04-23", "MAIL");
+        Member member = Member.create("asdz453@gmail.com", "노성웅", "12345678a", "1996-04-23", "MALE");
         Member encodedMember = member.withEncodedPassword("encodedPassword1234");
 
         long id = SnowFlakeGenerator.GENERATOR.nextId();
         ReflectionTestUtils.setField(member, "id", id);
 
-        MemberCreateResponse response = new MemberCreateResponse(new Snowflake().nextId(), memberCreateRequest.email(), memberCreateRequest.name(), LocalDate.of(1996, Month.APRIL, 23), Gender.MAIL.name(), MemberStatus.ACTIVE, LocalDateTime.now(), List.of(RoleType.BUYER.name()));
+        MemberCreateResponse response = new MemberCreateResponse(new Snowflake().nextId(), memberCreateRequest.email(), memberCreateRequest.name(), LocalDate.of(1996, Month.APRIL, 23), Gender.MALE.name(), MemberStatus.ACTIVE, LocalDateTime.now(), List.of(RoleType.BUYER.name()));
 
         when(memberWebMapper.createRequestToEntity(memberCreateRequest)).thenReturn(member);
         when(memberUseCase.createMember(member)).thenReturn(encodedMember);
         when(memberWebMapper.entityToCreateResponse(encodedMember)).thenReturn(response);  // ✅ 누락된 Mock 추가!
 
-        mockMvc.perform(post("/members")
+        mockMvc.perform(post("/api/v1/members")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(memberCreateRequest)))
                 .andExpect(status().isCreated())
