@@ -178,10 +178,10 @@ class MemberJpaRepositoryTest {
     @DisplayName("회원에 권한을 중복으로 부여할 수 없다.")
     void doNotGrantDupleRole() {
 
-        MemberRole.grantAdminRole(savedMember4);
+        ;
 
-        assertThatThrownBy(() -> testEntityManager.persistAndFlush(savedMember4))
-                .isInstanceOf(ConstraintViolationException.class);
+        assertThatThrownBy(() -> MemberRole.grantAdminRole(savedMember4))
+                .isInstanceOf(DuplicateRoleException.class);
 
     }
 
