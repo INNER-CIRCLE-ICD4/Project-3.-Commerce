@@ -27,10 +27,10 @@ public interface MemberJpaRepository extends JpaRepository<Member, Long> {
     @Query(value = """
             SELECT DISTINCT m FROM Member m
             LEFT JOIN m.roles mr 
-            WHERE ((LOWER(m.name) LIKE LOWER(CONCAT('%', :keyword, '%')) OR LOWER(m.email) LIKE LOWER(CONCAT('%', :keyword, '%'))) OR :keyword IS NULL)
-            AND LOWER(m.name) LIKE LOWER(CONCAT('%', :name, '%')) OR :name IS NULL
-            AND LOWER(m.email) LIKE LOWER(CONCAT('%', :email, '%')) OR :email IS NULL 
-            AND m.status = :status OR :status IS NULL
+            WHERE ((LOWER(m.name) LIKE LOWER(CONCAT('%', :keyword, '%')) OR LOWER(m.email.email) LIKE LOWER(CONCAT('%', :keyword, '%'))) OR :keyword is null)
+            AND (LOWER(m.name) LIKE LOWER(CONCAT('%', :name, '%')) OR :name is null) 
+            AND (LOWER(m.email.email) LIKE LOWER(CONCAT('%', :email, '%')) OR :email is null) 
+            AND (m.status = :status OR :status is null) 
             AND (:role IS NULL OR EXISTS (
                 SELECT 1 FROM MemberRole subMr 
                 WHERE subMr.member = m AND subMr.roleType = :role
@@ -39,11 +39,11 @@ public interface MemberJpaRepository extends JpaRepository<Member, Long> {
             """,
             countQuery = """
                     SELECT COUNT(DISTINCT m) FROM Member m
-                        LEFT JOIN  m.roles mr
-                        WHERE ((LOWER(m.name) LIKE LOWER(CONCAT('%', :keyword, '%')) OR LOWER(m.email) LIKE LOWER(CONCAT('%', :keyword, '%'))) OR :keyword IS NULL)
-                    AND LOWER(m.name) LIKE LOWER(CONCAT('%', :name, '%')) OR :name IS NULL
-                    AND LOWER(m.email) LIKE LOWER(CONCAT('%', :email, '%')) OR :email IS NULL 
-                    AND m.status = :status OR :status IS NULL
+                    LEFT JOIN  m.roles mr
+                    WHERE ((LOWER(m.name) LIKE LOWER(CONCAT('%', :keyword, '%')) OR LOWER(m.email.email) LIKE LOWER(CONCAT('%', :keyword, '%'))) OR :keyword is null)
+                    AND (LOWER(m.name) LIKE LOWER(CONCAT('%', :name, '%')) OR :name is null) 
+                    AND (LOWER(m.email.email) LIKE LOWER(CONCAT('%', :email, '%')) OR :email is null)  
+                    AND (m.status = :status OR :status is null)
                     AND (:role IS NULL OR EXISTS (
                         SELECT 1 FROM MemberRole subMr 
                         WHERE subMr.member = m AND subMr.roleType = :role
@@ -51,7 +51,6 @@ public interface MemberJpaRepository extends JpaRepository<Member, Long> {
                     """)
     @QueryHints({
             @QueryHint(name = "org.hibernate.cacheable", value = "true"),
-            @QueryHint(name = "org.hibernate.cacheRegion", value = "member.search"),
             @QueryHint(name = "org.hibernate.fetchSize", value = "50")  // 배치 크기 최적화
     })
     Page<Member> searchMembers(
