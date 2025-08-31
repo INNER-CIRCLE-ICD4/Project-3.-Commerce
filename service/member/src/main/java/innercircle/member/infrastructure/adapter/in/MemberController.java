@@ -52,7 +52,6 @@ public class MemberController {
         return ResponseEntity.ok(memberWebMapper.entityToDetailResponse(member));
     }
 
-
     @GetMapping("/test")
     public ResponseEntity<MemberCreateResponse> getMember(@PathVariable Long memberId,
                                                           @CurrentUser AuthenticatedUser authenticatedUser) {

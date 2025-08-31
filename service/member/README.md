@@ -15,14 +15,15 @@ Commerce MSA 플랫폼의 **회원 관리 및 인증** 마이크로서비스입�
 - [아키텍처](#-아키텍처)
 - [주요 기능](#-주요-기능)
   - [회원 관리](#1-회원-관리)
-  - [인증 시스템](#2-인증-시스템)
-    - [로그인 보안 (브루트포스 방어)](#23-로그인-보안-브루트포스-방어-️)
+  - [회원 검색](#2-회원-검색-🔍)
+  - [인증 시스템](#3-인증-시스템)
+    - [로그인 보안 (브루트포스 방어)](#34-로그인-보안-브루트포스-방어-️)
 - [API 가이드](#-api-가이드)
 - [개발 환경 설정](#-개발-환경-설정)
 - [데이터베이스](#-데이터베이스)
 - [보안](#-보안)
 - [테스트](#-테스트)
-- [모니터링](#-모니터링)
+- [모니터링 & 트레이싱](#-모니터링--트레이싱)
 - [문서](#-관련-문서)
 
 ---
@@ -43,10 +44,13 @@ Commerce MSA 플랫폼의 **회원 관리 및 인증** 마이크로서비스입�
 | 영역 | 기술 | 버전 | 용도 |
 |------|------|------|------|
 | **Framework** | Spring Boot | 3.5.3 | 애플리케이션 프레임워크 |
+| **Architecture** | Hexagonal + CQRS | - | 아키텍처 패턴 |
 | **Security** | Spring Security + JWT | 6.x + 0.12.3 | 인증/인가 |
 | **Database** | PostgreSQL | 16 | 운영 데이터베이스 |
 | **ORM** | Spring Data JPA | 3.x | 데이터 접근 계층 |
+| **Search** | JPQL + Native SQL | - | 복합 검색 쿼리 |
 | **Password** | BCrypt | 0.10.2 | 비밀번호 암호화 |
+| **Tracing** | Micrometer Tracing + Zipkin | 1.x | 분산 추적 |
 | **ID Generation** | Snowflake | Custom | 분산 ID 생성 |
 | **Config** | Spring Cloud Config | 4.x | 외부 설정 관리 |
 
@@ -54,7 +58,7 @@ Commerce MSA 플랫폼의 **회원 관리 및 인증** 마이크로서비스입�
 
 ## 🏗️ 아키텍처
 
-### 헥사고날 아키텍처 (Ports & Adapters)
+### 헥사고날 아키텍처 + CQRS 패턴
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
@@ -65,10 +69,11 @@ Commerce MSA 플랫폼의 **회원 관리 및 인증** 마이크로서비스입�
 │  ├── out/ : JpaRepository, JwtTokenAdapter, BCryptAdapter   │
 │  └── persistence/ : MemberJpaRepository                     │
 ├─────────────────────────────────────────────────────────────┤
-│  Application Layer (Use Cases)                              │
-│  ├── service/ : AuthApplicationService, MemberService       │
-│  ├── port/in/  : AuthUseCase, MemberUseCase                 │
-│  └── port/out/ : MemberRepository, TokenPort                │
+│  Application Layer (CQRS Use Cases)                         │
+│  ├── service/ : MemberApplicationService                    │
+│  ├── port/in/  : MemberUseCase (Command + Query)            │
+│  ├── port/out/ : MemberCommandPort, MemberQueryPort         │
+│  └── dto/ : Request/Response DTOs                           │
 ├─────────────────────────────────────────────────────────────┤
 │  Domain Layer (Business Logic)                              │
 │  ├── member/ : Member, Email, MemberRole, MemberStatus      │
@@ -76,6 +81,11 @@ Commerce MSA 플랫폼의 **회원 관리 및 인증** 마이크로서비스입�
 │  └── validation/ : 도메인 검증 규칙                             │ 
 └─────────────────────────────────────────────────────────────┘
 ```
+
+**CQRS (Command Query Responsibility Segregation)**:
+- **Command Side**: 회원 생성, 수정, 삭제 등 상태 변경
+- **Query Side**: 회원 검색, 조회 등 데이터 읽기
+- **분리된 포트**: `MemberCommandPort`, `MemberQueryPort`
 
 ### MSA 내에서의 위치
 
@@ -160,9 +170,90 @@ public ResponseEntity<MemberResponse> getMember(
 - 상태 관리: ACTIVE, INACTIVE, SUSPENDED
 - 역할 관리: BUYER, SELLER, ADMIN
 
-### 2. 인증 시스템
+### 2. 회원 검색 🔍
 
-#### 2.1 JWT 기반 로그인 🔐
+#### 2.1 복합 검색 기능
+
+**기능**: 다양한 조건을 통한 회원 검색 및 페이징 처리
+
+**지원하는 검색 조건**:
+```java
+public record MemberSearchRequest(
+    String keyword,          // 통합 검색 (이름, 이메일)
+    String name,            // 이름 검색
+    String email,           // 이메일 검색  
+    MemberStatus memberStatus, // 회원 상태
+    RoleType role,          // 권한 역할
+    int page,               // 페이지 번호
+    int size                // 페이지 크기
+) {}
+```
+
+**검색 특징**:
+- **🔍 키워드 검색**: 이름과 이메일을 동시에 검색
+- **🎯 정확한 필터링**: 상태, 역할별 필터링
+- **📄 페이징 처리**: 대용량 데이터 효율적 처리
+- **🚀 성능 최적화**: Query Cache + 배치 처리
+- **🔗 관계 데이터**: 역할 정보 포함 조회
+
+#### 2.2 검색 쿼리 아키텍처
+
+**쿼리 분리 전략** (대용량 처리 최적화):
+```java
+// 1단계: 조건에 맞는 Member만 조회 (페이징 적용)
+@Query(value = """
+    SELECT DISTINCT m FROM Member m
+    LEFT JOIN m.roles mr 
+    WHERE (:keyword IS NULL OR LOWER(m.name) LIKE LOWER(CONCAT('%', :keyword, '%')))
+    AND (:status IS NULL OR m.status = :status) 
+    AND (:role IS NULL OR EXISTS (
+        SELECT 1 FROM MemberRole subMr 
+        WHERE subMr.member = m AND subMr.roleType = :role
+    ))
+    ORDER BY m.createAt DESC
+    """)
+Page<Member> searchMembers(...);
+
+// 2단계: 해당 Member들의 역할 정보를 배치로 조회
+@Query("SELECT m FROM Member m JOIN FETCH m.roles mr WHERE m.id IN :memberIds")
+List<Member> findMembersWithRoles(@Param("memberIds") List<Long> memberIds);
+```
+
+**성능 최적화**:
+- **메모리 페이징 방지**: 쿼리 분리로 DB 레벨 페이징
+- **N+1 문제 해결**: 배치 조회로 역할 정보 로딩
+- **캐시 활용**: Query Cache + 배치 크기 최적화
+
+#### 2.3 권한 기반 접근 제어
+
+**관리자만 접근 가능**:
+```java
+@GetMapping
+@PreAuthorize("hasRole('ADMIN')")
+public ResponseEntity<MemberPageResponse<MemberSearchResponse>> searchMembers(
+    @ModelAttribute MemberSearchRequest request
+) {
+    // 관리자만 회원 검색 가능
+}
+```
+
+#### 2.4 PostgreSQL 호환성
+
+**Native Query 지원** (JPQL 호환성 문제 해결):
+```sql
+-- PostgreSQL 전용 최적화
+SELECT DISTINCT m.* FROM member m
+LEFT JOIN member_role mr ON m.id = mr.member_id
+WHERE (:keyword IS NULL OR (
+       LOWER(m.name) ILIKE '%' || :keyword || '%' OR 
+       LOWER(m.email) ILIKE '%' || :keyword || '%'))
+AND (:status IS NULL OR m.status::text = :status)
+ORDER BY m.create_at DESC
+```
+
+### 3. 인증 시스템
+
+#### 3.1 JWT 기반 로그인 🔐
 
 **기능**: 이메일/비밀번호 인증 후 JWT 토큰 발급
 
@@ -201,7 +292,7 @@ public ResponseEntity<LoginResponse> login(@RequestBody LoginRequest request) {
 }
 ```
 
-#### 2.2 권한 기반 접근 제어 🛡️
+#### 3.2 권한 기반 접근 제어 🛡️
 
 **역할 체계**:
 ```java
@@ -222,7 +313,7 @@ public enum RoleType {
 | 회원 상태 변경 | ❌ | ❌ | ✅ |
 | 상품 등록 | ❌ | ✅ | ✅ |
 
-#### 2.3 로그인 보안 (브루트포스 방어) 🛡️
+#### 3.3 로그인 보안 (브루트포스 방어) 🛡️
 
 **기능**: IP 기반 로그인 시도 횟수 제한으로 브루트포스 공격 방어
 
@@ -308,7 +399,7 @@ private String getClientIp(HttpServletRequest request) {
 **상태 코드**: `429 Too Many Requests`
 **응답 헤더**: `Retry-After: 900` (초 단위)
 
-#### 2.4 Gateway 연동 🌐
+#### 3.4 Gateway 연동 🌐
 
 **헤더 기반 사용자 정보 전달**:
 
@@ -391,6 +482,56 @@ Authorization: Bearer {accessToken}
 ```
 
 ### 회원 관리 API
+
+#### 회원 검색 (관리자만)
+```http
+GET /members?keyword=김철수&status=ACTIVE&role=BUYER&page=0&size=20
+Authorization: Bearer {accessToken}
+```
+
+**쿼리 파라미터**:
+- `keyword` (optional): 통합 검색 (이름, 이메일)
+- `name` (optional): 이름 검색
+- `email` (optional): 이메일 검색
+- `status` (optional): 회원 상태 (ACTIVE, INACTIVE, SUSPENDED, WITHDRAWN)
+- `role` (optional): 권한 역할 (BUYER, SELLER, ADMIN)
+- `page` (optional): 페이지 번호 (default: 0)
+- `size` (optional): 페이지 크기 (default: 20, max: 100)
+
+**성공 응답 (200 OK)**:
+```json
+{
+  "content": [
+    {
+      "id": 2158078162337996800,
+      "email": "user@example.com",
+      "name": "김철수",
+      "birthDate": "1990-01-01",
+      "gender": "MALE",
+      "status": "ACTIVE",
+      "roles": ["BUYER", "SELLER"],
+      "createdAt": "2025-01-18T10:30:00"
+    }
+  ],
+  "page": 0,
+  "size": 20,
+  "totalElements": 150,
+  "totalPages": 8,
+  "first": true,
+  "last": false,
+  "empty": false
+}
+```
+
+**권한 부족 (403 Forbidden)**:
+```json
+{
+  "success": false,
+  "code": "ACCESS-001",
+  "message": "접근 권한이 없습니다. 관리자만 회원 검색이 가능합니다.",
+  "timestamp": 1705520430000
+}
+```
 
 #### 회원 가입
 ```http
@@ -850,7 +991,7 @@ class AuthControllerBruteForceTest {
 
 ---
 
-## 📊 모니터링
+## 📊 모니터링 & 트레이싱
 
 ### Health Check
 
@@ -897,6 +1038,71 @@ log.info("👤 회원 상태 변경: ID={}, {} → {}", memberId, oldStatus, new
 log.debug("🌐 클라이언트 IP 추출: X-Forwarded-For={}, RemoteAddr={}, 최종IP={}", 
           xForwardedFor, remoteAddr, finalIp);
 ```
+
+### 분산 트레이싱 (Micrometer Tracing)
+
+**트레이싱 설정**:
+```yaml
+# application.yml
+management:
+  tracing:
+    enabled: true
+    sampling:
+      probability: 1.0          # 100% 샘플링 (개발환경)
+  zipkin:
+    tracing:
+      endpoint: http://localhost:9411/api/v2/spans
+```
+
+**트레이스 정보 포함 로그**:
+```yaml
+logging:
+  pattern:
+    level: "%5p [${spring.application.name},%X{traceId:-},%X{spanId:-}]"
+```
+
+**실제 로그 출력**:
+```bash
+INFO [member,68b335a4ae975f2a6c2f0975832beaca,d4c504749c710079] - 🔍 회원 검색 수행
+INFO [member,68b335a4ae975f2a6c2f0975832beaca,76b0eb46505663b7] - ✅ 로그인 성공: email=user@test.com
+```
+
+**자동 트레이스 대상**:
+- **HTTP 요청/응답**: Controller 레벨 자동 추적
+- **데이터베이스 쿼리**: JPA/JDBC 쿼리 실행 시간
+- **외부 API 호출**: Gateway와의 통신
+
+**커스텀 스팬 추가**:
+```java
+@Service
+public class MemberApplicationService {
+    
+    public Page<MemberSearchResponse> searchMembers(MemberSearchRequest request) {
+        // 자동으로 스팬 생성: "MemberApplicationService.searchMembers"
+        
+        // 커스텀 태그 추가
+        Span.current()
+            .setTag("search.keyword", request.keyword())
+            .setTag("search.page", String.valueOf(request.page()))
+            .setTag("search.size", String.valueOf(request.size()));
+            
+        Page<Member> members = memberQueryPort.searchMembers(...);
+        
+        // 결과 정보 추가
+        Span.current()
+            .setTag("search.results", String.valueOf(members.getTotalElements()));
+            
+        return members.map(this::memberToSearchResponse);
+    }
+}
+```
+
+**Zipkin UI에서 확인 가능한 정보**:
+- **요청 흐름**: Gateway → Member Service
+- **실행 시간**: 각 메서드별 소요 시간
+- **DB 쿼리**: 실행된 SQL과 소요 시간  
+- **에러 정보**: 예외 발생 시 스택 트레이스
+- **커스텀 태그**: 비즈니스 정보 (검색 조건, 결과 수 등)
 
 ### 메트릭스
 
@@ -1042,7 +1248,39 @@ Connection refused to PostgreSQL
 3. 방화벽 설정 확인
 ```
 
-#### 4. 브루트포스 차단 관련 문제
+#### 4. PostgreSQL JPQL 호환성 문제
+```bash
+# 증상 1: @Embedded 필드 에러
+"ERROR: function lower(bytea) does not exist"
+
+# 원인
+Hibernate가 @Embedded Email 객체를 bytea로 잘못 매핑
+
+# 해결책
+1. Native Query 사용 (권장)
+@Query(value = "SELECT * FROM member WHERE LOWER(email) LIKE ...", nativeQuery = true)
+
+2. 컬럼 정의 명시
+@Column(columnDefinition = "VARCHAR(150)")
+
+3. toString() 메서드 추가
+@Override public String toString() { return email; }
+
+# 증상 2: Enum 비교 에러
+"No function matches the given name and argument types"
+
+# 원인
+PostgreSQL에서 Enum 타입 비교 시 캐스팅 필요
+
+# 해결책
+1. Native Query에서 캐스팅
+WHERE m.status::text = :status
+
+2. 파라미터를 String으로 변경
+@Param("status") String status
+```
+
+#### 5. 브루트포스 차단 관련 문제
 ```bash
 # 증상 1: 정상 사용자가 차단됨
 "Too many login attempts. IP blocked for 15 minutes."
@@ -1104,6 +1342,13 @@ logging:
 
 ---
 
-**Last Updated**: 2025-08-27  
-**Version**: 1.1.0  
+**Last Updated**: 2025-08-31  
+**Version**: 2.0.0  
 **Maintainer**: Commerce 개발팀
+
+### 🆕 v2.0.0 주요 변경사항
+- ✅ **회원 검색 기능**: 복합 조건 검색 + 페이징 지원  
+- ✅ **CQRS 패턴**: Command/Query 책임 분리
+- ✅ **분산 트레이싱**: Micrometer + Zipkin 통합
+- ✅ **PostgreSQL 호환성**: Native Query 지원
+- ✅ **성능 최적화**: 쿼리 분리 + 배치 로딩

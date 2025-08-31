@@ -84,3 +84,15 @@ Content-Type: application/json
     }
   ]
 }
+
+
+### POST ADMIN 권한 부여
+POST localhost:8000/api/member-service/grant/admin/220486810874200064
+Content-Type: application/json
+Authorization: {{tokenType}} {{accessToken}}
+
+### POST SELLER 권한 부여
+POST localhost:8000/api/member-service/grant/seller/220486810874200064
+Content-Type: application/json
+Authorization: {{tokenType}} {{accessToken}}
+

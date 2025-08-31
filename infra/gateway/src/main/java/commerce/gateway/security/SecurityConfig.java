@@ -67,6 +67,9 @@ public class SecurityConfig {
                                         "/swagger-ui.html"
                                 ).permitAll()
 
+                                // 관리자 전용
+                                .pathMatchers("/api/member-service/grant/**").hasAnyAuthority("ADMIN")
+
                                 // 판매자/구매자 공통
                                 .pathMatchers("/api/member-service/members/**").hasAnyAuthority("BUYER", "SELLER", "ADMIN")
 

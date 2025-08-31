@@ -89,7 +89,7 @@ public class Member extends BaseEntity {
         MemberRole.signUp(this);
     }
 
-    private boolean hasRole(RoleType roleType) {
+    public boolean hasRole(RoleType roleType) {
         return roles.stream().anyMatch(role -> role.getRoleType() == roleType);
     }
 

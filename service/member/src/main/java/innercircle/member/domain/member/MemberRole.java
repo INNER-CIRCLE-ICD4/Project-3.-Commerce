@@ -1,5 +1,6 @@
 package innercircle.member.domain.member;
 
+import innercircle.global.member.MemberErrorCode;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -40,14 +41,19 @@ public class MemberRole extends BaseEntity {
 
     public static MemberRole grantAdminRole(Member member) {
         MemberRole memberAdminRole = createMemberRole(RoleType.ADMIN);
+        if (member.hasRole(RoleType.ADMIN)) {
+            throw new DuplicateRoleException(MemberErrorCode.DUPLICATE_ROLE, "Duplicate Admin Role, MemberId: {}" + member.getId());
+        }
         memberAdminRole.member = member;
         member.getRoles().add(memberAdminRole);
         return memberAdminRole;
     }
 
     public static MemberRole grantSellerRole(Member member) {
-
         MemberRole memberAdminRole = createMemberRole(RoleType.SELLER);
+        if (member.hasRole(RoleType.SELLER)) {
+            throw new DuplicateRoleException(MemberErrorCode.DUPLICATE_ROLE, "Duplicate Seller Role, MemberId: {}" + member.getId());
+        }
         memberAdminRole.member = member;
         member.getRoles().add(memberAdminRole);
         return memberAdminRole;

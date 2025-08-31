@@ -8,6 +8,7 @@ import innercircle.member.application.port.out.MemberQueryPort;
 import innercircle.member.domain.member.Member;
 import innercircle.member.domain.member.MemberDomainService;
 import innercircle.member.domain.member.MemberNotFoundException;
+import innercircle.member.domain.member.MemberRole;
 import innercircle.member.infrastructure.adapter.in.web.member.dto.MemberSearchRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -64,4 +65,23 @@ public class MemberApplicationService implements MemberUseCase {
         return byId.get();
     }
 
+    @Override
+    @Transactional
+    public MemberRole grantAdminRole(Long memberId) {
+        Member member = memberQueryPort.findById(memberId)
+                .orElseThrow(() -> new MemberNotFoundException(MemberErrorCode.MEMBER_NOT_FOUND, "Member Not Found memberId: " + memberId));
+
+        memberCommandPort.save(member);
+        return MemberRole.grantAdminRole(member);
+    }
+
+    @Override
+    @Transactional
+    public MemberRole grantSellerRole(Long memberId) {
+        Member member = memberQueryPort.findById(memberId)
+                .orElseThrow(() -> new MemberNotFoundException(MemberErrorCode.MEMBER_NOT_FOUND, "Member Not Found memberId: " + memberId));
+
+        memberCommandPort.save(member);
+        return MemberRole.grantSellerRole(member);
+    }
 }
