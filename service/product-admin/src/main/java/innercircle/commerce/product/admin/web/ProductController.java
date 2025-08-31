@@ -3,7 +3,7 @@ package innercircle.commerce.product.admin.web;
 import innercircle.commerce.product.admin.application.ImageUploadUseCase;
 import innercircle.commerce.product.admin.application.ProductCreateUseCase;
 import innercircle.commerce.product.admin.application.ProductDeleteUseCase;
-import innercircle.commerce.product.admin.application.ProductInventoryUpdateUseCase;
+import innercircle.commerce.product.admin.application.ProductInventoryFacade;
 import innercircle.commerce.product.admin.application.ProductRetrieveUseCase;
 import innercircle.commerce.product.admin.application.ProductUpdateUseCase;
 import innercircle.commerce.product.admin.application.dto.ProductAdminInfo;
@@ -46,7 +46,7 @@ public class ProductController {
 	private final ProductCreateUseCase productCreateUseCase;
 	private final ProductUpdateUseCase productUpdateUseCase;
 	private final ProductDeleteUseCase productDeleteUseCase;
-	private final ProductInventoryUpdateUseCase productInventoryUpdateUseCase;
+	private final ProductInventoryFacade productInventoryFacade;
 	private final ProductRetrieveUseCase productRetrieveUseCase;
 
 	/**
@@ -87,17 +87,17 @@ public class ProductController {
 	/**
 	 * 상품 정보를 수정합니다. (기본 정보 + 이미지 변경사항)
 	 *
-	 * @param id 상품 ID
+	 * @param id      상품 ID
 	 * @param request 상품 수정 요청
 	 * @return 수정된 상품 정보
 	 */
 	@PatchMapping("/{id}")
-	public ResponseEntity<ApiResponse<ProductUpdateResponse>> updateProduct(
+	public ResponseEntity<ApiResponse<ProductUpdateResponse>> updateProduct (
 			@PathVariable Long id,
 			@Valid @RequestBody ProductUpdateRequest request
 	) {
 		var command = request.toCommand(id);
-		
+
 		Product updatedProduct = productUpdateUseCase.updateProduct(command);
 		ProductUpdateResponse response = ProductUpdateResponse.from(updatedProduct);
 
@@ -111,7 +111,7 @@ public class ProductController {
 	 * @return 삭제 완료 응답
 	 */
 	@DeleteMapping("/{id}")
-	public ResponseEntity<Void> deleteProduct(@PathVariable Long id) {
+	public ResponseEntity<Void> deleteProduct (@PathVariable Long id) {
 		productDeleteUseCase.deleteProduct(id);
 		return ResponseEntity.noContent().build();
 	}
@@ -119,40 +119,39 @@ public class ProductController {
 	/**
 	 * 상품 재고를 조정합니다.
 	 *
-	 * @param id 상품 ID
+	 * @param id      상품 ID
 	 * @param request 재고 조정 요청 (양수: 증가, 음수: 감소)
-	 * @return 조정된 재고 정보
+	 * @return 재고 조정 완료 응답
 	 */
 	@PatchMapping("/{id}/inventory")
-	public ResponseEntity<ApiResponse<ProductInventoryUpdateResponse>> updateProductInventory(
+	public ResponseEntity<ApiResponse<Void>> updateProductInventory (
 			@PathVariable Long id,
 			@Valid @RequestBody ProductInventoryUpdateRequest request
-	) {
-		Product updatedProduct = productInventoryUpdateUseCase.updateStock(request.toCommand(id));
-		ProductInventoryUpdateResponse response = ProductInventoryUpdateResponse.from(updatedProduct);
+	) throws InterruptedException {
+		productInventoryFacade.updateStockWithRetry(request.toCommand(id));
 
-		return ResponseEntity.ok(ApiResponse.success(response));
+		return ResponseEntity.ok(ApiResponse.success());
 	}
 
 	/**
 	 * 상품 목록을 조회합니다.
 	 *
-	 * @param status 상품 상태 (선택사항)
+	 * @param status     상품 상태 (선택사항)
 	 * @param categoryId 카테고리 ID (선택사항)
-	 * @param pageable 페이징 정보
+	 * @param pageable   페이징 정보
 	 * @return 상품 목록
 	 */
 	@GetMapping
-	public ResponseEntity<ApiResponse<Page<ProductListResponse>>> getProducts(
+	public ResponseEntity<ApiResponse<Page<ProductListResponse>>> getProducts (
 			@RequestParam(required = false) ProductStatus status,
 			@RequestParam(required = false) Long categoryId,
 			@PageableDefault(size = 20) Pageable pageable
 	) {
 		ProductListQuery query = ProductListQuery.builder()
-				.status(status)
-				.categoryId(categoryId)
-				.pageable(pageable)
-				.build();
+												 .status(status)
+												 .categoryId(categoryId)
+												 .pageable(pageable)
+												 .build();
 
 		Page<ProductListAdminInfo> productInfos = productRetrieveUseCase.getProducts(query);
 		Page<ProductListResponse> responses = productInfos.map(ProductListResponse::from);
@@ -167,7 +166,7 @@ public class ProductController {
 	 * @return 상품 상세 정보
 	 */
 	@GetMapping("/{id}")
-	public ResponseEntity<ApiResponse<ProductDetailResponse>> getProduct(@PathVariable Long id) {
+	public ResponseEntity<ApiResponse<ProductDetailResponse>> getProduct (@PathVariable Long id) {
 		ProductAdminInfo productInfo = productRetrieveUseCase.getProduct(id);
 		ProductDetailResponse response = ProductDetailResponse.from(productInfo);
 
