@@ -13,7 +13,7 @@ import java.time.LocalDateTime;
  * 주문 결제 정보 엔티티 (order_payment 테이블)
  */
 @Entity
-@Table(name = "order_payment", schema = "commerce")
+@Table(name = "order_payment", schema = "orders")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class PaymentEntity {

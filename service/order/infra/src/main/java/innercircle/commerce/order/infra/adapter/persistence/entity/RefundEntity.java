@@ -16,7 +16,7 @@ import java.time.LocalDateTime;
  * 주문 환불/반품 정보 엔티티 (order_refund 테이블)
  */
 @Entity
-@Table(name = "order_refund", schema = "commerce")
+@Table(name = "order_refund", schema = "orders")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class RefundEntity {

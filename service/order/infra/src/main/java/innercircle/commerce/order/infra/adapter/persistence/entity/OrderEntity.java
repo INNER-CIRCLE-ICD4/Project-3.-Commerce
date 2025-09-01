@@ -15,7 +15,7 @@ import java.util.List;
  * 주문 기본 정보 엔티티 (order 테이블)
  */
 @Entity
-@Table(name = "order", schema = "commerce")
+@Table(name = "order", schema = "orders")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class OrderEntity {

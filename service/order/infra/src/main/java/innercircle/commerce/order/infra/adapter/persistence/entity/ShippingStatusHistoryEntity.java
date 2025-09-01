@@ -12,7 +12,7 @@ import java.time.LocalDateTime;
  * 배송 상태 이력 엔티티 (shipping_status_history 테이블)
  */
 @Entity
-@Table(name = "shipping_status_history", schema = "commerce")
+@Table(name = "shipping_status_history", schema = "orders")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class ShippingStatusHistoryEntity {

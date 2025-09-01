@@ -12,7 +12,7 @@ import java.time.LocalDateTime;
  * 배송 정보 엔티티 (shipping 테이블)
  */
 @Entity
-@Table(name = "shipping", schema = "commerce")
+@Table(name = "shipping", schema = "orders")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class ShippingEntity {

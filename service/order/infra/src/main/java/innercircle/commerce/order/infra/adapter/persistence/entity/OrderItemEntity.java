@@ -16,7 +16,7 @@ import java.time.LocalDateTime;
 @Entity
 @Table(
     name = "order_item",
-    schema = "commerce",
+    schema = "orders",
     indexes = {
         @Index(name = "idx_order_items_order_id", columnList = "order_id"),
         @Index(name = "idx_order_items_product_id", columnList = "product_id")
