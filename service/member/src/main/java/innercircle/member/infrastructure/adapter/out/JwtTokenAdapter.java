@@ -5,6 +5,7 @@ import innercircle.member.domain.auth.AuthToken;
 import innercircle.member.domain.auth.TokenType;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
+import io.micrometer.core.instrument.binder.jvm.ClassLoaderMetrics;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -93,8 +94,8 @@ public class JwtTokenAdapter implements TokenPort {
     @Override
     public List<String> getRolesFromToken(String token) {
         Claims claims = getClaimsFromToken(token);
-        String roles = claims.get("roles", String.class);
-        return List.of(roles.split(","));
+        List<?> roles = claims.get("roles", List.class);
+        return roles.stream().map(Object::toString).toList();
     }
 
     @Override
@@ -118,7 +119,7 @@ public class JwtTokenAdapter implements TokenPort {
         return Jwts.builder()
                 .subject(userId.toString())
                 .claim("email", email)
-                .claim("roles", String.join(",", roles))
+                .claim("roles", roles.toArray(new String[0]))
                 .claim("type", tokenType.name())
                 .issuedAt(now)
                 .id(jti)

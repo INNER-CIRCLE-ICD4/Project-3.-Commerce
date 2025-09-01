@@ -49,7 +49,7 @@ class MemberDomainServiceTest {
     void 이메일_중복_검증_실패() {
         String mail = "asdz453@gmail.com";
 
-        when(memberQueryPort.findByEmailUsingNaturalId(any(Email.class))).thenReturn(Optional.of(Member.create("asdz453@gmail.com", "노성웅", "password1234", "2025-07-21", "MAIL")));
+        when(memberQueryPort.findByEmailUsingNaturalId(any(Email.class))).thenReturn(Optional.of(Member.create("asdz453@gmail.com", "노성웅", "password1234", "2025-07-21", "MALE")));
 
         assertThatThrownBy(() -> memberDomainService.existsByEmail(mail))
                 .isInstanceOf(DuplicateRequestException.class)

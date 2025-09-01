@@ -1,6 +1,36 @@
+server:
+  port: 8002
+
 spring:
   profiles:
     active: dev
   config:
     import:
       - classpath:application-core.yml
+  datasource:
+    url: jdbc:postgresql://158.179.172.168:5433/postgres
+    driver-class-name: org.postgresql.Driver
+    username: postgres
+    password: commerce1234!
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+
+cloud:
+  aws:
+    credentials:
+      access-key: ${S3_ACCESS_KEY}
+      secret-key: ${S3_SECRET_KEY}
+    region:
+      static: ap-southeast-2
+    s3:
+      bucket: innercircle-commerce1
+      base-url: s3://innercircle-commerce1
+
+logging:
+  level:
+    innercircle.commerce.product.api: debug

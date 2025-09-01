@@ -1,3 +1,6 @@
+server:
+  port: 8001
+
 spring:
   profiles:
     active: dev
@@ -39,3 +42,16 @@ cloud:
 app:
   image:
     max-file-size: 5242880 # 5MB
+
+image:
+  deletion:
+    delay-days: 30
+    scheduler:
+      cron: "0 0 4 * * *"  # 매일 새벽 4시
+      batch-size: 100
+      max-retries: 3
+      retry-delay-hours: 1
+    cleanup:
+      cron: "0 0 2 * * SUN"  # 매주 일요일 새벽 2시
+    stats:
+      cron: "0 0 6 * * *"  # 매일 새벽 6시

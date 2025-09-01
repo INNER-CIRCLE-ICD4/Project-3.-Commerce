@@ -3,23 +3,31 @@ package innercircle.commerce.product.admin.web;
 import innercircle.commerce.product.admin.application.ImageUploadUseCase;
 import innercircle.commerce.product.admin.application.ProductCreateUseCase;
 import innercircle.commerce.product.admin.application.ProductDeleteUseCase;
+import innercircle.commerce.product.admin.application.ProductStockAdjustUseCase;
+import innercircle.commerce.product.admin.application.ProductRetrieveUseCase;
 import innercircle.commerce.product.admin.application.ProductUpdateUseCase;
-import innercircle.commerce.product.admin.application.dto.ProductUpdateCommand;
+import innercircle.commerce.product.admin.application.dto.ProductAdminInfo;
+import innercircle.commerce.product.admin.application.dto.ProductListAdminInfo;
+import innercircle.commerce.product.admin.application.dto.ProductListQuery;
 import innercircle.commerce.product.admin.web.dto.ApiResponse;
 import innercircle.commerce.product.admin.web.dto.ImageUploadResponse;
 import innercircle.commerce.product.admin.web.dto.ProductCreateRequest;
 import innercircle.commerce.product.admin.web.dto.ProductCreateResponse;
-import innercircle.commerce.product.admin.web.dto.ProductImageAddRequest;
-import innercircle.commerce.product.admin.web.dto.ProductImageUpdateResponse;
+import innercircle.commerce.product.admin.web.dto.ProductDetailResponse;
+import innercircle.commerce.product.admin.web.dto.ProductListResponse;
+import innercircle.commerce.product.admin.web.dto.ProductStockAdjustRequest;
 import innercircle.commerce.product.admin.web.dto.ProductUpdateRequest;
 import innercircle.commerce.product.admin.web.dto.ProductUpdateResponse;
 import innercircle.commerce.product.core.domain.Product;
-import innercircle.commerce.product.core.domain.ProductImage;
+import innercircle.commerce.product.core.domain.ProductStatus;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 
 import jakarta.validation.Valid;
 
@@ -37,6 +45,8 @@ public class ProductController {
 	private final ProductCreateUseCase productCreateUseCase;
 	private final ProductUpdateUseCase productUpdateUseCase;
 	private final ProductDeleteUseCase productDeleteUseCase;
+	private final ProductStockAdjustUseCase productStockAdjustUseCase;
+	private final ProductRetrieveUseCase productRetrieveUseCase;
 
 	/**
 	 * 상품을 등록합니다.
@@ -76,17 +86,17 @@ public class ProductController {
 	/**
 	 * 상품 정보를 수정합니다. (기본 정보 + 이미지 변경사항)
 	 *
-	 * @param id 상품 ID
+	 * @param id      상품 ID
 	 * @param request 상품 수정 요청
 	 * @return 수정된 상품 정보
 	 */
 	@PatchMapping("/{id}")
-	public ResponseEntity<ApiResponse<ProductUpdateResponse>> updateProduct(
+	public ResponseEntity<ApiResponse<ProductUpdateResponse>> updateProduct (
 			@PathVariable Long id,
 			@Valid @RequestBody ProductUpdateRequest request
 	) {
 		var command = request.toCommand(id);
-		
+
 		Product updatedProduct = productUpdateUseCase.updateProduct(command);
 		ProductUpdateResponse response = ProductUpdateResponse.from(updatedProduct);
 
@@ -100,8 +110,67 @@ public class ProductController {
 	 * @return 삭제 완료 응답
 	 */
 	@DeleteMapping("/{id}")
-	public ResponseEntity<Void> deleteProduct(@PathVariable Long id) {
+	public ResponseEntity<Void> deleteProduct (@PathVariable Long id) {
 		productDeleteUseCase.deleteProduct(id);
 		return ResponseEntity.noContent().build();
+	}
+
+	/**
+	 * 상품 재고를 절대값으로 조정합니다.
+	 *
+	 * @param id 상품 ID
+	 * @param request 재고 조정 요청 (절대값)
+	 * @return 조정된 상품 정보
+	 */
+	@PatchMapping("/{id}/stock")
+	public ResponseEntity<ApiResponse<ProductDetailResponse>> adjustProductStock (
+			@PathVariable Long id,
+			@Valid @RequestBody ProductStockAdjustRequest request
+	) {
+		ProductAdminInfo productInfo = productStockAdjustUseCase.adjustStock(request.toCommand(id));
+		ProductDetailResponse response = ProductDetailResponse.from(productInfo);
+		
+		return ResponseEntity.ok(ApiResponse.success(response));
+	}
+
+
+	/**
+	 * 상품 목록을 조회합니다.
+	 *
+	 * @param status     상품 상태 (선택사항)
+	 * @param categoryId 카테고리 ID (선택사항)
+	 * @param pageable   페이징 정보
+	 * @return 상품 목록
+	 */
+	@GetMapping
+	public ResponseEntity<ApiResponse<Page<ProductListResponse>>> getProducts (
+			@RequestParam(required = false) ProductStatus status,
+			@RequestParam(required = false) Long categoryId,
+			@PageableDefault(size = 20) Pageable pageable
+	) {
+		ProductListQuery query = ProductListQuery.builder()
+												 .status(status)
+												 .categoryId(categoryId)
+												 .pageable(pageable)
+												 .build();
+
+		Page<ProductListAdminInfo> productInfos = productRetrieveUseCase.getProducts(query);
+		Page<ProductListResponse> responses = productInfos.map(ProductListResponse::from);
+
+		return ResponseEntity.ok(ApiResponse.success(responses));
+	}
+
+	/**
+	 * 상품 상세 정보를 조회합니다.
+	 *
+	 * @param id 상품 ID
+	 * @return 상품 상세 정보
+	 */
+	@GetMapping("/{id}")
+	public ResponseEntity<ApiResponse<ProductDetailResponse>> getProduct (@PathVariable Long id) {
+		ProductAdminInfo productInfo = productRetrieveUseCase.getProduct(id);
+		ProductDetailResponse response = ProductDetailResponse.from(productInfo);
+
+		return ResponseEntity.ok(ApiResponse.success(response));
 	}
 }

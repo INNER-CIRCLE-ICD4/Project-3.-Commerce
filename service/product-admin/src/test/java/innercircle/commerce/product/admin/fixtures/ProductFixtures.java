@@ -120,4 +120,26 @@ public class ProductFixtures {
 		product.delete(); // 삭제 상태로 변경
 		return product;
 	}
+
+	/**
+	 * 테스트용 - 저장된 상품을 시뮬레이션 (version이 있는 상품)
+	 */
+	public static Product createUpdatedProduct() {
+		return Product.restore(
+				1L, // ID
+				VALID_NAME,
+				VALID_CATEGORY_ID,
+				VALID_BRAND_ID,
+				VALID_BASE_PRICE,
+				VALID_STOCK,
+				1L, // version
+				null, // options
+				null, // images
+				VALID_DETAIL_CONTENT,
+				innercircle.commerce.product.core.domain.SaleType.NEW,
+				innercircle.commerce.product.core.domain.ProductStatus.SALE,
+				java.time.LocalDateTime.now().minusDays(1), // createdAt
+				java.time.LocalDateTime.now() // updatedAt
+		);
+	}
 }

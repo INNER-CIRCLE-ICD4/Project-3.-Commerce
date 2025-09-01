@@ -77,7 +77,7 @@ public class JwtTokenInfo {
     @Override
     public String toString() {
         return "JwtTokenInfo{" +
-                "userId=" + userId +
+                "memberId=" + userId +
                 ", email='" + email + '\'' +
                 ", roles=" + roles +
                 ", type=" + type +

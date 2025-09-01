@@ -7,7 +7,7 @@ import java.util.regex.Pattern;
 
 @Embeddable
 public record Email(
-        @Column(length = 150, nullable = false, name = "email") String email
+        @Column(length = 150, nullable = false, name = "email", columnDefinition = "varchar(100)") String email
 ) {
 
     private static final Pattern EMAIL_PATTERN =

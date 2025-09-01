@@ -10,8 +10,6 @@ import innercircle.commerce.product.core.domain.ProductStatus;
 import innercircle.commerce.product.core.domain.SaleType;
 import innercircle.commerce.product.infra.config.InfraConfig;
 import innercircle.commerce.product.infra.entity.ProductJpaEntity;
-import innercircle.commerce.product.infra.repository.BrandRepositoryAdapter;
-import innercircle.commerce.product.infra.repository.CategoryRepositoryAdapter;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -57,19 +55,6 @@ class ProductRepositoryImplTest {
 		entityManager.clear();
 	}
 
-	private Product createAndSaveProduct(String name) {
-		Product product = Product.create(
-				name,
-				savedCategory.getId(),
-				savedBrand.getId(),
-				15000,
-				100,
-				Collections.emptyList(),
-				"상품 상세 설명"
-		);
-		return productRepository.save(product);
-	}
-
 	@Nested
 	@DisplayName("상품 저장")
 	class Save {
@@ -99,6 +84,7 @@ class ProductRepositoryImplTest {
 			assertThat(savedProduct.getBrandId()).isEqualTo(savedBrand.getId());
 			assertThat(savedProduct.getPrice()).isEqualTo(15000);
 			assertThat(savedProduct.getStock()).isEqualTo(100);
+			assertThat(savedProduct.getVersion()).isEqualTo(0L);
 			assertThat(savedProduct.getDetailContent()).isEqualTo("상품 상세 설명");
 			assertThat(savedProduct.getStatus()).isEqualTo(ProductStatus.SALE);
 			assertThat(savedProduct.getSaleType()).isEqualTo(SaleType.NEW);
@@ -114,20 +100,32 @@ class ProductRepositoryImplTest {
 		@DisplayName("기존 상품을 업데이트할 수 있다.")
 		void 기존_상품_업데이트 () {
 			// given
-			Product savedProduct = createAndSaveProduct("원본 상품");
+			Product product = Product.create(
+					"원본 상품",
+					savedCategory.getId(),
+					savedBrand.getId(),
+					15000,
+					100,
+					Collections.emptyList(),
+					"상품 상세 설명"
+			);
+			Product savedProduct = productRepository.save(product);
 			entityManager.flush();
 			entityManager.clear();
 
-			savedProduct.update("수정된 상품", 20000, "수정된 설명");
+			// 최신 상태로 다시 조회
+			Product retrievedProduct = productRepository.findById(savedProduct.getId()).orElseThrow();
+			retrievedProduct.update("수정된 상품", 20000, "수정된 설명");
 
 			// when
-			Product updatedProduct = productRepository.save(savedProduct);
+			Product updatedProduct = productRepository.save(retrievedProduct);
 
 			// then
 			assertThat(updatedProduct.getId()).isEqualTo(savedProduct.getId());
 			assertThat(updatedProduct.getName()).isEqualTo("수정된 상품");
 			assertThat(updatedProduct.getPrice()).isEqualTo(20000);
 			assertThat(updatedProduct.getDetailContent()).isEqualTo("수정된 설명");
+			assertThat(updatedProduct.getVersion()).isEqualTo(1L); // version 증가 확인
 
 			ProductJpaEntity foundEntity = entityManager.find(ProductJpaEntity.class, updatedProduct.getId());
 			assertThat(foundEntity.getName()).isEqualTo("수정된 상품");
@@ -143,7 +141,16 @@ class ProductRepositoryImplTest {
 		@DisplayName("존재하는 상품을 ID로 조회할 수 있다.")
 		void 존재하는_상품_ID_조회 () {
 			// given
-			Product savedProduct = createAndSaveProduct("조회 테스트 상품");
+			Product product = Product.create(
+					"조회 테스트 상품",
+					savedCategory.getId(),
+					savedBrand.getId(),
+					15000,
+					100,
+					Collections.emptyList(),
+					"상품 상세 설명"
+			);
+			Product savedProduct = productRepository.save(product);
 			entityManager.flush();
 			entityManager.clear();
 
@@ -157,6 +164,7 @@ class ProductRepositoryImplTest {
 			assertThat(foundProduct.getName()).isEqualTo("조회 테스트 상품");
 			assertThat(foundProduct.getCategoryId()).isEqualTo(savedCategory.getId());
 			assertThat(foundProduct.getBrandId()).isEqualTo(savedBrand.getId());
+			assertThat(foundProduct.getVersion()).isEqualTo(0L);
 		}
 
 		@Test
@@ -178,11 +186,20 @@ class ProductRepositoryImplTest {
 		@DisplayName("존재하는 상품명인 경우 true를 반환한다.")
 		void 존재하는_상품명_확인 () {
 			// given
-			createAndSaveProduct("중복 체크 상품");
-			entityManager.flush();
+			String uniqueProductName = "중복체크상품_" + System.nanoTime();
+			Product product = Product.create(
+					uniqueProductName,
+					savedCategory.getId(),
+					savedBrand.getId(),
+					15000,
+					100,
+					Collections.emptyList(),
+					"상품 상세 설명"
+			);
+			productRepository.save(product);
 
 			// when
-			boolean exists = productRepository.existsByName("중복 체크 상품");
+			boolean exists = productRepository.existsByName(uniqueProductName);
 
 			// then
 			assertThat(exists).isTrue();
@@ -197,12 +214,32 @@ class ProductRepositoryImplTest {
 		@DisplayName("특정 ID를 제외하고 같은 이름의 상품이 존재하는 경우 true를 반환한다.")
 		void 특정_ID_제외_중복_상품명_존재 () {
 			// given
-			createAndSaveProduct("동일 이름 상품");
-			Product savedProduct2 = createAndSaveProduct("동일 이름 상품");
-			entityManager.flush();
+			String uniqueProductName = "동일이름상품_" + System.nanoTime();
+			
+			Product product1 = Product.create(
+					uniqueProductName,
+					savedCategory.getId(),
+					savedBrand.getId(),
+					15000,
+					100,
+					Collections.emptyList(),
+					"상품 상세 설명"
+			);
+			productRepository.save(product1);
+			
+			Product product2 = Product.create(
+					uniqueProductName,
+					savedCategory.getId(),
+					savedBrand.getId(),
+					16000,
+					50,
+					Collections.emptyList(),
+					"다른 상품 상세 설명"
+			);
+			Product savedProduct2 = productRepository.save(product2);
 
 			// when
-			boolean exists = productRepository.existsByNameAndIdNot("동일 이름 상품", savedProduct2.getId());
+			boolean exists = productRepository.existsByNameAndIdNot(uniqueProductName, savedProduct2.getId());
 
 			// then
 			assertThat(exists).isTrue();

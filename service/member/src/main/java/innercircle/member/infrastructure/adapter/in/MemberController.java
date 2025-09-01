@@ -2,14 +2,14 @@ package innercircle.member.infrastructure.adapter.in;
 
 import innercircle.common.AuthenticatedUser;
 import innercircle.common.CurrentUser;
-import innercircle.member.infrastructure.adapter.in.web.member.dto.MemberCreateRequest;
-import innercircle.member.infrastructure.adapter.in.web.member.dto.MemberCreateResponse;
+import innercircle.member.infrastructure.adapter.in.web.member.dto.*;
 import innercircle.member.application.port.in.MemberUseCase;
 import innercircle.member.domain.member.Member;
 import innercircle.member.domain.member.MemberStatus;
 import innercircle.member.infrastructure.adapter.in.web.member.mapper.MemberWebMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -19,7 +19,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @RestController
-@RequestMapping("/members")
+@RequestMapping("/api/v1/members")
 @RequiredArgsConstructor
 @Slf4j
 public class MemberController {
@@ -39,7 +39,20 @@ public class MemberController {
                 .body(memberWebMapper.entityToCreateResponse(member));
     }
 
+    @GetMapping
+    public ResponseEntity<Page<MemberSearchResponse>> retrieveMember(@ModelAttribute MemberSearchRequest request) {
+        //todo 반환 타입을 Custom 타입으로 만들기
+        Page<Member> members = memberUseCase.searchMembers(request);
+        return ResponseEntity.ok().body(memberWebMapper.entityToSearchResponse(members));
+    }
+
     @GetMapping("/{memberId}")
+    public ResponseEntity<MemberDetailResponse> retrieveMember(@PathVariable Long memberId) {
+        Member member = memberUseCase.findByMemberId(memberId);
+        return ResponseEntity.ok(memberWebMapper.entityToDetailResponse(member));
+    }
+
+    @GetMapping("/test")
     public ResponseEntity<MemberCreateResponse> getMember(@PathVariable Long memberId,
                                                           @CurrentUser AuthenticatedUser authenticatedUser) {
         // 🔍 헤더 정보 로깅
@@ -60,4 +73,5 @@ public class MemberController {
                 List.of("BUYER"))
         );
     }
+
 }
