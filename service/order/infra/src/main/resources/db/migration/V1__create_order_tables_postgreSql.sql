@@ -3,10 +3,10 @@
 -- PostgreSQL DDL for Order Domain Tables (Entity 코드 기반)
 
 -- Create schema if not exists
-CREATE SCHEMA IF NOT EXISTS commerce;
+CREATE SCHEMA IF NOT EXISTS orders;
 
 -- Set search path for this migration
-SET search_path TO commerce, public;
+SET search_path TO orders, public;
 
 -- =====================================================================
 -- 1. ORDER TABLE (OrderEntity.java 기반)
