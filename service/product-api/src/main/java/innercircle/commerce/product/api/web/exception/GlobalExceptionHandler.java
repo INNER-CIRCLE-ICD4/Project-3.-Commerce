@@ -1,14 +1,12 @@
-package innercircle.commerce.product.admin.web.exception;
+package innercircle.commerce.product.api.web.exception;
 
-import innercircle.commerce.product.admin.application.exception.DuplicateProductNameException;
-import innercircle.commerce.product.admin.application.exception.InvalidBrandException;
-import innercircle.commerce.product.admin.application.exception.InvalidCategoryException;
-import innercircle.commerce.product.admin.application.exception.InvalidImageFileException;
-import innercircle.commerce.product.admin.application.exception.NotFoundTempImageException;
-import innercircle.commerce.product.admin.application.exception.ProductImageUploadInProgressException;
-import innercircle.commerce.product.admin.application.exception.ProductNotFoundException;
-import innercircle.commerce.product.admin.application.exception.StockConflictException;
-import innercircle.commerce.product.admin.web.dto.ApiResponse;
+import innercircle.commerce.product.api.application.exception.DuplicateProductNameException;
+import innercircle.commerce.product.api.application.exception.InvalidBrandException;
+import innercircle.commerce.product.api.application.exception.InvalidImageFileException;
+import innercircle.commerce.product.api.application.exception.ProductImageUploadInProgressException;
+import innercircle.commerce.product.api.application.exception.ProductNotFoundException;
+import innercircle.commerce.product.api.application.exception.StockConflictException;
+import innercircle.commerce.product.api.web.dto.ApiResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindException;
@@ -34,24 +32,6 @@ public class GlobalExceptionHandler {
 		return buildErrorResponseEntity(ErrorCode.INVALID_BRAND_ID, e.getMessage());
 	}
 
-	@ExceptionHandler(InvalidCategoryException.class)
-	public ResponseEntity<ApiResponse<Void>> handleInvalidCategory(InvalidCategoryException e) {
-		log.warn("유효하지 않은 카테고리 ID: {}", e.getMessage());
-		return buildErrorResponseEntity(ErrorCode.INVALID_CATEGORY_ID, e.getMessage());
-	}
-
-	@ExceptionHandler(NotFoundTempImageException.class)
-	public ResponseEntity<ApiResponse<Void>> handleNotFoundTempImage(NotFoundTempImageException e) {
-		log.warn("임시 이미지 찾을 수 없음: {}", e.getMessage());
-		return buildErrorResponseEntity(ErrorCode.NOT_FOUND_TEMP_IMAGE, e.getMessage());
-	}
-
-	@ExceptionHandler(ProductNotFoundException.class)
-	public ResponseEntity<ApiResponse<Void>> handleProductNotFound(ProductNotFoundException e) {
-		log.warn("상품을 찾을 수 없음: {}", e.getMessage());
-		return buildErrorResponseEntity(ErrorCode.PRODUCT_NOT_FOUND, e.getMessage());
-	}
-
 	@ExceptionHandler(InvalidImageFileException.class)
 	public ResponseEntity<ApiResponse<Void>> handleInvalidImageFile(InvalidImageFileException e) {
 		log.warn("유효하지 않은 이미지 파일: {}", e.getMessage());
@@ -62,6 +42,12 @@ public class GlobalExceptionHandler {
 	public ResponseEntity<ApiResponse<Void>> handleImageUploadInProgress(ProductImageUploadInProgressException e) {
 		log.warn("이미지 업로드 진행 중: {}", e.getMessage());
 		return buildErrorResponseEntity(ErrorCode.IMAGE_UPLOAD_IN_PROGRESS);
+	}
+
+	@ExceptionHandler(ProductNotFoundException.class)
+	public ResponseEntity<ApiResponse<Void>> handleProductNotFound(ProductNotFoundException e) {
+		log.warn("상품을 찾을 수 없음: {}", e.getMessage());
+		return buildErrorResponseEntity(ErrorCode.PRODUCT_NOT_FOUND, e.getMessage());
 	}
 
 	@ExceptionHandler(StockConflictException.class)
