@@ -1,7 +1,6 @@
 package innercircle.commerce.product.admin.application.dto;
 
 import innercircle.commerce.product.core.domain.Product;
-import innercircle.commerce.product.core.domain.ProductImage;
 import innercircle.commerce.product.core.domain.ProductOption;
 import org.springframework.util.CollectionUtils;
 
