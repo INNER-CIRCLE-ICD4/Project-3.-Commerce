@@ -1,4 +1,3 @@
-
 # 회원가입 및 인증 기능
 ### POST 회원가입 - Gateway
 POST http://localhost:8000/api/member-service/members
@@ -31,6 +30,16 @@ Content-Type: application/json
     client.log("Access Token: " + response.body.accessToken);
     client.log("Token Type: " + (response.body.tokenType || "Bearer"));
 %}
+
+
+### POST 로그인 - Gateway (실패
+POST http://localhost:8000/api/member-service/auth/login
+Content-Type: application/json
+
+{
+  "email": "sw.noh@gmail.com",
+  "password": "Commerce12341"
+}
 
 ### GET 회원 조회
 GET http://localhost:8000/api/member-service/members/220229981992341504
