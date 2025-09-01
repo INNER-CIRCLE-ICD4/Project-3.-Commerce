@@ -1,11 +1,11 @@
-package innercircle.commerce.product.admin.application.dto;
+package innercircle.commerce.product.api.application.dto;
 
-import innercircle.commerce.product.admin.web.dto.StockOperationType;
+import innercircle.commerce.product.api.web.dto.StockOperationType;
 import lombok.Builder;
 import lombok.Getter;
 
 /**
- * 상품 재고 조정을 위한 명령 객체
+ * 상품 재고 증감을 위한 명령 객체
  * 
  * 상품의 재고를 증가 또는 감소시키기 위한 필요한 정보를 담고 있습니다.
  *

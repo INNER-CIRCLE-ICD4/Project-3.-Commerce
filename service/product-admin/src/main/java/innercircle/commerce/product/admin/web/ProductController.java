@@ -3,7 +3,7 @@ package innercircle.commerce.product.admin.web;
 import innercircle.commerce.product.admin.application.ImageUploadUseCase;
 import innercircle.commerce.product.admin.application.ProductCreateUseCase;
 import innercircle.commerce.product.admin.application.ProductDeleteUseCase;
-import innercircle.commerce.product.admin.application.ProductInventoryFacade;
+import innercircle.commerce.product.admin.application.ProductStockAdjustUseCase;
 import innercircle.commerce.product.admin.application.ProductRetrieveUseCase;
 import innercircle.commerce.product.admin.application.ProductUpdateUseCase;
 import innercircle.commerce.product.admin.application.dto.ProductAdminInfo;
@@ -14,9 +14,8 @@ import innercircle.commerce.product.admin.web.dto.ImageUploadResponse;
 import innercircle.commerce.product.admin.web.dto.ProductCreateRequest;
 import innercircle.commerce.product.admin.web.dto.ProductCreateResponse;
 import innercircle.commerce.product.admin.web.dto.ProductDetailResponse;
-import innercircle.commerce.product.admin.web.dto.ProductInventoryUpdateRequest;
-import innercircle.commerce.product.admin.web.dto.ProductInventoryUpdateResponse;
 import innercircle.commerce.product.admin.web.dto.ProductListResponse;
+import innercircle.commerce.product.admin.web.dto.ProductStockAdjustRequest;
 import innercircle.commerce.product.admin.web.dto.ProductUpdateRequest;
 import innercircle.commerce.product.admin.web.dto.ProductUpdateResponse;
 import innercircle.commerce.product.core.domain.Product;
@@ -46,7 +45,7 @@ public class ProductController {
 	private final ProductCreateUseCase productCreateUseCase;
 	private final ProductUpdateUseCase productUpdateUseCase;
 	private final ProductDeleteUseCase productDeleteUseCase;
-	private final ProductInventoryFacade productInventoryFacade;
+	private final ProductStockAdjustUseCase productStockAdjustUseCase;
 	private final ProductRetrieveUseCase productRetrieveUseCase;
 
 	/**
@@ -117,21 +116,23 @@ public class ProductController {
 	}
 
 	/**
-	 * 상품 재고를 조정합니다.
+	 * 상품 재고를 절대값으로 조정합니다.
 	 *
-	 * @param id      상품 ID
-	 * @param request 재고 조정 요청 (양수: 증가, 음수: 감소)
-	 * @return 재고 조정 완료 응답
+	 * @param id 상품 ID
+	 * @param request 재고 조정 요청 (절대값)
+	 * @return 조정된 상품 정보
 	 */
-	@PatchMapping("/{id}/inventory")
-	public ResponseEntity<ApiResponse<Void>> updateProductInventory (
+	@PatchMapping("/{id}/stock")
+	public ResponseEntity<ApiResponse<ProductDetailResponse>> adjustProductStock (
 			@PathVariable Long id,
-			@Valid @RequestBody ProductInventoryUpdateRequest request
-	) throws InterruptedException {
-		productInventoryFacade.updateStockWithRetry(request.toCommand(id));
-
-		return ResponseEntity.ok(ApiResponse.success());
+			@Valid @RequestBody ProductStockAdjustRequest request
+	) {
+		ProductAdminInfo productInfo = productStockAdjustUseCase.adjustStock(request.toCommand(id));
+		ProductDetailResponse response = ProductDetailResponse.from(productInfo);
+		
+		return ResponseEntity.ok(ApiResponse.success(response));
 	}
+
 
 	/**
 	 * 상품 목록을 조회합니다.

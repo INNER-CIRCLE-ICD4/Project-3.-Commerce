@@ -1,8 +1,8 @@
-package innercircle.commerce.product.admin.application;
+package innercircle.commerce.product.api.application;
 
-import innercircle.commerce.product.admin.application.dto.ProductInventoryUpdateCommand;
-import innercircle.commerce.product.admin.application.exception.ProductNotFoundException;
-import innercircle.commerce.product.admin.application.exception.StockConflictException;
+import innercircle.commerce.product.api.application.dto.ProductInventoryUpdateCommand;
+import innercircle.commerce.product.api.application.exception.ProductNotFoundException;
+import innercircle.commerce.product.api.application.exception.StockConflictException;
 import innercircle.commerce.product.core.application.repository.ProductRepository;
 import innercircle.commerce.product.core.domain.Product;
 import jakarta.persistence.OptimisticLockException;
@@ -12,7 +12,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
- * 상품 재고 조정을 처리하는 애플리케이션 서비스
+ * 상품 재고 증감을 처리하는 애플리케이션 서비스
  * 
  * 동시성 제어를 위해 낙관적 락킹을 사용하며,
  * 재고 증가/감소 연산을 트랜잭션 내에서 안전하게 처리합니다.

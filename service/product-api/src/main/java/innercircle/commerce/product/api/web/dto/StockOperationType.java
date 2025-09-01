@@ -1,4 +1,4 @@
-package innercircle.commerce.product.admin.web.dto;
+package innercircle.commerce.product.api.web.dto;
 
 /**
  * 재고 조정 연산 타입을 나타내는 열거형

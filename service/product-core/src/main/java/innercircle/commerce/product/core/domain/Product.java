@@ -202,6 +202,26 @@ public class Product {
 		this.updatedAt = LocalDateTime.now();
 	}
 
+	/**
+	 * 상품의 재고를 절대값으로 조정합니다.
+	 * 
+	 * 관리자 또는 판매자가 창고 실사 등의 목적으로 
+	 * 재고 수량을 직접 설정할 때 사용합니다.
+	 *
+	 * @param quantity 설정할 재고 수량 (0 이상)
+	 * @throws IllegalArgumentException quantity가 null이거나 0 미만인 경우
+	 */
+	public void adjustStock(Integer quantity) {
+		if (quantity == null) {
+			throw new IllegalArgumentException("조정할 재고 수량은 필수입니다.");
+		}
+		if (quantity < 0) {
+			throw new IllegalArgumentException("조정할 재고 수량은 0 이상이어야 합니다.");
+		}
+		this.stock = quantity;
+		this.updatedAt = LocalDateTime.now();
+	}
+
 	private void setName (String name) {
 		validateProductName(name);
 		this.name = name;

@@ -1,7 +1,7 @@
-package innercircle.commerce.product.admin.application;
+package innercircle.commerce.product.api.application;
 
-import innercircle.commerce.product.admin.application.dto.ProductInventoryUpdateCommand;
-import innercircle.commerce.product.admin.application.exception.StockConflictException;
+import innercircle.commerce.product.api.application.dto.ProductInventoryUpdateCommand;
+import innercircle.commerce.product.api.application.exception.StockConflictException;
 import innercircle.commerce.product.core.domain.Product;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

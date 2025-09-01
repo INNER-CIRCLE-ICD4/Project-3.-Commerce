@@ -58,7 +58,7 @@ class ProductControllerTest {
 	private ImageUploadUseCase imageUploadUseCase;
 
 	@MockitoBean
-	private ProductInventoryFacade productInventoryFacade;
+	private ProductStockAdjustUseCase productStockAdjustUseCase;
 
 	@Nested
 	@DisplayName("상품 등록")
@@ -537,54 +537,61 @@ class ProductControllerTest {
 
 	@Nested
 	@DisplayName("상품 재고 조정")
-	class UpdateInventory {
+	class AdjustStock {
 
 		@Test
-		@DisplayName("재고를 정상적으로 증가시킬 수 있다.")
-		void 재고_증가_성공 () throws Exception {
+		@DisplayName("재고를 절대값으로 정상적으로 조정할 수 있다.")
+		void 재고_조정_성공 () throws Exception {
 			// given
-			Product updatedProduct = ProductFixtures.createUpdatedProduct();
+			Long productId = 1L;
+			Product adjustedProduct = ProductFixtures.createUpdatedProduct();
+			ProductAdminInfo productInfo = ProductAdminInfo.from(adjustedProduct);
 			String requestBody = """
 					{
-						"operationType": "INCREASE",
-						"quantity": 10
+						"quantity": 100
 					}
 					""";
 
+			given(productStockAdjustUseCase.adjustStock(any())).willReturn(productInfo);
 
 			// when & then
-			mockMvc.perform(patch("/api/admin/products/{id}/inventory", updatedProduct.getId())
+			mockMvc.perform(patch("/api/admin/products/{id}/stock", productId)
 						   .contentType(MediaType.APPLICATION_JSON)
 						   .content(requestBody))
 				   .andExpect(status().isOk())
 				   .andExpect(jsonPath("$.success").value(true))
-				   .andExpect(jsonPath("$.data.productName").value("재고 조정 완료"));
+				   .andExpect(jsonPath("$.data").isNotEmpty())
+				   .andExpect(jsonPath("$.data.id").value(adjustedProduct.getId()))
+				   .andExpect(jsonPath("$.data.stock").value(adjustedProduct.getStock()));
 
-			verify(productInventoryFacade).updateStockWithRetry(any());
+			verify(productStockAdjustUseCase).adjustStock(any());
 		}
 
 		@Test
-		@DisplayName("재고를 정상적으로 감소시킬 수 있다.")
-		void 재고_감소_성공 () throws Exception {
+		@DisplayName("재고를 0으로 조정할 수 있다.")
+		void 재고_0으로_조정_성공 () throws Exception {
 			// given
-			Product updatedProduct = ProductFixtures.createUpdatedProduct();
+			Long productId = 1L;
+			Product adjustedProduct = ProductFixtures.createUpdatedProduct();
+			ProductAdminInfo productInfo = ProductAdminInfo.from(adjustedProduct);
 			String requestBody = """
 					{
-						"operationType": "DECREASE",
-						"quantity": 5
+						"quantity": 0
 					}
 					""";
 
+			given(productStockAdjustUseCase.adjustStock(any())).willReturn(productInfo);
 
 			// when & then
-			mockMvc.perform(patch("/api/admin/products/{id}/inventory", updatedProduct.getId())
+			mockMvc.perform(patch("/api/admin/products/{id}/stock", productId)
 						   .contentType(MediaType.APPLICATION_JSON)
 						   .content(requestBody))
 				   .andExpect(status().isOk())
 				   .andExpect(jsonPath("$.success").value(true))
-				   .andExpect(jsonPath("$.data.productName").value("재고 조정 완료"));
+				   .andExpect(jsonPath("$.data").isNotEmpty())
+				   .andExpect(jsonPath("$.data.id").value(adjustedProduct.getId()));
 
-			verify(productInventoryFacade).updateStockWithRetry(any());
+			verify(productStockAdjustUseCase).adjustStock(any());
 		}
 
 		@Test
@@ -594,34 +601,49 @@ class ProductControllerTest {
 			Long productId = 1L;
 			String requestBody = """
 					{
-						"operationType": "INCREASE",
 						"quantity": -5
 					}
 					""";
 
 			// when & then
-			mockMvc.perform(patch("/api/admin/products/{id}/inventory", productId)
+			mockMvc.perform(patch("/api/admin/products/{id}/stock", productId)
 						   .contentType(MediaType.APPLICATION_JSON)
 						   .content(requestBody))
 				   .andExpect(status().isBadRequest());
 		}
 
 		@Test
-		@DisplayName("필수 필드 누락 시 400 에러를 반환한다.")
-		void 필수_필드_누락_400_에러 () throws Exception {
+		@DisplayName("수량이 누락된 경우 400 에러를 반환한다.")
+		void 수량_누락_400_에러 () throws Exception {
 			// given
 			Long productId = 1L;
-			String requestBody = """
-					{
-						"quantity": 10
-					}
-					""";
+			String requestBody = "{}";
 
 			// when & then
-			mockMvc.perform(patch("/api/admin/products/{id}/inventory", productId)
+			mockMvc.perform(patch("/api/admin/products/{id}/stock", productId)
 						   .contentType(MediaType.APPLICATION_JSON)
 						   .content(requestBody))
 				   .andExpect(status().isBadRequest());
+		}
+
+		@Test
+		@DisplayName("존재하지 않는 상품의 재고 조정 시 404 에러를 반환한다.")
+		void 상품_없음_404_에러 () throws Exception {
+			// given
+			Long productId = 999L;
+			String requestBody = """
+					{
+						"quantity": 50
+					}
+					""";
+
+			given(productStockAdjustUseCase.adjustStock(any())).willThrow(new ProductNotFoundException(productId));
+
+			// when & then
+			mockMvc.perform(patch("/api/admin/products/{id}/stock", productId)
+						   .contentType(MediaType.APPLICATION_JSON)
+						   .content(requestBody))
+				   .andExpect(status().isNotFound());
 		}
 	}
 }

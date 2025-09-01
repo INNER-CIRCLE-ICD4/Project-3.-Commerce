@@ -1,9 +1,9 @@
-package innercircle.commerce.product.admin.application;
+package innercircle.commerce.product.api.application;
 
-import innercircle.commerce.product.admin.application.dto.ProductInventoryUpdateCommand;
-import innercircle.commerce.product.admin.application.exception.ProductNotFoundException;
-import innercircle.commerce.product.admin.application.exception.StockConflictException;
-import innercircle.commerce.product.admin.web.dto.StockOperationType;
+import innercircle.commerce.product.api.application.dto.ProductInventoryUpdateCommand;
+import innercircle.commerce.product.api.application.exception.ProductNotFoundException;
+import innercircle.commerce.product.api.application.exception.StockConflictException;
+import innercircle.commerce.product.api.web.dto.StockOperationType;
 import innercircle.commerce.product.core.application.repository.ProductRepository;
 import innercircle.commerce.product.core.domain.Product;
 import innercircle.commerce.product.core.domain.ProductStatus;
