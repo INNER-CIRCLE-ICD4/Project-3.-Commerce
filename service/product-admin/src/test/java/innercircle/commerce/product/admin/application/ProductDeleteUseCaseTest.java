@@ -1,10 +1,10 @@
 package innercircle.commerce.product.admin.application;
 
 import innercircle.commerce.product.admin.application.exception.ProductNotFoundException;
+import innercircle.commerce.product.core.application.repository.ImageDeletionTargetRepository;
 import innercircle.commerce.product.core.application.repository.ProductRepository;
+import innercircle.commerce.product.core.domain.ImageDeletionTarget;
 import innercircle.commerce.product.core.domain.Product;
-import innercircle.commerce.product.core.domain.ProductStatus;
-import innercircle.commerce.product.core.domain.event.ProductDeletedEvent;
 import innercircle.commerce.product.admin.fixtures.ProductFixtures;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -13,12 +13,14 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.test.util.ReflectionTestUtils;
 
+import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.verify;
 
@@ -30,13 +32,14 @@ class ProductDeleteUseCaseTest {
     private ProductRepository productRepository;
 
     @Mock
-    private ApplicationEventPublisher eventPublisher;
+    private ImageDeletionTargetRepository imageDeletionTargetRepository;
 
     private ProductDeleteUseCase productDeleteUseCase;
 
     @BeforeEach
     void setUp() {
-        productDeleteUseCase = new ProductDeleteUseCase(productRepository, eventPublisher);
+        productDeleteUseCase = new ProductDeleteUseCase(productRepository, imageDeletionTargetRepository);
+        ReflectionTestUtils.setField(productDeleteUseCase, "imageDeletionDelayDays", 30);
     }
 
     @Test
@@ -49,6 +52,7 @@ class ProductDeleteUseCaseTest {
 
         given(productRepository.findById(productId)).willReturn(Optional.of(existingProduct));
         given(productRepository.save(any(Product.class))).willReturn(deletedProduct);
+        given(imageDeletionTargetRepository.saveAll(anyList())).willReturn(List.of());
 
         // when
         productDeleteUseCase.deleteProduct(productId);
@@ -57,13 +61,21 @@ class ProductDeleteUseCaseTest {
         verify(productRepository).findById(productId);
         verify(productRepository).save(any(Product.class));
         
-        // 이벤트 발행 검증
-        ArgumentCaptor<ProductDeletedEvent> eventCaptor = ArgumentCaptor.forClass(ProductDeletedEvent.class);
-        verify(eventPublisher).publishEvent(eventCaptor.capture());
+        // 이미지 지연 삭제 대상 저장 검증
+        ArgumentCaptor<List<ImageDeletionTarget>> targetsCaptor = ArgumentCaptor.forClass(List.class);
+        verify(imageDeletionTargetRepository).saveAll(targetsCaptor.capture());
         
-        ProductDeletedEvent publishedEvent = eventCaptor.getValue();
-        assertThat(publishedEvent.getProductId()).isEqualTo(productId);
-        assertThat(publishedEvent.getImageUrls()).isNotNull();
+        List<ImageDeletionTarget> savedTargets = targetsCaptor.getValue();
+        assertThat(savedTargets).isNotEmpty();
+        assertThat(savedTargets.size()).isEqualTo(existingProduct.getImages().size());
+        
+        for (int i = 0; i < savedTargets.size(); i++) {
+            ImageDeletionTarget target = savedTargets.get(i);
+            String expectedUrl = existingProduct.getImages().get(i).getUrl();
+            assertThat(target.getImageUrl()).isEqualTo(expectedUrl);
+            assertThat(target.getRetryCount()).isZero();
+            assertThat(target.isScheduledForDeletion()).isFalse();
+        }
     }
 
     @Test
