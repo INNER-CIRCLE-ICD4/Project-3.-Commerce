@@ -1,6 +1,10 @@
 server.port: 9001
 
 spring:
+  data:
+    redis:
+      host: localhost
+      port: 16379
   datasource:
     url: jdbc:h2:mem:reviewdb # 인메모리 H2 DB 사용
     driver-class-name: org.h2.Driver
@@ -30,6 +34,7 @@ eureka:
     register-with-eureka: true
     service-url:
       defaultZone: http://localhost:8761/eureka
+    enabled: false
 server:
   servlet:
     context-path: /api/review-service

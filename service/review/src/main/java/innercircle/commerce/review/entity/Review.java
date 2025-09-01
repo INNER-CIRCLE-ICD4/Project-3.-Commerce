@@ -21,7 +21,7 @@ public class Review {
     private Long memberId;
     private Long productId;
 
-    private Long rating = 0L;
+    private int rating = 0;
     @Column(columnDefinition = "TEXT")
     private String content;
     private Long likeCount;
@@ -32,7 +32,7 @@ public class Review {
     private List<ReviewLike> likes = new ArrayList<>();
 
     @Builder
-    public Review(Long memberId, Long productId, long rating, String content) {
+    public Review(Long memberId, Long productId, int rating, String content) {
         this.memberId = memberId;
         this.productId = productId;
         this.rating = rating;

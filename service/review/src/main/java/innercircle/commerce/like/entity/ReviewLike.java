@@ -3,9 +3,11 @@ package innercircle.commerce.like.entity;
 import innercircle.commerce.review.entity.Review;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Entity
+@Getter
 @IdClass(ReviewLikeId.class)
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class ReviewLike {
