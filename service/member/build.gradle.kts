@@ -18,6 +18,8 @@ dependencies {
     implementation(project(":common:encryption"))
     implementation(project(":common:snowflake"))
     implementation(project(":common:web-security"))
+    implementation(project(":common:logging"))
+
 }
 
 // 개발 환경에서만 테스트 비활성화

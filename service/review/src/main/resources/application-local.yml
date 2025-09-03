@@ -25,16 +25,6 @@ spring:
       enabled: true
       path: /h2-console
 
-
-eureka:
-  instance:
-    instance-id: ${spring.application.name}:${spring.application.instance_id:${random.value}}
-  client:
-    fetch-registry: true
-    register-with-eureka: true
-    service-url:
-      defaultZone: http://localhost:8761/eureka
-    enabled: false
 server:
   servlet:
     context-path: /api/review-service

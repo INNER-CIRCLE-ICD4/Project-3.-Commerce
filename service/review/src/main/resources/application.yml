@@ -9,15 +9,6 @@ spring:
       host: localhost
       port: 6379
 
-
-eureka:
-  instance:
-    instance-id: ${spring.application.name}:${spring.application.instance_id:${random.value}}
-  client:
-    fetch-registry: true
-    register-with-eureka: true
-    service-url:
-      defaultZone: http://localhost:8761/eureka
 server:
   servlet:
     context-path: /api/review-service
