@@ -1,0 +1,19 @@
+<!-- common/logging/src/main/resources/logback-spring.xml -->
+<configuration>
+    <!-- 기존 설정들... -->
+
+    <!-- local 프로파일 추가 -->
+    <springProfile name="local">
+        <appender name="LOCAL_CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+            <encoder>
+                <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level [%X{traceId:-},%X{spanId:-}] %logger{36} - %msg%n</pattern>
+            </encoder>
+        </appender>
+
+        <root level="DEBUG">
+            <appender-ref ref="LOCAL_CONSOLE"/>
+        </root>
+    </springProfile>
+
+    <!-- 기존 dev, prod 설정들... -->
+</configuration>
