@@ -18,7 +18,6 @@ dependencies {
     implementation(project(":common:encryption"))
     implementation(project(":common:snowflake"))
     implementation(project(":common:web-security"))
-    implementation(project(":common:logging"))
 
 }
 
