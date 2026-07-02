@@ -22,10 +22,10 @@ Client
 |--------|------|------|
 | [Gateway](./infra/gateway) | JWT 인증 · Token Bucket Rate Limiting · 분산 라우팅 | 노성웅 |
 | [Member](./service/member) | 회원 관리 · JWT 인증 · RBAC 권한 체계 | 노성웅 |
-| [Order](./service/order) | 주문·결제 흐름 | 팀원 |
-| [Product](./service/product-api) | 상품 등록·조회 | 팀원 |
-| [Search](./service/search) | Elasticsearch 상품 검색 | 팀원 |
-| [Review](./service/review) | 리뷰 관리 | 팀원 |
+| [Order](./service/order) | 주문·결제 흐름 | 박소영 |
+| [Product](./service/product-api) | 상품 등록·조회 | 황인웅 |
+| [Search](./service/search) | Elasticsearch 상품 검색 | 이상혁 |
+| [Review](./service/review) | 리뷰 관리 | 송철현 |
 | [Eureka](./infra/eureka-server) | 서비스 디스커버리 | 노성웅 |
 | [Config Server](./infra/config-server) | 중앙 설정 관리 | 노성웅 |
 
